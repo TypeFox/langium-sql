@@ -1,0 +1,13 @@
+{
+    "projectName": "Sql",
+    "languages": [{
+        "id": "sql",
+        "grammar": "src/language-server/sql.langium",
+        "caseInsensitive": true,
+        "fileExtensions": [".sql"],
+        "textMate": {
+            "out": "syntaxes/sql.tmLanguage.json"
+        }
+    }],
+    "out": "src/language-server/generated"
+}

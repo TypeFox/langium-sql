@@ -1,0 +1,52 @@
+{
+  "name": "sql",
+  "scopeName": "source.sql",
+  "fileTypes": [
+    ".sql"
+  ],
+  "patterns": [
+    {
+      "include": "#comments"
+    },
+    {
+      "name": "keyword.control.sql",
+      "match": "\\b([bB][oO][oO][lL][eE][aA][nN]|[cC][hH][aA][rR]|[cC][hH][aA][rR][aA][cC][tT][eE][rR]|[cC][rR][eE][aA][tT][eE]|[fF][rR][oO][mM]|[iI][nN][tT][eE][gG][eE][rR]|[sS][eE][lL][eE][cC][tT]|[tT][aA][bB][lL][eE]|[vV][aA][rR][cC][hH][aA][rR]|[vV][aA][rR][yY][iI][nN][gG])\\b"
+    },
+    {
+      "name": "string.quoted.single.sql",
+      "begin": "'",
+      "end": "'"
+    }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.block.sql",
+          "begin": "/\\*",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.definition.comment.sql"
+            }
+          },
+          "end": "\\*/",
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.definition.comment.sql"
+            }
+          }
+        },
+        {
+          "begin": "//",
+          "beginCaptures": {
+            "1": {
+              "name": "punctuation.whitespace.comment.leading.sql"
+            }
+          },
+          "end": "(?=$)",
+          "name": "comment.line.sql"
+        }
+      ]
+    }
+  }
+}

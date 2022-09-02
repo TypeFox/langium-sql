@@ -1,0 +1,58 @@
+{
+    "name": "sql-language-server",
+    "displayName": "sql-language-server",
+    "description": "Please enter a brief description here",
+    "version": "0.0.1",
+    "engines": {
+        "vscode": "^1.56.0"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "contributes": {
+        "languages": [{
+            "id": "sql",
+            "aliases": ["SQL", "sql"],
+            "extensions": [".sql"],
+            "configuration": "./language-configuration.json"
+        }],
+        "grammars": [{
+            "language": "sql",
+            "scopeName": "source.sql",
+            "path": "./syntaxes/sql.tmLanguage.json"
+        }]
+    },
+    "activationEvents": [
+        "onLanguage:sql"
+    ],
+    "files": [
+        "bin",
+        "out",
+        "src"
+    ],
+    "main": "./out/extension.js",
+    "scripts": {
+        "vscode:prepublish": "npm run build && npm run lint",
+        "build": "tsc -b tsconfig.json",
+        "watch": "tsc -b tsconfig.json --watch",
+        "lint": "eslint src --ext ts",
+        "langium:generate": "langium generate",
+        "langium:watch": "langium generate --watch"
+    },
+    "dependencies": {
+        "chevrotain": "^9.1.0",
+        "langium": "0.5.0-next.f150dbd",
+        "vscode-languageclient": "^8.0.1",
+        "vscode-languageserver": "^8.0.1",
+        "vscode-uri": "^3.0.2"
+    },
+    "devDependencies": {
+        "@types/node": "^14.17.3",
+        "@types/vscode": "^1.56.0",
+        "@typescript-eslint/eslint-plugin": "^4.14.1",
+        "@typescript-eslint/parser": "^4.14.1",
+        "eslint": "^7.19.0",
+        "langium-cli": "0.5.0-next.f150dbd",
+        "typescript": "^4.6.2"
+    }
+}
