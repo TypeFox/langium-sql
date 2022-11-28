@@ -1,0 +1,7 @@
+tasks:
+  - init: npm install
+
+vscode:
+  extensions:
+    - langium.langium-vscode
+    - dbaeumer.vscode-eslint

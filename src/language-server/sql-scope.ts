@@ -1,3 +1,9 @@
+/******************************************************************************
+ * Copyright 2022 TypeFox GmbH
+ * This program and the accompanying materials are made available under the
+ * terms of the MIT License, which is available in the project root.
+ ******************************************************************************/
+
 import {
     AstNode, AstNodeDescriptionProvider, DefaultScopeProvider, EMPTY_SCOPE, LangiumServices, ReferenceInfo,
     Scope, stream, StreamScope
@@ -13,7 +19,7 @@ export class SqlScopeProvider extends DefaultScopeProvider {
         this.astNodeDescriptionProvider = services.workspace.AstNodeDescriptionProvider;
     }
 
-    getScope(context: ReferenceInfo): Scope {
+    override getScope(context: ReferenceInfo): Scope {
         if (isColumnReference(context.container) && context.property === 'column') {
             return this.getColumnReferenceScope(context);
         }

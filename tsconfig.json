@@ -7,6 +7,7 @@
     "outDir": "out",
     "strict": true,
     "noUnusedLocals": true,
+    "noImplicitOverride": true,
     "noImplicitReturns": true,
     "moduleResolution": "node",
     "esModuleInterop": true,
