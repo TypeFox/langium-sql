@@ -44,7 +44,7 @@ describe('SELECT statements', () => {
         const result = await parse('SELECT * FROM tab_non_existing;');
         expect(result.parseResult.lexerErrors).toHaveLength(0);
         expect(result.parseResult.parserErrors).toHaveLength(0)
-        expect(result.diagnostics).not.toBeUndefined()
-        expect(result.diagnostics).toHaveLength(1);
+        expect(result.diagnostics).toBeUndefined()
+        expect(result.references.map(r => r.error)).toHaveLength(1);
     });
 });

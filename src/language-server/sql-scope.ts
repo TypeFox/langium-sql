@@ -23,7 +23,14 @@ export class SqlScopeProvider extends DefaultScopeProvider {
         if (isColumnReference(context.container) && context.property === 'column') {
             return this.getColumnReferenceScope(context);
         }
+        if(isSelectQuery(context.container) && context.property === 'table') {
+            return this.getTableScope(context);
+        } 
         return super.getScope(context);
+    }
+
+    private getTableScope(_context: ReferenceInfo): Scope {
+        return new StreamScope(this.indexManager.allElements('TableDefinition'));
     }
 
     private getColumnReferenceScope(context: ReferenceInfo): Scope {

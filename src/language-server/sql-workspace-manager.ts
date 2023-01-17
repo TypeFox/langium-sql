@@ -1,4 +1,4 @@
-import { AstNode, DefaultWorkspaceManager, LangiumDocument, LangiumDocumentFactory, LangiumSharedServices, linkContentToContainer, streamAllContents } from "langium";
+import { AstNode, DefaultWorkspaceManager, LangiumDocument, LangiumDocumentFactory, LangiumSharedServices, linkContentToContainer, streamAst } from "langium";
 import { ColumnDefinition, SqlFile, TableDefinition, TypeDefinition } from "./generated/ast";
 import { SqlTableDefinitions, SqlTypeDefinitions } from "./sql-meta";
 import { SqlSharedServices } from "./sql-module";
@@ -55,7 +55,7 @@ export class SqlWorkspaceManager extends DefaultWorkspaceManager {
             $type: "SqlFile",
             statements,
         };
-        streamAllContents(file).forEach(linkContentToContainer);
+        streamAst(file).forEach(node => linkContentToContainer(node));
 
         const uri = URI.parse(`inmemory://prelude.sql`);
         const document = this.langiumDocumentFactory.fromModel(file, uri);
