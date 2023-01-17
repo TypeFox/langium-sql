@@ -6,11 +6,10 @@
 
 import {
     AstNodeDescription,
-    AstNodeDescriptionProvider, DefaultScopeProvider, getContainerOfType, LangiumServices, ReferenceInfo,
+    AstNodeDescriptionProvider, DefaultScopeProvider, getContainerOfType, hasContainerOfType, LangiumServices, ReferenceInfo,
     Scope, stream, StreamScope
 } from 'langium';
-import { Stream } from 'stream';
-import { isColumnName, isSelectStatement, isTableName, SelectStatement } from './generated/ast';
+import { isColumnName, isSelectStatement, isTableName, isTableRelated, isTableVariableName, SelectStatement } from './generated/ast';
 
 export class SqlScopeProvider extends DefaultScopeProvider {
 
@@ -23,14 +22,38 @@ export class SqlScopeProvider extends DefaultScopeProvider {
 
     override getScope(context: ReferenceInfo): Scope {
         if(isColumnName(context.container) && context.property === 'column') {
-            const selectStatement = getContainerOfType(context.container, isSelectStatement);
-            return this.getColumnsForSelectStatement(context, selectStatement!);
+            if(hasContainerOfType(context.container, isTableRelated)) {
+                const tableRelated = getContainerOfType(context.container, isTableRelated)!;
+                const columns = tableRelated.variableName.variable.ref!.tableName.table.ref!.columns;
+                return new StreamScope(stream(columns.map(c => this.astNodeDescriptionProvider.createDescription(c, c.name))));
+            } else {
+                const selectStatement = getContainerOfType(context.container, isSelectStatement);
+                return this.getColumnsForSelectStatement(context, selectStatement!);
+            }
         }
         if(isTableName(context.container) && context.property === 'table') {
             return this.getTablesFromGlobalScope(context);
-        } 
+        }
+        if(isTableVariableName(context.container) && context.property === 'variable') {
+            const selectStatement = getContainerOfType(context.container, isSelectStatement);
+            return this.getTableVariablesForSelectStatement(context, selectStatement!);
+        }
         return super.getScope(context);
     }
+
+    private getTableVariablesForSelectStatement(context: ReferenceInfo, selectStatement: SelectStatement): Scope {
+        if(selectStatement.from) {
+            const astDescriptions: AstNodeDescription[] = [];
+            for (const source of selectStatement.from.sources.list) {
+                if(source.item.name) {
+                    astDescriptions.push(this.astNodeDescriptionProvider.createDescription(source.item, source.item.name));
+                }
+            }
+            return new StreamScope(stream(astDescriptions));
+        }
+        return super.getScope(context);
+    }
+
     private getColumnsForSelectStatement(context: ReferenceInfo, selectStatement: SelectStatement): Scope {
         if(selectStatement.from) {
             const astDescriptions: AstNodeDescription[] = [];

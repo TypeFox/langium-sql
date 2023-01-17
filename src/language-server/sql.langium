@@ -37,7 +37,7 @@ SelectElements:
     
 SelectElement:
     {infer AllStar}'*'
-    | {infer AllTable}name=TableName '.' '*'
+    | {infer TableRelated}variableName=TableVariableName '.' (allStar?='*'|columnName=ColumnName)
     | Expression
     ;
     
@@ -55,6 +55,10 @@ JoinPart:
 
 TableSourceItem
     : tableName=TableName ('AS'? name=Identifier)?
+    ;
+
+TableVariableName:
+    variable=[TableSourceItem:Identifier]
     ;
 
 TableName: table=[TableDefinition:Identifier];
