@@ -4,8 +4,10 @@ entry SqlFile:
     statements+=Statement*;
 
 Statement:
-    TableDefinition | SelectQuery | TypeDefinition;
+    TableDefinition | SelectStatement | TypeDefinition;
 
+
+//DEFINITION/////////////////////////////////////////////////////////
 TypeDefinition:
     'CREATE' 'TYPE' name=Identifier ';'
     ;
@@ -17,17 +19,50 @@ TableDefinition:
 
 ColumnDefinition:
     name=Identifier dataType=[TypeDefinition:Identifier];
+//END DEFINITION/////////////////////////////////////////////////////////
 
-SelectQuery:
-    'SELECT' (
-        columns+=Expression (',' columns+=Expression)* trailingComma?=','?
-        | wildcard='*'
-    )? 'FROM' table=[TableDefinition:Identifier] ';';
+SelectStatement:
+    'SELECT'
+    selects=SelectElements
+    from=FromClause? 
+    //groupBy=GroupByClause?
+    //having=HavingClause?
+    //orderBy=OrderByClause?
+    //limit=LimitClause? 
+    ';';
+
+SelectElements:
+    elements+=SelectElement (',' elements+=SelectElement)*
+    ;
+    
+SelectElement:
+    {infer AllStar}'*'
+    | {infer AllTable}name=TableName '.' '*'
+    | Expression
+    ;
+    
+FromClause: 'FROM' sources=TableSources;
+
+TableSources: list+=TableSource (',' list+=TableSource)*;
+
+TableSource:
+    item=TableSourceItem joins+=JoinPart*
+    ;
+
+JoinPart:
+    'JOIN' nextItem=TableSourceItem ('ON' joinOn=Expression)?
+    ;
+
+TableSourceItem
+    : tableName=TableName ('AS'? name=Identifier)?
+    ;
+
+TableName: table=[TableDefinition:Identifier];
 
 Expression:
-    ColumnReference;
+    ColumnName;
 
-ColumnReference:
+ColumnName:
     column=[ColumnDefinition:Identifier];
 
 Identifier returns string:

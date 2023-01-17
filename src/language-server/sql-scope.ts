@@ -5,10 +5,12 @@
  ******************************************************************************/
 
 import {
-    AstNode, AstNodeDescriptionProvider, DefaultScopeProvider, EMPTY_SCOPE, LangiumServices, ReferenceInfo,
+    AstNodeDescription,
+    AstNodeDescriptionProvider, DefaultScopeProvider, getContainerOfType, LangiumServices, ReferenceInfo,
     Scope, stream, StreamScope
 } from 'langium';
-import { isColumnReference, isSelectQuery, TableDefinition } from './generated/ast';
+import { Stream } from 'stream';
+import { isColumnName, isSelectStatement, isTableName, SelectStatement } from './generated/ast';
 
 export class SqlScopeProvider extends DefaultScopeProvider {
 
@@ -20,39 +22,31 @@ export class SqlScopeProvider extends DefaultScopeProvider {
     }
 
     override getScope(context: ReferenceInfo): Scope {
-        if (isColumnReference(context.container) && context.property === 'column') {
-            return this.getColumnReferenceScope(context);
+        if(isColumnName(context.container) && context.property === 'column') {
+            const selectStatement = getContainerOfType(context.container, isSelectStatement);
+            return this.getColumnsForSelectStatement(context, selectStatement!);
         }
-        if(isSelectQuery(context.container) && context.property === 'table') {
-            return this.getTableScope(context);
+        if(isTableName(context.container) && context.property === 'table') {
+            return this.getTablesFromGlobalScope(context);
         } 
         return super.getScope(context);
     }
-
-    private getTableScope(_context: ReferenceInfo): Scope {
-        return new StreamScope(this.indexManager.allElements('TableDefinition'));
-    }
-
-    private getColumnReferenceScope(context: ReferenceInfo): Scope {
-        let container: AstNode | undefined = context.container;
-        let contProp: string | undefined = undefined;
-        while (container) {
-            contProp = container.$containerProperty;
-            container = container.$container;
-            if (isSelectQuery(container) && contProp === 'columns') {
-                const table = container.table.ref;
-                if (table) {
-                    return this.getTableColumnsScope(table);
+    private getColumnsForSelectStatement(context: ReferenceInfo, selectStatement: SelectStatement): Scope {
+        if(selectStatement.from) {
+            const astDescriptions: AstNodeDescription[] = [];
+            for (const source of selectStatement.from.sources.list) {
+                if(!source.item.name && source.item.tableName.table.ref) {
+                    for (const column of source.item.tableName.table.ref.columns) {
+                        astDescriptions.push(this.astNodeDescriptionProvider.createDescription(column, column.name));
+                    }
                 }
             }
+            return new StreamScope(stream(astDescriptions));
         }
-        return EMPTY_SCOPE;
+        return super.getScope(context);
     }
 
-    private getTableColumnsScope(table: TableDefinition): Scope {
-        return new StreamScope(
-            stream(table.columns).map(c => this.astNodeDescriptionProvider.createDescription(c, c.name))
-        );
+    private getTablesFromGlobalScope(_context: ReferenceInfo): Scope {
+        return new StreamScope(this.indexManager.allElements('TableDefinition'));
     }
-
 }
