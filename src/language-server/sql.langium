@@ -4,7 +4,11 @@ entry SqlFile:
     statements+=Statement*;
 
 Statement:
-    TableDefinition | SelectQuery;
+    TableDefinition | SelectQuery | TypeDefinition;
+
+TypeDefinition:
+    'CREATE' 'TYPE' name=Identifier ';'
+    ;
 
 TableDefinition:
     'CREATE' 'TABLE' name=Identifier '('(
@@ -12,7 +16,7 @@ TableDefinition:
     )?')' ';';
 
 ColumnDefinition:
-    name=Identifier type=DataType;
+    name=Identifier dataType=[TypeDefinition:Identifier];
 
 SelectQuery:
     'SELECT' (
@@ -26,31 +30,12 @@ Expression:
 ColumnReference:
     column=[ColumnDefinition:Identifier];
 
-DataType:
-    BooleanDataType | IntegerDataType | StringDataType;
-
-BooleanDataType:
-    {infer BooleanDataType} 'boolean';
-
-IntegerDataType:
-    {infer IntegerDataType} 'integer';
-
-StringDataType:
-    (
-        'character' varying?='varying'?
-        | 'char'
-        | varying?='varchar'
-    )
-    ('(' length=INT ')')?;
-
 Identifier returns string:
     ID | QUOTE_ID;
 
 hidden terminal WS: /\s+/;
 terminal ID: /[_a-zA-Z][\w_]*/;
 terminal QUOTE_ID: /"[^"]*"/;
-terminal INT returns number: /[0-9]+/;
-terminal STRING: /'[^']*'/;
 
 hidden terminal ML_COMMENT: /\/\*[\s\S]*?\*\//;
 hidden terminal SL_COMMENT: /\/\/[^\n\r]*/;

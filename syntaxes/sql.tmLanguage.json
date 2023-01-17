@@ -10,12 +10,7 @@
     },
     {
       "name": "keyword.control.sql",
-      "match": "\\b([bB][oO][oO][lL][eE][aA][nN]|[cC][hH][aA][rR]|[cC][hH][aA][rR][aA][cC][tT][eE][rR]|[cC][rR][eE][aA][tT][eE]|[fF][rR][oO][mM]|[iI][nN][tT][eE][gG][eE][rR]|[sS][eE][lL][eE][cC][tT]|[tT][aA][bB][lL][eE]|[vV][aA][rR][cC][hH][aA][rR]|[vV][aA][rR][yY][iI][nN][gG])\\b"
-    },
-    {
-      "name": "string.quoted.single.sql",
-      "begin": "'",
-      "end": "'"
+      "match": "\\b([cC][rR][eE][aA][tT][eE]|[fF][rR][oO][mM]|[sS][eE][lL][eE][cC][tT]|[tT][aA][bB][lL][eE]|[tT][yY][pP][eE])\\b"
     }
   ],
   "repository": {
