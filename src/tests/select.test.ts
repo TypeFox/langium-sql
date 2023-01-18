@@ -1,17 +1,27 @@
+/******************************************************************************
+ * Copyright 2022 TypeFox GmbH
+ * This program and the accompanying materials are made available under the
+ * terms of the MIT License, which is available in the project root.
+ ******************************************************************************/
+
 import { EmptyFileSystem, LangiumDocument } from "langium";
 import { describe, it, expect, beforeAll } from "vitest";
 import * as ast from "../language-server/generated/ast";
+import { ReportAs } from "../language-server/sql-error-codes";
 import { createSqlServices } from "../language-server/sql-module";
 import {
   parseHelper,
   expectNoErrors,
   asSelectStatement,
   expectTableLinked,
+  expectSelectItemToBeAllStarRelativeToVariable,
+  expectSelectItemToBeColumnName,
+  expectSelectItemToBeColumnNameRelativeToVariable,
 } from "./test-utils";
 
 const services = createSqlServices(EmptyFileSystem);
 
-describe("SELECT statement use cases", () => {
+describe("SELECT use cases", () => {
   let parse: (input: string) => Promise<LangiumDocument<ast.SqlFile>>;
 
   beforeAll(async () => {
@@ -53,7 +63,7 @@ describe("SELECT statement use cases", () => {
     });
 
     it("should have only linking errors", () => {
-      expectNoErrors(document, { linker: false });
+      expectNoErrors(document, { exceptFor: 'validator' });
       expect(
         document.references.filter((r) => r.error)[0].error!.message
       ).contain("tab_non_existing");
@@ -95,83 +105,42 @@ describe("SELECT statement use cases", () => {
       expectSelectItemToBeColumnNameRelativeToVariable(selectStatement, 0, 't', 'tab', 'id');
       expectSelectItemToBeColumnNameRelativeToVariable(selectStatement, 1, 's', 'tab', 'name');
       expectSelectItemToBeAllStarRelativeToVariable(selectStatement, 2, 's', 'tab');
-    })
+    });
   });
 
-  describe("related with FROM clause", () => {
-    describe("and SELECT ELEMENTs", () => {
-      it("should reject wrong column names", async () => {
-        const result = await parse("SELECT wrong_column FROM tab;");
-        expectNoErrors(result, { linker: false });
-        const selectQuery = asSelectStatement(result);
-        expect(selectQuery.selects.elements).toHaveLength(1);
-        const first = selectQuery.selects.elements[0];
-        expect(first.$type).toBe(ast.ColumnName);
-        expect((first as ast.ColumnName).column.error).not.toBeUndefined();
-      });
+  describe("SELECT s.wrong FROM tab s;", () => {
+    let document: LangiumDocument<ast.SqlFile>;
 
-      it("should accept relative column names", async () => {
-        const result = await parse("SELECT t.id FROM tab t;");
-        expectNoErrors(result);
-        const selectQuery = asSelectStatement(result);
-        const first = selectQuery.selects.elements[0];
-        expect(first.$type).toBe(ast.TableRelated);
-        expect((first as ast.TableRelated).columnName?.column.ref?.name).toBe(
-          "id"
-        );
-        expect(
-          (first as ast.TableRelated).variableName.variable.ref?.tableName.table
-            .ref?.name
-        ).toBe("tab");
-      });
+    beforeAll(async () => {
+      document = await parse("SELECT s.wrong FROM tab s;");
+    });
+
+    it("should have only linker errors", () => {
+      expectNoErrors(document, {exceptFor: 'validator'});
+      expect(
+        document.references.filter((r) => r.error)[0].error!.message
+      ).contain("wrong");
+    });
+  });
+
+  describe("Duplicated table variable", () => {
+    let document: LangiumDocument<ast.SqlFile>;
+    let selectStatement: ast.SelectStatement;
+
+    beforeAll(async () => {
+      document = await parse("SELECT * FROM tab s, tab s;");
+      selectStatement = asSelectStatement(document);
+    });
+
+    it("should have only validator errors", () => {
+      expectNoErrors(document, {exceptFor: 'validator'});
+      expectValidationIssues(document, 2, ReportAs.DuplicatedVariableName.Code);
     });
   });
 });
 
-function expectSelectItemToBeColumnName(
-  selectStatement: ast.SelectStatement,
-  selectElementIndex: number,
-  tableName: string,
-  columnName: string
-) {
-  expect(selectStatement.selects.elements.length).toBeGreaterThan(
-    selectElementIndex
-  );
-  const element = selectStatement.selects.elements[selectElementIndex];
-  expect(element.$type).toBe(ast.ColumnName);
-  expect((element as ast.ColumnName).column.ref!.name).toBe(columnName);
-  expect((element as ast.ColumnName).column.ref!.$container.name).toBe(tableName);
+export function expectValidationIssues(document: LangiumDocument<ast.SqlFile>, count: number, code: string) {
+  const issuesByGivenCode = (document.diagnostics ?? []).filter(d => d.code === code);
+  expect(issuesByGivenCode.length).toBe(count);
 }
 
-function expectSelectItemToBeColumnNameRelativeToVariable(
-  selectStatement: ast.SelectStatement,
-  selectElementIndex: number,
-  variableName: string,
-  tableName: string,
-  columnName: string
-) {
-  expect(selectStatement.selects.elements.length).toBeGreaterThan(
-    selectElementIndex
-  );
-  const element = selectStatement.selects.elements[selectElementIndex];
-  expect(element.$type).toBe(ast.TableRelated);
-  expect((element as ast.TableRelated).variableName.variable.ref!.name).toBe(variableName);
-  expect((element as ast.TableRelated).variableName.variable.ref!.tableName.table.ref!.name).toBe(tableName);
-  expect((element as ast.TableRelated).columnName!.column.ref!.name).toBe(columnName);
-}
-
-function expectSelectItemToBeAllStarRelativeToVariable(
-  selectStatement: ast.SelectStatement,
-  selectElementIndex: number,
-  variableName: string,
-  tableName: string
-) {
-  expect(selectStatement.selects.elements.length).toBeGreaterThan(
-    selectElementIndex
-  );
-  const element = selectStatement.selects.elements[selectElementIndex];
-  expect(element.$type).toBe(ast.TableRelated);
-  expect((element as ast.TableRelated).allStar).toBeTruthy();
-  expect((element as ast.TableRelated).variableName.variable.ref!.name).toBe(variableName);
-  expect((element as ast.TableRelated).variableName.variable.ref!.tableName.table.ref!.name).toBe(tableName);
-}

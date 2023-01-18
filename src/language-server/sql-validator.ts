@@ -5,8 +5,10 @@
  ******************************************************************************/
 
 import { ValidationAcceptor, ValidationChecks, ValidationRegistry } from 'langium';
-import { SelectQuery, SqlAstType } from './generated/ast';
+import * as ast from './generated/ast';
+import _ from 'lodash';
 import type { SqlServices } from './sql-module';
+import { ReportAs } from './sql-error-codes';
 
 /**
  * Registry for validation checks.
@@ -15,8 +17,8 @@ export class SqlValidationRegistry extends ValidationRegistry {
     constructor(services: SqlServices) {
         super(services);
         const validator = services.validation.SqlValidator;
-        const checks: ValidationChecks<SqlAstType> = {
-            SelectQuery: validator.checkSelectQuery
+        const checks: ValidationChecks<ast.SqlAstType> = {
+            SelectStatement: [validator.checkVariableNamesAreUnique]
         };
         this.register(checks, validator);
     }
@@ -26,11 +28,12 @@ export class SqlValidationRegistry extends ValidationRegistry {
  * Implementation of custom validations.
  */
 export class SqlValidator {
-
-    checkSelectQuery(query: SelectQuery, accept: ValidationAcceptor): void {
-        if (query.table?.ref && query.columns.length === 0 && !query.wildcard) {
-            accept('error', 'Query must specify at least one output column.', { node: query })
+    checkVariableNamesAreUnique(query: ast.SelectStatement, accept: ValidationAcceptor): void {
+        const groups = _.groupBy(query.from?.sources.list, s => s.item.name);
+        for (const [key, group] of Object.entries(groups).filter(g => g[0] && g[1].length > 1)) {
+            for (const member of group) {
+                ReportAs.DuplicatedVariableName(member.item, {name: key}, accept)
+            }
         }
     }
-
 }
