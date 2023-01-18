@@ -1,3 +1,8 @@
+/******************************************************************************
+ * Copyright 2022 TypeFox GmbH
+ * This program and the accompanying materials are made available under the
+ * terms of the MIT License, which is available in the project root.
+******************************************************************************/
 import { AstNode, DefaultWorkspaceManager, LangiumDocument, LangiumDocumentFactory, LangiumSharedServices, linkContentToContainer, streamAst } from "langium";
 import { ColumnDefinition, SqlFile, TableDefinition, TypeDefinition } from "./generated/ast";
 import { SqlTableDefinitions, SqlTypeDefinitions } from "./sql-meta";

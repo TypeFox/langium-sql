@@ -108,3 +108,8 @@ export function expectSelectItemToBeAllStarRelativeToVariable(
   expect((element as ast.TableRelated).variableName.variable.ref!.name).toBe(variableName);
   expect((element as ast.TableRelated).variableName.variable.ref!.tableName.table.ref!.name).toBe(tableName);
 }
+
+export function expectValidationIssues(document: LangiumDocument<ast.SqlFile>, count: number, code: string) {
+  const issuesByGivenCode = (document.diagnostics ?? []).filter(d => d.code === code);
+  expect(issuesByGivenCode.length).toBe(count);
+}

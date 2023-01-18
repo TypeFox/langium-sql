@@ -17,6 +17,7 @@ import {
   expectSelectItemToBeAllStarRelativeToVariable,
   expectSelectItemToBeColumnName,
   expectSelectItemToBeColumnNameRelativeToVariable,
+  expectValidationIssues,
 } from "./test-utils";
 
 const services = createSqlServices(EmptyFileSystem);
@@ -138,9 +139,4 @@ describe("SELECT use cases", () => {
     });
   });
 });
-
-export function expectValidationIssues(document: LangiumDocument<ast.SqlFile>, count: number, code: string) {
-  const issuesByGivenCode = (document.diagnostics ?? []).filter(d => d.code === code);
-  expect(issuesByGivenCode.length).toBe(count);
-}
 
