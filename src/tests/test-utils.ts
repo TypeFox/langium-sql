@@ -50,7 +50,7 @@ export function expectNoErrors(
 export function asSelectStatement(result: LangiumDocument<ast.SqlFile>) {
   const file = result.parseResult.value;
   expect(file.statements).toHaveLength(1);
-  expect(file.statements[0].$type === "SelectQuery");
+  expect(file.statements[0].$type === "SelectStatement");
   return file.statements[0] as ast.SelectStatement;
 }
 

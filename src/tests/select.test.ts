@@ -126,11 +126,9 @@ describe("SELECT use cases", () => {
 
   describe("Duplicated table variable", () => {
     let document: LangiumDocument<ast.SqlFile>;
-    let selectStatement: ast.SelectStatement;
 
     beforeAll(async () => {
       document = await parse("SELECT * FROM tab s, tab s;");
-      selectStatement = asSelectStatement(document);
     });
 
     it("should have only validator errors", () => {
