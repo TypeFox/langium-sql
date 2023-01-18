@@ -5,10 +5,11 @@
  ******************************************************************************/
 
 import {
-    AstNode, AstNodeDescriptionProvider, DefaultScopeProvider, EMPTY_SCOPE, LangiumServices, ReferenceInfo,
+    AstNodeDescription,
+    AstNodeDescriptionProvider, DefaultScopeProvider, getContainerOfType, hasContainerOfType, LangiumServices, ReferenceInfo,
     Scope, stream, StreamScope
 } from 'langium';
-import { isColumnReference, isSelectQuery, TableDefinition } from './generated/ast';
+import { isColumnName, isSelectStatement, isTableName, isTableRelated, isTableVariableName, SelectStatement } from './generated/ast';
 
 export class SqlScopeProvider extends DefaultScopeProvider {
 
@@ -20,32 +21,55 @@ export class SqlScopeProvider extends DefaultScopeProvider {
     }
 
     override getScope(context: ReferenceInfo): Scope {
-        if (isColumnReference(context.container) && context.property === 'column') {
-            return this.getColumnReferenceScope(context);
+        if(isColumnName(context.container) && context.property === 'column') {
+            if(hasContainerOfType(context.container, isTableRelated)) {
+                const tableRelated = getContainerOfType(context.container, isTableRelated)!;
+                const columns = tableRelated.variableName.variable.ref!.tableName.table.ref!.columns;
+                return new StreamScope(stream(columns.map(c => this.astNodeDescriptionProvider.createDescription(c, c.name))));
+            } else {
+                const selectStatement = getContainerOfType(context.container, isSelectStatement);
+                return this.getColumnsForSelectStatement(context, selectStatement!);
+            }
+        }
+        if(isTableName(context.container) && context.property === 'table') {
+            return this.getTablesFromGlobalScope(context);
+        }
+        if(isTableVariableName(context.container) && context.property === 'variable') {
+            const selectStatement = getContainerOfType(context.container, isSelectStatement);
+            return this.getTableVariablesForSelectStatement(context, selectStatement!);
         }
         return super.getScope(context);
     }
 
-    private getColumnReferenceScope(context: ReferenceInfo): Scope {
-        let container: AstNode | undefined = context.container;
-        let contProp: string | undefined = undefined;
-        while (container) {
-            contProp = container.$containerProperty;
-            container = container.$container;
-            if (isSelectQuery(container) && contProp === 'columns') {
-                const table = container.table.ref;
-                if (table) {
-                    return this.getTableColumnsScope(table);
+    private getTableVariablesForSelectStatement(context: ReferenceInfo, selectStatement: SelectStatement): Scope {
+        if(selectStatement.from) {
+            const astDescriptions: AstNodeDescription[] = [];
+            for (const source of selectStatement.from.sources.list) {
+                if(source.item.name) {
+                    astDescriptions.push(this.astNodeDescriptionProvider.createDescription(source.item, source.item.name));
                 }
             }
+            return new StreamScope(stream(astDescriptions));
         }
-        return EMPTY_SCOPE;
+        return super.getScope(context);
     }
 
-    private getTableColumnsScope(table: TableDefinition): Scope {
-        return new StreamScope(
-            stream(table.columns).map(c => this.astNodeDescriptionProvider.createDescription(c, c.name))
-        );
+    private getColumnsForSelectStatement(context: ReferenceInfo, selectStatement: SelectStatement): Scope {
+        if(selectStatement.from) {
+            const astDescriptions: AstNodeDescription[] = [];
+            for (const source of selectStatement.from.sources.list) {
+                if(!source.item.name && source.item.tableName.table.ref) {
+                    for (const column of source.item.tableName.table.ref.columns) {
+                        astDescriptions.push(this.astNodeDescriptionProvider.createDescription(column, column.name));
+                    }
+                }
+            }
+            return new StreamScope(stream(astDescriptions));
+        }
+        return super.getScope(context);
     }
 
+    private getTablesFromGlobalScope(_context: ReferenceInfo): Scope {
+        return new StreamScope(this.indexManager.allElements('TableDefinition'));
+    }
 }

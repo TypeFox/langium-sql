@@ -4,7 +4,13 @@ entry SqlFile:
     statements+=Statement*;
 
 Statement:
-    TableDefinition | SelectQuery;
+    TableDefinition | SelectStatement | TypeDefinition;
+
+
+//DEFINITION/////////////////////////////////////////////////////////
+TypeDefinition:
+    'CREATE' 'TYPE' name=Identifier ';'
+    ;
 
 TableDefinition:
     'CREATE' 'TABLE' name=Identifier '('(
@@ -12,36 +18,56 @@ TableDefinition:
     )?')' ';';
 
 ColumnDefinition:
-    name=Identifier type=DataType;
+    name=Identifier dataType=[TypeDefinition:Identifier];
+//END DEFINITION/////////////////////////////////////////////////////////
 
-SelectQuery:
-    'SELECT' (
-        columns+=Expression (',' columns+=Expression)* trailingComma?=','?
-        | wildcard='*'
-    )? 'FROM' table=[TableDefinition:Identifier] ';';
+SelectStatement:
+    'SELECT'
+    selects=SelectElements
+    from=FromClause? 
+    //groupBy=GroupByClause?
+    //having=HavingClause?
+    //orderBy=OrderByClause?
+    //limit=LimitClause? 
+    ';';
+
+SelectElements:
+    elements+=SelectElement (',' elements+=SelectElement)*
+    ;
+    
+SelectElement:
+    {infer AllStar}'*'
+    | {infer TableRelated}variableName=TableVariableName '.' (allStar?='*'|columnName=ColumnName)
+    | Expression
+    ;
+    
+FromClause: 'FROM' sources=TableSources;
+
+TableSources: list+=TableSource (',' list+=TableSource)*;
+
+TableSource:
+    item=TableSourceItem joins+=JoinPart*
+    ;
+
+JoinPart:
+    'JOIN' nextItem=TableSourceItem ('ON' joinOn=Expression)?
+    ;
+
+TableSourceItem
+    : tableName=TableName ('AS'? name=Identifier)?
+    ;
+
+TableVariableName:
+    variable=[TableSourceItem:Identifier]
+    ;
+
+TableName: table=[TableDefinition:Identifier];
 
 Expression:
-    ColumnReference;
+    ColumnName;
 
-ColumnReference:
+ColumnName:
     column=[ColumnDefinition:Identifier];
-
-DataType:
-    BooleanDataType | IntegerDataType | StringDataType;
-
-BooleanDataType:
-    {infer BooleanDataType} 'boolean';
-
-IntegerDataType:
-    {infer IntegerDataType} 'integer';
-
-StringDataType:
-    (
-        'character' varying?='varying'?
-        | 'char'
-        | varying?='varchar'
-    )
-    ('(' length=INT ')')?;
 
 Identifier returns string:
     ID | QUOTE_ID;
@@ -49,8 +75,6 @@ Identifier returns string:
 hidden terminal WS: /\s+/;
 terminal ID: /[_a-zA-Z][\w_]*/;
 terminal QUOTE_ID: /"[^"]*"/;
-terminal INT returns number: /[0-9]+/;
-terminal STRING: /'[^']*'/;
 
 hidden terminal ML_COMMENT: /\/\*[\s\S]*?\*\//;
 hidden terminal SL_COMMENT: /\/\/[^\n\r]*/;

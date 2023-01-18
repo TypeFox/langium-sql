@@ -11,17 +11,26 @@
         "Programming Languages"
     ],
     "contributes": {
-        "languages": [{
-            "id": "sql",
-            "aliases": ["SQL", "sql"],
-            "extensions": [".sql"],
-            "configuration": "./language-configuration.json"
-        }],
-        "grammars": [{
-            "language": "sql",
-            "scopeName": "source.sql",
-            "path": "./syntaxes/sql.tmLanguage.json"
-        }]
+        "languages": [
+            {
+                "id": "sql",
+                "aliases": [
+                    "SQL",
+                    "sql"
+                ],
+                "extensions": [
+                    ".sql"
+                ],
+                "configuration": "./language-configuration.json"
+            }
+        ],
+        "grammars": [
+            {
+                "language": "sql",
+                "scopeName": "source.sql",
+                "path": "./syntaxes/sql.tmLanguage.json"
+            }
+        ]
     },
     "activationEvents": [
         "onLanguage:sql"
@@ -38,11 +47,15 @@
         "watch": "tsc -b tsconfig.json --watch",
         "lint": "eslint src --ext ts",
         "langium:generate": "langium generate",
-        "langium:watch": "langium generate --watch"
+        "langium:watch": "langium generate --watch",
+        "test": "vitest",
+        "coverage": "vitest run --coverage"
     },
     "dependencies": {
+        "@types/lodash": "^4.14.191",
         "chevrotain": "^10.4.2",
-        "langium": "0.6.0-next.62c127c",
+        "langium": "^1.0.0",
+        "lodash": "^4.17.21",
         "vscode-languageclient": "^8.0.2",
         "vscode-languageserver": "^8.0.2",
         "vscode-uri": "^3.0.6"
@@ -53,16 +66,17 @@
         "@typescript-eslint/eslint-plugin": "^5.44.0",
         "@typescript-eslint/parser": "^5.44.0",
         "eslint": "^8.28.0",
-        "langium-cli": "0.6.0-next.62c127c",
-        "typescript": "^4.6.2"
+        "langium-cli": "^1.0.0",
+        "typescript": "^4.6.2",
+        "vitest": "^0.27.2"
     },
     "repository": {
-      "type": "git",
-      "url": "https://github.com/langium/langium-sql"
+        "type": "git",
+        "url": "https://github.com/langium/langium-sql"
     },
     "bugs": "https://github.com/langium/langium-sql/issues",
     "author": {
-      "name": "TypeFox",
-      "url": "https://www.typefox.io"
+        "name": "TypeFox",
+        "url": "https://www.typefox.io"
     }
 }
