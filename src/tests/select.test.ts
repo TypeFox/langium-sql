@@ -174,7 +174,7 @@ describe("SELECT use cases", () => {
     });
   });
 
-  describe("SELECT CAST(1.815 AS INTEGER)", () => {
+  describe("SELECT CAST(1.815 AS NUMERIC(1, 2.3))", () => {
     let document: LangiumDocument<ast.SqlFile>;
     let selectStatement: ast.SelectStatement;
 
