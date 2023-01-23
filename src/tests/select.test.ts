@@ -65,7 +65,7 @@ describe("SELECT use cases", () => {
     });
 
     it("should have only linking errors", () => {
-      expectNoErrors(document, { exceptFor: 'validator' });
+      expectNoErrors(document, { exceptFor: "validator" });
       expect(
         document.references.filter((r) => r.error)[0].error!.message
       ).contain("tab_non_existing");
@@ -104,9 +104,26 @@ describe("SELECT use cases", () => {
     it("should have no errors", () => expectNoErrors(document));
 
     it("should link all select elements", () => {
-      expectSelectItemToBeColumnNameRelativeToVariable(selectStatement, 0, 't', 'tab', 'id');
-      expectSelectItemToBeColumnNameRelativeToVariable(selectStatement, 1, 's', 'tab', 'name');
-      expectSelectItemToBeAllStarRelativeToVariable(selectStatement, 2, 's', 'tab');
+      expectSelectItemToBeColumnNameRelativeToVariable(
+        selectStatement,
+        0,
+        "t",
+        "tab",
+        "id"
+      );
+      expectSelectItemToBeColumnNameRelativeToVariable(
+        selectStatement,
+        1,
+        "s",
+        "tab",
+        "name"
+      );
+      expectSelectItemToBeAllStarRelativeToVariable(
+        selectStatement,
+        2,
+        "s",
+        "tab"
+      );
     });
   });
 
@@ -118,7 +135,7 @@ describe("SELECT use cases", () => {
     });
 
     it("should have only linker errors", () => {
-      expectNoErrors(document, {exceptFor: 'validator'});
+      expectNoErrors(document, { exceptFor: "validator" });
       expect(
         document.references.filter((r) => r.error)[0].error!.message
       ).contain("wrong");
@@ -133,7 +150,7 @@ describe("SELECT use cases", () => {
     });
 
     it("should have only validator errors", () => {
-      expectNoErrors(document, {exceptFor: 'validator'});
+      expectNoErrors(document, { exceptFor: "validator" });
       expectValidationIssues(document, 2, ReportAs.DuplicatedVariableName.Code);
     });
   });
@@ -149,7 +166,7 @@ describe("SELECT use cases", () => {
 
     it("should be evaluated as number", () => {
       expectNoErrors(document);
-      expectSelectItemToBeNumeric(selectStatement, 0, 12345.54321E-10);
+      expectSelectItemToBeNumeric(selectStatement, 0, 12345.54321e-10);
     });
 
     it("should have no from clause", () => {
@@ -172,4 +189,3 @@ describe("SELECT use cases", () => {
     });
   });
 });
-
