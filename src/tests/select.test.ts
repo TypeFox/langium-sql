@@ -5,6 +5,7 @@
  ******************************************************************************/
 
 import { EmptyFileSystem, LangiumDocument } from "langium";
+import { resolve } from "path";
 import { describe, it, expect, beforeAll } from "vitest";
 import * as ast from "../language-server/generated/ast";
 import { ReportAs } from "../language-server/sql-error-codes";
@@ -26,7 +27,7 @@ describe("SELECT use cases", () => {
   let parse: (input: string) => Promise<LangiumDocument<ast.SqlFile>>;
 
   beforeAll(async () => {
-    parse = await parseHelper(services.Sql);
+    parse = await parseHelper(services.Sql, resolve(__dirname, 'select.test.sql'));
   });
 
   describe("SELECT * FROM tab", () => {

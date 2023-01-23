@@ -9,7 +9,23 @@ Statement:
 
 //DEFINITION/////////////////////////////////////////////////////////
 TypeDefinition:
-    'CREATE' 'TYPE' name=Identifier ';'
+    'CREATE' 'TYPE' name=TypeName '(' 
+       (properties+=TypeProperty (',' properties+=TypeProperty)*)?
+    ')' ';'
+    ;
+
+TypeName returns string:
+    Identifier+
+    ;
+
+TypeProperty:
+    name=Identifier type=TypeCall ('=' defaultValue=Expression)?
+    ;
+
+TypeCall:
+    type=[TypeDefinition:TypeName] ('(' 
+        values+=Expression (',' values+=Expression)*
+    ')')?
     ;
 
 TableDefinition:
@@ -18,7 +34,7 @@ TableDefinition:
     )?')' ';';
 
 ColumnDefinition:
-    name=Identifier dataType=[TypeDefinition:Identifier];
+    name=Identifier dataType=[TypeDefinition:TypeName];
 //END DEFINITION/////////////////////////////////////////////////////////
 
 SelectStatement:

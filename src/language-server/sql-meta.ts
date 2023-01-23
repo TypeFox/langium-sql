@@ -4,7 +4,15 @@
  * terms of the MIT License, which is available in the project root.
 ******************************************************************************/
 export type SqlTypeDefinitions = Record<string, SqlTypeDefinition>;
-export interface SqlTypeDefinition {}
+export interface SqlTypeDefinition {
+    properties: SqlTypeProperty[];
+}
+
+export interface SqlTypeProperty {
+    propertyName: string;
+    typeName: string;
+    defaultValue: any;
+}
 
 export type SqlColumnDefinitions = Record<string, SqlColumnDefinition>;
 export interface SqlColumnDefinition {
@@ -12,3 +20,4 @@ export interface SqlColumnDefinition {
 }
 
 export type SqlTableDefinitions = Record<string, SqlColumnDefinitions>;
+

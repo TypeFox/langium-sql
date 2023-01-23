@@ -19,7 +19,11 @@ import {
   SqlGeneratedModule,
   SqlGeneratedSharedModule,
 } from "./generated/module";
-import { SqlTableDefinitions, SqlTypeDefinitions } from "./sql-meta";
+import {
+  SqlTableDefinitions,
+  SqlTypeDefinition,
+  SqlTypeDefinitions,
+} from "./sql-meta";
 import { SqlScopeProvider } from "./sql-scope";
 import { SqlValidationRegistry, SqlValidator } from "./sql-validator";
 import { SqlWorkspaceManager } from "./sql-workspace-manager";
@@ -34,10 +38,6 @@ export type SqlAddedServices = {
 };
 
 export type SqlSharedServices = {
-  sql: {
-    dataTypes: SqlTypeDefinitions;
-    tables: SqlTableDefinitions;
-  };
   workspace: {
     WorkspaceManager: SqlWorkspaceManager;
   };
@@ -47,19 +47,6 @@ export const SqlSharedModule: Module<
   LangiumSharedServices & SqlSharedServices,
   PartialLangiumSharedServices & SqlSharedServices
 > = {
-  sql: {
-    dataTypes: () => ({
-      TEXT: {},
-      INT: {},
-      BOOLEAN: {},
-    }),
-    tables: () => ({
-      tab: {
-        id: { dataTypeName: "INT" },
-        name: { dataTypeName: "TEXT" },
-      },
-    }),
-  },
   workspace: {
     WorkspaceManager: (services) => new SqlWorkspaceManager(services),
   },

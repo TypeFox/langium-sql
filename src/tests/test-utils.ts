@@ -8,13 +8,19 @@ import { expect } from "vitest";
 import * as ast from "../language-server/generated/ast";
 import { SqlServices } from "../language-server/sql-module";
 import { URI } from "vscode-uri";
+import { readFile } from "fs/promises";
 
 export async function parseHelper(
-  services: SqlServices
+  services: SqlServices,
+  definitionsPath: string
 ): Promise<(input: string) => Promise<LangiumDocument<ast.SqlFile>>> {
   const metaData = services.LanguageMetaData;
   const documentBuilder = services.shared.workspace.DocumentBuilder;
   await services.shared.workspace.WorkspaceManager.initializeWorkspace([]);
+  const defsContent = await readFile(definitionsPath, 'utf-8');
+  const defs = services.shared.workspace.LangiumDocumentFactory.fromString(defsContent, URI.parse(`inmemory://definitions.sql`));
+  services.shared.workspace.LangiumDocuments.addDocument(defs);
+  await documentBuilder.build([defs], {validationChecks: 'all'});
   return async (input) => {
     const randomNumber = Math.floor(Math.random() * 10000000) + 1000000;
     const uri = URI.parse(
