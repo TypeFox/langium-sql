@@ -1,40 +1,21 @@
 grammar Sql
 
 entry SqlFile:
-    statements+=Statement*;
+    statements+=Statement*
+    ;
 
 Statement:
-    TableDefinition | SelectStatement | TypeDefinition;
+    TableDefinition | SelectStatement;
 
 
 //DEFINITION/////////////////////////////////////////////////////////
-TypeDefinition:
-    'CREATE' 'TYPE' name=TypeName '(' 
-       (properties+=TypeProperty (',' properties+=TypeProperty)*)?
-    ')' ';'
-    ;
-
-TypeName returns string:
-    Identifier+
-    ;
-
-TypeProperty:
-    name=Identifier type=TypeCall ('=' defaultValue=Expression)?
-    ;
-
-TypeCall:
-    type=[TypeDefinition:TypeName] ('(' 
-        values+=Expression (',' values+=Expression)*
-    ')')?
-    ;
-
 TableDefinition:
     'CREATE' 'TABLE' name=Identifier '('(
         columns+=ColumnDefinition (',' columns+=ColumnDefinition)*
     )?')' ';';
 
 ColumnDefinition:
-    name=Identifier dataType=[TypeDefinition:TypeName];
+    name=Identifier dataType=Type;
 //END DEFINITION/////////////////////////////////////////////////////////
 
 SelectStatement:
@@ -92,6 +73,19 @@ Identifier returns string:
     ID | QUOTE_ID;
 
 Numeric: value=NUMBER;
+
+Type infers Type: 
+    {infer BooleanType} 'BOOLEAN'
+    //@see https://crate.io/docs/sql-99/en/latest//chapters/03.html
+    | {infer SmallIntType} 'SMALLINT'
+    | {infer IntegerType} ('INTEGER'|'INT')
+    | {infer NumericType} 'NUMERIC' ('(' precision=IntegerLiteral (',' scale=IntegerLiteral)? ')')?
+    | {infer FloatType} 'FLOAT' ('(' precision=IntegerLiteral ')')?
+    | {infer DecimalType} ('DECIMAL'|'DEC') ('(' precision=IntegerLiteral (',' scale=IntegerLiteral)? ')')?
+    | {infer RealType} 'REAL'
+    | {infer DoublePrecisionType} 'DOUBLE' 'PRECISION'
+    ; 
+IntegerLiteral: value=NUMBER;
 
 hidden terminal WS: /\s+/;
 terminal ID: /[_a-zA-Z][\w_]*/;

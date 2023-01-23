@@ -5,7 +5,6 @@
  ******************************************************************************/
 
 import { EmptyFileSystem, LangiumDocument } from "langium";
-import { resolve } from "path";
 import { describe, it, expect, beforeAll } from "vitest";
 import * as ast from "../language-server/generated/ast";
 import { ReportAs } from "../language-server/sql-error-codes";
@@ -28,7 +27,7 @@ describe("SELECT use cases", () => {
   let parse: (input: string) => Promise<LangiumDocument<ast.SqlFile>>;
 
   beforeAll(async () => {
-    parse = await parseHelper(services.Sql, resolve(__dirname, 'select.test.sql'));
+    parse = await parseHelper(services.Sql, __dirname);
   });
 
   describe("SELECT * FROM tab", () => {
@@ -54,7 +53,7 @@ describe("SELECT use cases", () => {
 
     it("should select all-star", () => {
       expect(selectStatement.select.elements).toHaveLength(1);
-      expect(selectStatement.select.elements[0]).toBe(ast.AllStar);
+      expect(selectStatement.select.elements[0].$type).toBe(ast.AllStar);
     });
   });
 
