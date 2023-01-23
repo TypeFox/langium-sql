@@ -139,18 +139,18 @@ describe("SELECT use cases", () => {
     });
   });
 
-  describe("SELECT 12345.54321", () => {
+  describe("SELECT 12345.54321E-10", () => {
     let document: LangiumDocument<ast.SqlFile>;
     let selectStatement: ast.SelectStatement;
 
     beforeAll(async () => {
-      document = await parse("SELECT 12345.54321;");
+      document = await parse("SELECT 12345.54321E-10;");
       selectStatement = asSelectStatement(document);
     });
 
     it("should be evaluated as number", () => {
       expectNoErrors(document);
-      expectSelectItemToBeNumeric(selectStatement, 0, 12345.54321);
+      expectSelectItemToBeNumeric(selectStatement, 0, 12345.54321E-10);
     });
 
     it("should have no from clause", () => {

@@ -96,7 +96,7 @@ Numeric: value=NUMBER;
 hidden terminal WS: /\s+/;
 terminal ID: /[_a-zA-Z][\w_]*/;
 terminal QUOTE_ID: /"[^"]*"/;
-terminal NUMBER returns number: /[0-9]+(\.[0-9]+)?/;
+terminal NUMBER returns number: /\d+(\.\d+([eE][\-+]?\d+)?)?/;
 
 hidden terminal ML_COMMENT: /\/\*[\s\S]*?\*\//;
 hidden terminal SL_COMMENT: /\/\/[^\n\r]*/;
