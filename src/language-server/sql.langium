@@ -64,6 +64,11 @@ Expression:
     ColumnName
     | {infer TableRelatedColumn}variableName=TableVariableName '.' columnName=ColumnName
     | Numeric
+    | CastExpression
+    ;
+
+CastExpression:
+    'CAST' '(' expr=Expression 'AS' type=Type ')'
     ;
 
 ColumnName:

@@ -18,7 +18,8 @@ export class SqlValidationRegistry extends ValidationRegistry {
         super(services);
         const validator = services.validation.SqlValidator;
         const checks: ValidationChecks<ast.SqlAstType> = {
-            SelectStatement: [validator.checkVariableNamesAreUnique]
+            SelectStatement: [validator.checkVariableNamesAreUnique],
+            IntegerLiteral: [validator.checkIntegerLiteralIsWholeNumber]
         };
         this.register(checks, validator);
     }
@@ -34,6 +35,12 @@ export class SqlValidator {
             for (const member of group) {
                 ReportAs.DuplicatedVariableName(member.item, {name: key}, accept)
             }
+        }
+    }
+
+    checkIntegerLiteralIsWholeNumber(literal: ast.IntegerLiteral, accept: ValidationAcceptor): void {
+        if(Math.floor(literal.value) !== literal.value) {
+            ReportAs.NumericValueIsNotInteger(literal, {value: literal.value}, accept)
         }
     }
 }

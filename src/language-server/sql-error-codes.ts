@@ -32,6 +32,11 @@ interface Nameable {
     name: string;
 }
 
+
+interface NumericValue {
+    value: number;
+}
+
 export const ReportAs = {
     DuplicatedVariableName: SqlErrorFactory.create<ast.TableSourceItem, Nameable>(
         'SQL00001',
@@ -39,4 +44,10 @@ export const ReportAs = {
         ({name}) => `Duplicated variable name '${name}'.`,
         node => ({node, property: "name"})
     ),
+    NumericValueIsNotInteger: SqlErrorFactory.create<ast.IntegerLiteral, NumericValue>(
+        'SQL00002',
+        'error',
+        ({value}) => `Value '${value}' is not an integer.`,
+        node => ({node, property: "value"})
+    )
 };
