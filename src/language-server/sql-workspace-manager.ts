@@ -3,7 +3,7 @@
  * This program and the accompanying materials are made available under the
  * terms of the MIT License, which is available in the project root.
 ******************************************************************************/
-import { AstNode, DefaultWorkspaceManager, LangiumDocument, LangiumDocumentFactory, LangiumSharedServices, linkContentToContainer, streamAst } from "langium";
+import { AstNode, DefaultWorkspaceManager, LangiumDocument, LangiumDocumentFactory, LangiumSharedServices } from "langium";
 import { SqlSharedServices } from "./sql-module";
 import { URI } from 'vscode-uri';
 import { WorkspaceFolder } from "vscode-languageserver";

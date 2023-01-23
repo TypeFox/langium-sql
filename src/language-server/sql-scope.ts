@@ -9,7 +9,7 @@ import {
     AstNodeDescriptionProvider, DefaultScopeProvider, getContainerOfType, hasContainerOfType, LangiumServices, ReferenceInfo,
     Scope, stream, StreamScope
 } from 'langium';
-import { isColumnName, isSelectStatement, isTableName, isTableRelated, isTableVariableName, SelectStatement } from './generated/ast';
+import { isColumnName, isSelectStatement, isTableName, isTableRelatedColumn, isTableVariableName, SelectStatement } from './generated/ast';
 
 export class SqlScopeProvider extends DefaultScopeProvider {
 
@@ -22,8 +22,8 @@ export class SqlScopeProvider extends DefaultScopeProvider {
 
     override getScope(context: ReferenceInfo): Scope {
         if(isColumnName(context.container) && context.property === 'column') {
-            if(hasContainerOfType(context.container, isTableRelated)) {
-                const tableRelated = getContainerOfType(context.container, isTableRelated)!;
+            if(hasContainerOfType(context.container, isTableRelatedColumn)) {
+                const tableRelated = getContainerOfType(context.container, isTableRelatedColumn)!;
                 const columns = tableRelated.variableName.variable.ref!.tableName.table.ref!.columns;
                 return new StreamScope(stream(columns.map(c => this.astNodeDescriptionProvider.createDescription(c, c.name))));
             } else {
