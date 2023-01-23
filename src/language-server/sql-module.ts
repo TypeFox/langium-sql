@@ -19,11 +19,6 @@ import {
   SqlGeneratedModule,
   SqlGeneratedSharedModule,
 } from "./generated/module";
-import {
-  SqlTableDefinitions,
-  SqlTypeDefinition,
-  SqlTypeDefinitions,
-} from "./sql-meta";
 import { SqlScopeProvider } from "./sql-scope";
 import { SqlValidationRegistry, SqlValidator } from "./sql-validator";
 import { SqlWorkspaceManager } from "./sql-workspace-manager";

@@ -4,7 +4,6 @@
  * terms of the MIT License, which is available in the project root.
 ******************************************************************************/
 import { AstNode, DefaultWorkspaceManager, LangiumDocument, LangiumDocumentFactory, LangiumSharedServices, linkContentToContainer, streamAst } from "langium";
-import { SqlTableDefinitions, SqlTypeDefinitions } from "./sql-meta";
 import { SqlSharedServices } from "./sql-module";
 import { URI } from 'vscode-uri';
 import { WorkspaceFolder } from "vscode-languageserver";

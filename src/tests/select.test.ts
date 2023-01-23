@@ -19,6 +19,7 @@ import {
   expectSelectItemToBeColumnName,
   expectSelectItemToBeColumnNameRelativeToVariable,
   expectValidationIssues,
+  expectSelectItemToBeNumeric,
 } from "./test-utils";
 
 const services = createSqlServices(EmptyFileSystem);
@@ -52,8 +53,8 @@ describe("SELECT use cases", () => {
     });
 
     it("should select all-star", () => {
-      expect(selectStatement.selects.elements).toHaveLength(1);
-      expect(selectStatement.selects.elements[0].$type).toBe(ast.AllStar);
+      expect(selectStatement.select.elements).toHaveLength(1);
+      expect(selectStatement.select.elements[0]).toBe(ast.AllStar);
     });
   });
 
@@ -135,6 +136,25 @@ describe("SELECT use cases", () => {
     it("should have only validator errors", () => {
       expectNoErrors(document, {exceptFor: 'validator'});
       expectValidationIssues(document, 2, ReportAs.DuplicatedVariableName.Code);
+    });
+  });
+
+  describe("SELECT 12345.54321", () => {
+    let document: LangiumDocument<ast.SqlFile>;
+    let selectStatement: ast.SelectStatement;
+
+    beforeAll(async () => {
+      document = await parse("SELECT 12345.54321;");
+      selectStatement = asSelectStatement(document);
+    });
+
+    it("should be evaluated as number", () => {
+      expectNoErrors(document);
+      expectSelectItemToBeNumeric(selectStatement, 0, 12345.54321);
+    });
+
+    it("should have no from clause", () => {
+      expect(selectStatement.from).toBeUndefined();
     });
   });
 });

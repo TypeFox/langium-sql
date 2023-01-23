@@ -39,7 +39,7 @@ ColumnDefinition:
 
 SelectStatement:
     'SELECT'
-    selects=SelectElements
+    select=SelectElements
     from=FromClause? 
     //groupBy=GroupByClause?
     //having=HavingClause?
@@ -53,7 +53,7 @@ SelectElements:
     
 SelectElement:
     {infer AllStar}'*'
-    | {infer TableRelated}variableName=TableVariableName '.' (allStar?='*'|columnName=ColumnName)
+    | {infer AllTable}variableName=TableVariableName '.' '*'
     | Expression
     ;
     
@@ -80,7 +80,10 @@ TableVariableName:
 TableName: table=[TableDefinition:Identifier];
 
 Expression:
-    ColumnName;
+    ColumnName
+    | {infer TableRelatedColumn}variableName=TableVariableName '.' columnName=ColumnName
+    | Numeric
+    ;
 
 ColumnName:
     column=[ColumnDefinition:Identifier];
@@ -88,9 +91,12 @@ ColumnName:
 Identifier returns string:
     ID | QUOTE_ID;
 
+Numeric: value=NUMBER;
+
 hidden terminal WS: /\s+/;
 terminal ID: /[_a-zA-Z][\w_]*/;
 terminal QUOTE_ID: /"[^"]*"/;
+terminal NUMBER returns number: /[0-9]+(\.[0-9]+)?/;
 
 hidden terminal ML_COMMENT: /\/\*[\s\S]*?\*\//;
 hidden terminal SL_COMMENT: /\/\/[^\n\r]*/;

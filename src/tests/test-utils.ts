@@ -73,13 +73,25 @@ export function expectSelectItemToBeColumnName(
   tableName: string,
   columnName: string
 ) {
-  expect(selectStatement.selects.elements.length).toBeGreaterThan(
+  expect(selectStatement.select.elements.length).toBeGreaterThan(
     selectElementIndex
   );
-  const element = selectStatement.selects.elements[selectElementIndex];
-  expect(element.$type).toBe(ast.ColumnName);
+  const element = selectStatement.select.elements[selectElementIndex];
   expect((element as ast.ColumnName).column.ref!.name).toBe(columnName);
   expect((element as ast.ColumnName).column.ref!.$container.name).toBe(tableName);
+}
+
+export function expectSelectItemToBeNumeric(
+  selectStatement: ast.SelectStatement,
+  selectElementIndex: number,
+  value: number
+) {
+  expect(selectStatement.select.elements.length).toBeGreaterThan(
+    selectElementIndex
+  );
+  const element = selectStatement.select.elements[selectElementIndex];
+  expect(element.$type).toBe(ast.Numeric);
+  expect((element as ast.Numeric).value).toBe(value);
 }
 
 export function expectSelectItemToBeColumnNameRelativeToVariable(
@@ -89,14 +101,13 @@ export function expectSelectItemToBeColumnNameRelativeToVariable(
   tableName: string,
   columnName: string
 ) {
-  expect(selectStatement.selects.elements.length).toBeGreaterThan(
+  expect(selectStatement.select.elements.length).toBeGreaterThan(
     selectElementIndex
   );
-  const element = selectStatement.selects.elements[selectElementIndex];
-  expect(element.$type).toBe(ast.TableRelated);
-  expect((element as ast.TableRelated).variableName.variable.ref!.name).toBe(variableName);
-  expect((element as ast.TableRelated).variableName.variable.ref!.tableName.table.ref!.name).toBe(tableName);
-  expect((element as ast.TableRelated).columnName!.column.ref!.name).toBe(columnName);
+  const element = selectStatement.select.elements[selectElementIndex];
+  expect((element as ast.TableRelatedColumn).variableName.variable.ref!.name).toBe(variableName);
+  expect((element as ast.TableRelatedColumn).variableName.variable.ref!.tableName.table.ref!.name).toBe(tableName);
+  expect((element as ast.TableRelatedColumn).columnName!.column.ref!.name).toBe(columnName);
 }
 
 export function expectSelectItemToBeAllStarRelativeToVariable(
@@ -105,14 +116,12 @@ export function expectSelectItemToBeAllStarRelativeToVariable(
   variableName: string,
   tableName: string
 ) {
-  expect(selectStatement.selects.elements.length).toBeGreaterThan(
+  expect(selectStatement.select.elements.length).toBeGreaterThan(
     selectElementIndex
   );
-  const element = selectStatement.selects.elements[selectElementIndex];
-  expect(element.$type).toBe(ast.TableRelated);
-  expect((element as ast.TableRelated).allStar).toBeTruthy();
-  expect((element as ast.TableRelated).variableName.variable.ref!.name).toBe(variableName);
-  expect((element as ast.TableRelated).variableName.variable.ref!.tableName.table.ref!.name).toBe(tableName);
+  const element = selectStatement.select.elements[selectElementIndex];
+  expect((element as ast.AllTable).variableName.variable.ref!.name).toBe(variableName);
+  expect((element as ast.AllTable).variableName.variable.ref!.tableName.table.ref!.name).toBe(tableName);
 }
 
 export function expectValidationIssues(document: LangiumDocument<ast.SqlFile>, count: number, code: string) {
