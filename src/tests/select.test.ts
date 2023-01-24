@@ -187,7 +187,7 @@ describe("SELECT use cases", () => {
       selectStatement = asSelectStatement(document);
     });
 
-    it("should be evaluated as number", () => {
+    it("should have no errors", () => {
       expectNoErrors(document);
     });
 

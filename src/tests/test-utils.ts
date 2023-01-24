@@ -61,7 +61,7 @@ export function expectNoErrors(
 export function asSelectStatement(result: LangiumDocument<ast.SqlFile>) {
   const file = result.parseResult.value;
   expect(file.statements).toHaveLength(1);
-  expect(file.statements[0].$type === "SelectStatement");
+  expect(file.statements[0].$type).toBe("SelectStatement");
   return file.statements[0] as ast.SelectStatement;
 }
 
@@ -122,13 +122,13 @@ export function expectSelectItemToBeColumnNameRelativeToVariable(
   );
   const element = selectStatement.select.elements[selectElementIndex];
   expect(
-    (element as ast.TableRelatedColumn).variableName.variable.ref!.name
+    (element as ast.TableRelatedColumnExpression).variableName.variable.ref!.name
   ).toBe(variableName);
   expect(
-    (element as ast.TableRelatedColumn).variableName.variable.ref!.tableName
+    (element as ast.TableRelatedColumnExpression).variableName.variable.ref!.tableName
       .table.ref!.name
   ).toBe(tableName);
-  expect((element as ast.TableRelatedColumn).columnName!.column.ref!.name).toBe(
+  expect((element as ast.TableRelatedColumnExpression).columnName!.column.ref!.name).toBe(
     columnName
   );
 }

@@ -5,7 +5,7 @@ entry SqlFile:
     ;
 
 Statement:
-    TableDefinition | SelectStatement;
+    FunctionDefinition | TableDefinition | SelectStatement;
 
 
 //DEFINITION/////////////////////////////////////////////////////////
@@ -16,6 +16,15 @@ TableDefinition:
 
 ColumnDefinition:
     name=Identifier dataType=Type;
+
+FunctionDefinition:
+    'CREATE' 'FUNCTION' name=Identifier '('
+        (params+=FormalParameterDefinition (',' params+=FormalParameterDefinition)*)?
+    ')' 'AS' returnType=Type ';';
+
+FormalParameterDefinition:
+    name=Identifier dataType=Type
+    ;
 //END DEFINITION/////////////////////////////////////////////////////////
 
 SelectStatement:
@@ -60,15 +69,48 @@ TableVariableName:
 
 TableName: table=[TableDefinition:Identifier];
 
-Expression:
+Expression: OrExpression;
+
+OrExpression infers Expression:
+    AndExpression ({infer BinaryExpression.left=current} operator='OR' right=AndExpression)*
+    ;
+
+AndExpression infers Expression:
+    EqExpression ({infer BinaryExpression.left=current} operator='AND' right=EqExpression)*
+    ;
+
+EqExpression infers Expression:
+    RelationalExpression ({infer BinaryExpression.left=current} operator=('='|'<>') right=RelationalExpression)*
+    ;
+
+RelationalExpression infers Expression:
+    AdditiveExpression ({infer BinaryExpression.left=current} operator=('<='|'>='|'<'|'>') right=AdditiveExpression)*
+    ;
+
+AdditiveExpression infers Expression:
+    MultiplicativeExpression ({infer BinaryExpression.left=current} operator=('+'|'-') right=MultiplicativeExpression)*
+    ;
+
+MultiplicativeExpression infers Expression:
+    PrimaryExpression ({infer BinaryExpression.left=current} operator=('*'|'/'|'%') right=PrimaryExpression)*
+    ;
+
+PrimaryExpression:
     ColumnName
-    | {infer TableRelatedColumn}variableName=TableVariableName '.' columnName=ColumnName
+    | {infer TableRelatedColumnExpression}variableName=TableVariableName '.' columnName=ColumnName
     | NumericExpression
     | CastExpression
+    | {infer UnaryExpression} operator=('NOT'|'-'|'+') value=PrimaryExpression
+    | {infer ParenthesisExpression} '(' expression=Expression ')'
+    | {infer FunctionCall} functionName=FunctionName '(' params=SelectElements? ')'
     ;
 
 CastExpression:
     'CAST' '(' expr=Expression 'AS' type=Type ')'
+    ;
+
+FunctionName:
+    function=[FunctionDefinition:Identifier]
     ;
 
 ColumnName:
@@ -90,6 +132,7 @@ Type infers Type:
     | {infer RealType} 'REAL'
     | {infer DoublePrecisionType} 'DOUBLE' 'PRECISION'
     ; 
+
 IntegerLiteral: value=NUMBER;
 
 hidden terminal WS: /\s+/;

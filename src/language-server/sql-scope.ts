@@ -20,7 +20,7 @@ import {
   isColumnName,
   isSelectStatement,
   isTableName,
-  isTableRelatedColumn,
+  isTableRelatedColumnExpression,
   isTableVariableName,
   SelectStatement,
 } from "./generated/ast";
@@ -36,10 +36,10 @@ export class SqlScopeProvider extends DefaultScopeProvider {
 
   override getScope(context: ReferenceInfo): Scope {
     if (isColumnName(context.container) && context.property === "column") {
-      if (hasContainerOfType(context.container, isTableRelatedColumn)) {
+      if (hasContainerOfType(context.container, isTableRelatedColumnExpression)) {
         const tableRelated = getContainerOfType(
           context.container,
-          isTableRelatedColumn
+          isTableRelatedColumnExpression
         )!;
         const columns =
           tableRelated.variableName.variable.ref!.tableName.table.ref!.columns;

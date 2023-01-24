@@ -4,7 +4,7 @@
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
 import { describe, expect, it } from "vitest";
-import { getTypeOfNumericLiteral } from "../language-server/sql-type-utilities";
+import { computeTypeOfNumericLiteral } from "../language-server/sql-type-utilities";
 
 describe('Type system utilities', () => {
   it.each([
@@ -14,7 +14,7 @@ describe('Type system utilities', () => {
     ['1E3', 'numeric', 4, 0],
     ['123456', 'numeric', 6, 0],
   ])('typeof(%s) === {%s, prec: %i, scale: %i}', (input: string, discriminator: string, precision?: number, scale?: number) => {
-    expect(getTypeOfNumericLiteral(input)!).toEqual({
+    expect(computeTypeOfNumericLiteral(input)!).toEqual({
       discriminator,
       precision,
       scale

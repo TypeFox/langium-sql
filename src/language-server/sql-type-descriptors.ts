@@ -4,41 +4,64 @@
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
 
-export type TypeDescriptorDiscriminator = 
-  | 'boolean'
-  | 'smallint'
-  | 'integer'
-  | 'numeric'
-  | 'float'
-  | 'decimal'
-  | 'real'
-  | 'double'
-  ;
+export type NumberishTypeDescriptorDiscriminator =
+  | "smallint"
+  | "integer"
+  | "numeric"
+  | "float"
+  | "decimal"
+  | "real"
+  | "double";
+
+export type TypeDescriptorDiscriminator =
+  | "boolean"
+  | NumberishTypeDescriptorDiscriminator;
+
+export function isTypeABoolean(
+  type: TypeDescriptor
+): type is BooleanTypeDesciptor {
+  return type.discriminator === 'boolean';
+}
+
+export function isTypeANumber(
+  type: TypeDescriptor
+): type is NumberishTypeDescriptor {
+  return [
+    "smallint",
+    "integer",
+    "numeric",
+    "float",
+    "decimal",
+    "real",
+    "double",
+  ].includes(type.discriminator);
+}
 
 export interface TypeDescriptorBase {
   discriminator: TypeDescriptorDiscriminator;
 }
 
 export interface ParameterlessNumericTypedescriptor extends TypeDescriptorBase {
-  discriminator: 'smallint'|'integer'|'real'|'double';
+  discriminator: "smallint" | "integer" | "real" | "double";
 }
 
-export interface PreciseNumericTypedescriptor extends TypeDescriptorBase {
-  discriminator: 'float';
+export interface PreciseNumericTypeDescriptor extends TypeDescriptorBase {
+  discriminator: "float";
   precision: number;
 }
 
-export interface ScaledNumericTypedescriptor extends TypeDescriptorBase {
-  discriminator: 'numeric'|'decimal';
+export interface ScaledNumericTypeDescriptor extends TypeDescriptorBase {
+  discriminator: "numeric" | "decimal";
   precision: number;
   scale: number;
 }
 
-export interface BooleanTypeDesciptor extends TypeDescriptorBase { 
-  discriminator: 'boolean';
+export interface BooleanTypeDesciptor extends TypeDescriptorBase {
+  discriminator: "boolean";
 }
-export type TypeDescriptor = BooleanTypeDesciptor
-| ParameterlessNumericTypedescriptor
-| ScaledNumericTypedescriptor
-| PreciseNumericTypedescriptor
-;
+
+export type NumberishTypeDescriptor =
+  | ParameterlessNumericTypedescriptor
+  | ScaledNumericTypeDescriptor
+  | PreciseNumericTypeDescriptor;
+export type TypeDescriptor = BooleanTypeDesciptor | NumberishTypeDescriptor;
