@@ -4,7 +4,7 @@
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
 import _ from "lodash";
-import { BinaryExpression } from "./generated/ast";
+import { BinaryExpression, UnaryExpression } from "./generated/ast";
 import { isTypeANumber, TypeDescriptor } from "./sql-type-descriptors";
 
 const NumericLiteralPattern = /^(\d+)((\.(\d)+)?([eE]([\-+]?\d+))?)?$/;
@@ -55,5 +55,10 @@ export function computeTypeOfBinaryOperation(operator: BinaryExpression['operato
     default:
       assertUnreachable(operator);
   }
+  return undefined;
+}
+
+export function computeTypeOfUnaryOperation(operator: UnaryExpression['operator'], operandType: TypeDescriptor): TypeDescriptor|undefined {
+  //TODO do it properly
   return undefined;
 }

@@ -5,9 +5,9 @@
  ******************************************************************************/
 import { AstNode } from "langium";
 import _ from "lodash";
-import { Expression, isBooleanType, isFloatType, isCastExpression, isColumnName, isDecimalType, isDoublePrecisionType, isExpression, isIntegerType, isNumericType, isRealType, isSmallIntType, Type, isNumericExpression, isTableRelatedColumnExpression, isBinaryExpression } from "./generated/ast";
+import { Expression, isBooleanType, isFloatType, isCastExpression, isColumnName, isDecimalType, isDoublePrecisionType, isExpression, isIntegerType, isNumericType, isRealType, isSmallIntType, Type, isNumericExpression, isTableRelatedColumnExpression, isBinaryExpression, isUnaryExpression, isParenthesisExpression } from "./generated/ast";
 import { TypeDescriptor } from "./sql-type-descriptors";
-import { assertUnreachable, computeTypeOfBinaryOperation, computeTypeOfNumericLiteral } from "./sql-type-utilities";
+import { assertUnreachable, computeTypeOfBinaryOperation, computeTypeOfNumericLiteral, computeTypeOfUnaryOperation } from "./sql-type-utilities";
 
 export type ComputeTypeFunction = (node: AstNode) => TypeDescriptor|undefined;
 export const createCachedComputeType = function(): ComputeTypeFunction {
@@ -30,6 +30,13 @@ export const createCachedComputeType = function(): ComputeTypeFunction {
     if(isTableRelatedColumnExpression(node)) {
       const dataType = node.columnName.column.ref?.dataType;
       return dataType ? getTypeOfDataType(dataType) : undefined;
+    }
+    if(isParenthesisExpression(node)) {
+      return computeType(node.expression);
+    }
+    if(isUnaryExpression(node)) {
+      const operandType = computeType(node.value);
+      return operandType ? computeTypeOfUnaryOperation(node.operator, operandType) : undefined;
     }
     if(isColumnName(node)) {
       const dataType = node.column.ref?.dataType;
