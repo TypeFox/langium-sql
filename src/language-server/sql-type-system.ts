@@ -9,8 +9,8 @@ import { Expression, isBooleanType, isFloatType, isCastExpression, isColumnName,
 import { TypeDescriptor } from "./sql-type-descriptors";
 import { getTypeOfNumericLiteral } from "./sql-type-utilities";
 
-
-export const createCachedComputeType = function() {
+export type ComputeTypeFunction = (node: AstNode) => TypeDescriptor|undefined;
+export const createCachedComputeType = function(): ComputeTypeFunction {
   return _.memoize(function computeType(node: AstNode): TypeDescriptor | undefined {
     if(isExpression(node)) {
       return getExpressionType(node);

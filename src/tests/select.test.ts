@@ -9,6 +9,7 @@ import { describe, it, expect, beforeAll } from "vitest";
 import * as ast from "../language-server/generated/ast";
 import { ReportAs } from "../language-server/sql-error-codes";
 import { createSqlServices } from "../language-server/sql-module";
+import { ComputeTypeFunction, createCachedComputeType } from "../language-server/sql-type-system";
 import {
   parseHelper,
   expectNoErrors,
@@ -19,14 +20,17 @@ import {
   expectSelectItemToBeColumnNameRelativeToVariable,
   expectValidationIssues,
   expectSelectItemToBeNumeric,
+  expectSelectItemToBeCastToType,
 } from "./test-utils";
 
 const services = createSqlServices(EmptyFileSystem);
 
 describe("SELECT use cases", () => {
+  let computeType: ComputeTypeFunction;
   let parse: (input: string) => Promise<LangiumDocument<ast.SqlFile>>;
 
   beforeAll(async () => {
+    computeType = createCachedComputeType();
     parse = await parseHelper(services.Sql, __dirname);
   });
 
@@ -167,6 +171,28 @@ describe("SELECT use cases", () => {
     it("should be evaluated as number", () => {
       expectNoErrors(document);
       expectSelectItemToBeNumeric(selectStatement, 0, 12345.54321e-10);
+    });
+
+    it("should have no from clause", () => {
+      expect(selectStatement.from).toBeUndefined();
+    });
+  });
+
+  describe("SELECT CAST (12345 AS NUMERIC)", () => {
+    let document: LangiumDocument<ast.SqlFile>;
+    let selectStatement: ast.SelectStatement;
+
+    beforeAll(async () => {
+      document = await parse("SELECT CAST (12345 AS NUMERIC);");
+      selectStatement = asSelectStatement(document);
+    });
+
+    it("should be evaluated as number", () => {
+      expectNoErrors(document);
+    });
+
+    it("should be evaluated as number", () => {
+      expectSelectItemToBeCastToType(computeType, selectStatement, 0, 'numeric');
     });
 
     it("should have no from clause", () => {

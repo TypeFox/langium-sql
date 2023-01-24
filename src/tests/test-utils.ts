@@ -8,6 +8,8 @@ import { expect } from "vitest";
 import * as ast from "../language-server/generated/ast";
 import { SqlServices } from "../language-server/sql-module";
 import { URI } from "vscode-uri";
+import { TypeDescriptorDiscriminator } from "../language-server/sql-type-descriptors";
+import { ComputeTypeFunction } from "../language-server/sql-type-system";
 export async function parseHelper(
   services: SqlServices,
   folder: string
@@ -159,4 +161,18 @@ export function expectValidationIssues(
     (d) => d.code === code
   );
   expect(issuesByGivenCode.length).toBe(count);
+}
+
+export function expectSelectItemToBeCastToType(
+  computeType: ComputeTypeFunction,
+  selectStatement: ast.SelectStatement,
+  selectElementIndex: number,
+  type: TypeDescriptorDiscriminator
+) {
+  expect(selectStatement.select.elements.length).toBeGreaterThan(
+    selectElementIndex
+  );
+  const element = selectStatement.select.elements[selectElementIndex];
+  expect(element.$type).toBe(ast.CastExpression);
+  expect(computeType(element)!.discriminator).toBe(type);
 }
