@@ -1,3 +1,8 @@
+/******************************************************************************
+ * Copyright 2023 TypeFox GmbH
+ * This program and the accompanying materials are made available under the
+ * terms of the MIT License, which is available in the project root.
+ ******************************************************************************/
 import { describe, expect, it } from "vitest";
 import { getTypeOfNumericLiteral } from "../language-server/sql-type-utilities";
 

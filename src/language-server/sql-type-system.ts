@@ -1,3 +1,8 @@
+/******************************************************************************
+ * Copyright 2023 TypeFox GmbH
+ * This program and the accompanying materials are made available under the
+ * terms of the MIT License, which is available in the project root.
+ ******************************************************************************/
 import { AstNode } from "langium";
 import _ from "lodash";
 import { Expression, isBooleanType, isFloatType, isCastExpression, isColumnName, isDecimalType, isDoublePrecisionType, isExpression, isIntegerType, isNumeric, isNumericType, isRealType, isSmallIntType, isTableRelatedColumn, Type } from "./generated/ast";
