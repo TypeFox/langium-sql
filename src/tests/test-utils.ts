@@ -106,8 +106,8 @@ export function expectSelectItemToBeNumeric(
     selectElementIndex
   );
   const element = selectStatement.select.elements[selectElementIndex];
-  expect(element.$type).toBe(ast.Numeric);
-  expect((element as ast.Numeric).value).toBe(value);
+  expect(element.$type).toBe(ast.NumericExpression);
+  expect((element as ast.NumericExpression).value).toBe(value);
 }
 
 export function expectSelectItemToBeColumnNameRelativeToVariable(

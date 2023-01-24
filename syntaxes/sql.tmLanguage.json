@@ -10,7 +10,7 @@
     },
     {
       "name": "keyword.control.sql",
-      "match": "\\b([aA][sS]|[bB][oO][oO][lL][eE][aA][nN]|[cC][aA][sS][tT]|[cC][rR][eE][aA][tT][eE]|[dD][eE][cC]|[dD][eE][cC][iI][mM][aA][lL]|[dD][oO][uU][bB][lL][eE]|[fF][lL][oO][aA][tT]|[fF][rR][oO][mM]|[iI][nN][tT]|[iI][nN][tT][eE][gG][eE][rR]|[jJ][oO][iI][nN]|[nN][uU][mM][eE][rR][iI][cC]|[oO][nN]|[pP][rR][eE][cC][iI][sS][iI][oO][nN]|[rR][eE][aA][lL]|[sS][eE][lL][eE][cC][tT]|[sS][mM][aA][lL][lL][iI][nN][tT]|[tT][aA][bB][lL][eE])\\b"
+      "match": "\\b([aA][lL][lL]|[aA][sS]|[bB][oO][oO][lL][eE][aA][nN]|[cC][aA][sS][tT]|[cC][rR][eE][aA][tT][eE]|[dD][eE][cC]|[dD][eE][cC][iI][mM][aA][lL]|[dD][iI][sS][tT][iI][nN][cC][tT]|[dD][oO][uU][bB][lL][eE]|[fF][lL][oO][aA][tT]|[fF][rR][oO][mM]|[iI][nN][tT]|[iI][nN][tT][eE][gG][eE][rR]|[jJ][oO][iI][nN]|[nN][uU][mM][eE][rR][iI][cC]|[oO][nN]|[pP][rR][eE][cC][iI][sS][iI][oO][nN]|[rR][eE][aA][lL]|[sS][eE][lL][eE][cC][tT]|[sS][mM][aA][lL][lL][iI][nN][tT]|[tT][aA][bB][lL][eE])\\b"
     }
   ],
   "repository": {

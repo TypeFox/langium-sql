@@ -5,7 +5,7 @@
  ******************************************************************************/
 import { AstNode } from "langium";
 import _ from "lodash";
-import { Expression, isBooleanType, isFloatType, isCastExpression, isColumnName, isDecimalType, isDoublePrecisionType, isExpression, isIntegerType, isNumeric, isNumericType, isRealType, isSmallIntType, isTableRelatedColumn, Type } from "./generated/ast";
+import { Expression, isBooleanType, isFloatType, isCastExpression, isColumnName, isDecimalType, isDoublePrecisionType, isExpression, isIntegerType, isNumericType, isRealType, isSmallIntType, isTableRelatedColumn, Type, isNumericExpression } from "./generated/ast";
 import { TypeDescriptor } from "./sql-type-descriptors";
 import { getTypeOfNumericLiteral } from "./sql-type-utilities";
 
@@ -20,7 +20,7 @@ export const createCachedComputeType = function(): ComputeTypeFunction {
 }
 
 function getExpressionType(node: Expression): TypeDescriptor | undefined {
-  if(isNumeric(node)) {
+  if(isNumericExpression(node)) {
     return getTypeOfNumericLiteral(node.$cstNode!.text);
   }
   if(isTableRelatedColumn(node)) {

@@ -19,7 +19,7 @@ ColumnDefinition:
 //END DEFINITION/////////////////////////////////////////////////////////
 
 SelectStatement:
-    'SELECT'
+    'SELECT' ('ALL'|distinct?='DISTINCT')?
     select=SelectElements
     from=FromClause? 
     //groupBy=GroupByClause?
@@ -63,7 +63,7 @@ TableName: table=[TableDefinition:Identifier];
 Expression:
     ColumnName
     | {infer TableRelatedColumn}variableName=TableVariableName '.' columnName=ColumnName
-    | Numeric
+    | NumericExpression
     | CastExpression
     ;
 
@@ -77,7 +77,7 @@ ColumnName:
 Identifier returns string:
     ID | QUOTE_ID;
 
-Numeric: value=NUMBER;
+NumericExpression: value=NUMBER;
 
 Type infers Type: 
     {infer BooleanType} 'BOOLEAN'
