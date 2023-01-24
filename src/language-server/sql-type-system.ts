@@ -21,6 +21,9 @@ export const createCachedComputeType = function(): ComputeTypeFunction {
   }
 
   function computeTypeOfExpression(node: Expression): TypeDescriptor | undefined {
+    if(isCastExpression(node)) {
+      return getTypeOfDataType(node.type);
+    }
     if(isNumericExpression(node)) {
       return computeTypeOfNumericLiteral(node.$cstNode!.text);
     }
@@ -31,9 +34,6 @@ export const createCachedComputeType = function(): ComputeTypeFunction {
     if(isColumnName(node)) {
       const dataType = node.column.ref?.dataType;
       return dataType ? getTypeOfDataType(dataType) : undefined;
-    }
-    if(isCastExpression(node)) {
-      return getTypeOfDataType(node.type);
     }
     if(isBinaryExpression(node)) {
       const left = computeType(node.left);

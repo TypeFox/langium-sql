@@ -95,11 +95,11 @@ MultiplicativeExpression infers Expression:
     PrimaryExpression ({infer BinaryExpression.left=current} operator=('*'|'/'|'%') right=PrimaryExpression)*
     ;
 
-PrimaryExpression:
+PrimaryExpression infers Expression:
     ColumnName
     | {infer TableRelatedColumnExpression}variableName=TableVariableName '.' columnName=ColumnName
-    | NumericExpression
-    | CastExpression
+    | {infer NumericExpression} NumericExpression
+    | {infer CastExpression} CastExpression
     | {infer UnaryExpression} operator=('NOT'|'-'|'+') value=PrimaryExpression
     | {infer ParenthesisExpression} '(' expression=Expression ')'
     | {infer FunctionCall} functionName=FunctionName '(' params=SelectElements? ')'
