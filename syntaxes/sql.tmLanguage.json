@@ -1,7 +1,9 @@
 {
   "name": "sql",
   "scopeName": "source.sql",
-  "fileTypes": [".sql"],
+  "fileTypes": [
+    ".sql"
+  ],
   "patterns": [
     {
       "include": "#comments"

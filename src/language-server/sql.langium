@@ -95,7 +95,7 @@ IntegerLiteral: value=NUMBER;
 hidden terminal WS: /\s+/;
 terminal ID: /[_a-zA-Z][\w_]*/;
 terminal QUOTE_ID: /"[^"]*"/;
-terminal NUMBER returns number: /\d+(\.\d+([eE][\-+]?\d+)?)?/;
+terminal NUMBER returns number: /\d+((\.\d+)?([eE][\-+]?\d+)?)?/;
 
 hidden terminal ML_COMMENT: /\/\*[\s\S]*?\*\//;
 hidden terminal SL_COMMENT: /\/\/[^\n\r]*/;

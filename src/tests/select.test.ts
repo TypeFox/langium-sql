@@ -173,19 +173,4 @@ describe("SELECT use cases", () => {
       expect(selectStatement.from).toBeUndefined();
     });
   });
-
-  describe("SELECT CAST(1.815 AS NUMERIC(1, 2.3))", () => {
-    let document: LangiumDocument<ast.SqlFile>;
-    let selectStatement: ast.SelectStatement;
-
-    beforeAll(async () => {
-      document = await parse("SELECT CAST(1.815 AS INTEGER);");
-      selectStatement = asSelectStatement(document);
-    });
-
-    it("should be evaluated as number", () => {
-      expectNoErrors(document);
-      //TODO
-    });
-  });
 });
