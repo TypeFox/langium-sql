@@ -1,1 +1,3 @@
 src/language-server/generated
+out
+node_modules
