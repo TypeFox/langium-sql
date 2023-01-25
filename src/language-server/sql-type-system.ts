@@ -21,6 +21,8 @@ import {
     isCharType,
     isNumberLiteral,
     isStringLiteral,
+    isBooleanLiteral,
+    isFunctionCall,
 } from "./generated/ast";
 import { TypeDescriptor, Types } from "./sql-type-descriptors";
 import {
@@ -63,12 +65,19 @@ export const createCachedComputeType = function (): ComputeTypeFunction {
                 ? computeTypeOfUnaryOperation(node.operator, operandType)
                 : undefined;
         }
+        if(isStringLiteral(node)) {
+            return Types.Char();
+        }
+        if(isBooleanLiteral(node)) {
+            return Types.Boolean;
+        }
         if (isColumnName(node)) {
             const dataType = node.column.ref?.dataType;
             return dataType ? getTypeOfDataType(dataType) : undefined;
         }
-        if(isStringLiteral(node)) {
-            return Types.Char();
+        if (isFunctionCall(node)) {
+            const dataType = node.functionName.function.ref?.returnType
+            return dataType ? getTypeOfDataType(dataType) : undefined;
         }
         if (isBinaryExpression(node)) {
             const left = computeType(node.left);

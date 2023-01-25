@@ -8,7 +8,7 @@ import { expect } from "vitest";
 import * as ast from "../language-server/generated/ast";
 import { SqlServices } from "../language-server/sql-module";
 import { URI } from "vscode-uri";
-import { TypeDescriptorDiscriminator } from "../language-server/sql-type-descriptors";
+import { TypeDescriptor, TypeDescriptorDiscriminator } from "../language-server/sql-type-descriptors";
 import { ComputeTypeFunction } from "../language-server/sql-type-system";
 export async function parseHelper(
     services: SqlServices,
@@ -97,6 +97,13 @@ export function expectSelectItemToBeColumnName(
     );
 }
 
+export function expectSelectItemsToBeOfType(selectStatement: ast.SelectStatement, computeType: ComputeTypeFunction, types: TypeDescriptor[]): void {
+    expect(selectStatement.select.elements.length).toBe(types.length);
+    selectStatement.select.elements.forEach((element, index) => {
+        expect(computeType(element)).toStrictEqual(types[index]);
+    });
+}
+
 export function expectSelectItemToBeNumeric(
     selectStatement: ast.SelectStatement,
     selectElementIndex: number,
@@ -106,8 +113,8 @@ export function expectSelectItemToBeNumeric(
         selectElementIndex
     );
     const element = selectStatement.select.elements[selectElementIndex];
-    expect(element.$type).toBe(ast.NumericExpression);
-    expect((element as ast.NumericExpression).value).toBe(value);
+    expect(element.$type).toBe(ast.NumberLiteral);
+    expect((element as ast.NumberLiteral).value).toBe(value);
 }
 
 export function expectSelectItemToBeColumnNameRelativeToVariable(

@@ -9,6 +9,7 @@ import { describe, it, expect, beforeAll } from "vitest";
 import * as ast from "../language-server/generated/ast";
 import { ReportAs } from "../language-server/sql-error-codes";
 import { createSqlServices } from "../language-server/sql-module";
+import { Types } from "../language-server/sql-type-descriptors";
 import {
     ComputeTypeFunction,
     createCachedComputeType,
@@ -23,7 +24,7 @@ import {
     expectSelectItemToBeColumnNameRelativeToVariable,
     expectValidationIssues,
     expectSelectItemToBeNumeric,
-    expectSelectItemToBeCastToType,
+    expectSelectItemsToBeOfType,
 } from "./test-utils";
 
 const services = createSqlServices(EmptyFileSystem);
@@ -188,7 +189,7 @@ describe("SELECT use cases", () => {
         });
     });
 
-    describe("SELECT CAST (12345 AS NUMERIC)", () => {
+    describe("SELECT CAST (12345 AS REAL)", () => {
         let document: LangiumDocument<ast.SqlFile>;
         let selectStatement: ast.SelectStatement;
 
@@ -202,16 +203,29 @@ describe("SELECT use cases", () => {
         });
 
         it("should be evaluated as number", () => {
-            expectSelectItemToBeCastToType(
-                computeType,
-                selectStatement,
-                0,
-                "real"
-            );
+            expectSelectItemsToBeOfType(selectStatement, computeType, [Types.Real]);
         });
 
         it("should have no from clause", () => {
             expect(selectStatement.from).toBeUndefined();
+        });
+    });
+
+    describe("SELECT 123, 0.456, true, false;", () => {
+        let document: LangiumDocument<ast.SqlFile>;
+        let selectStatement: ast.SelectStatement;
+
+        beforeAll(async () => {
+            document = await parse("SELECT 123, 0.456, true, false, 'help';");
+            selectStatement = asSelectStatement(document);
+        });
+
+        it("should have no errors", () => {
+            expectNoErrors(document);
+        });
+
+        it("should be evaluated with given types", () => {
+            expectSelectItemsToBeOfType(selectStatement, computeType, [Types.Integer, Types.Real, Types.Boolean, Types.Boolean, Types.Char()]);
         });
     });
 });
