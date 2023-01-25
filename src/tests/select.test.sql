@@ -2,5 +2,3 @@ CREATE TABLE tab (
     id INTEGER,
     name TEXT
 );
-
-CREATE FUNCTION SUM()
