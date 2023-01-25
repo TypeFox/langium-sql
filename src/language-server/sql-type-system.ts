@@ -14,12 +14,13 @@ import {
     isIntegerType,
     isRealType,
     Type,
-    isNumericExpression,
     isTableRelatedColumnExpression,
     isBinaryExpression,
     isUnaryExpression,
     isParenthesisExpression,
     isCharType,
+    isNumberLiteral,
+    isStringLiteral,
 } from "./generated/ast";
 import { TypeDescriptor, Types } from "./sql-type-descriptors";
 import {
@@ -46,7 +47,7 @@ export const createCachedComputeType = function (): ComputeTypeFunction {
         if (isCastExpression(node)) {
             return getTypeOfDataType(node.type);
         }
-        if (isNumericExpression(node)) {
+        if (isNumberLiteral(node)) {
             return computeTypeOfNumericLiteral(node.$cstNode!.text);
         }
         if (isTableRelatedColumnExpression(node)) {
@@ -65,6 +66,9 @@ export const createCachedComputeType = function (): ComputeTypeFunction {
         if (isColumnName(node)) {
             const dataType = node.column.ref?.dataType;
             return dataType ? getTypeOfDataType(dataType) : undefined;
+        }
+        if(isStringLiteral(node)) {
+            return Types.Char();
         }
         if (isBinaryExpression(node)) {
             const left = computeType(node.left);

@@ -98,7 +98,8 @@ MultiplicativeExpression infers Expression:
 PrimaryExpression infers Expression:
     ColumnName
     | {infer TableRelatedColumnExpression}variableName=TableVariableName '.' columnName=ColumnName
-    | {infer NumericExpression} NumericExpression
+    | {infer NumberLiteral}NumberLiteral
+    | {infer StringLiteral}StringLiteral
     | {infer CastExpression} CastExpression
     | {infer UnaryExpression} operator=('NOT'|'-'|'+') value=PrimaryExpression
     | {infer ParenthesisExpression} '(' expression=Expression ')'
@@ -119,7 +120,8 @@ ColumnName:
 Identifier returns string:
     ID | QUOTE_ID;
 
-NumericExpression: value=NUMBER;
+NumberLiteral: value=NUMBER;
+StringLiteral: value=STRING;
 
 Type infers Type: 
     {infer BooleanType} 'BOOLEAN'
@@ -135,6 +137,7 @@ hidden terminal WS: /\s+/;
 terminal ID: /[_a-zA-Z][\w_]*/;
 terminal QUOTE_ID: /"[^"]*"/;
 terminal NUMBER returns number: /\d+((\.\d+)?([eE][\-+]?\d+)?)?/;
+terminal STRING returns string: /'(\\.|\\\|[^'\\])*'/;
 
 hidden terminal ML_COMMENT: /\/\*[\s\S]*?\*\//;
 hidden terminal SL_COMMENT: /\/\/[^\n\r]*/;

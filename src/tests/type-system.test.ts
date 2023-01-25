@@ -14,17 +14,13 @@ describe("Type system utilities", () => {
         ["1E3", "integer"],
         ["123456", "integer"],
     ])(
-        "typeof(%s) === {%s, prec: %i, scale: %i}",
+        "typeof(%s) === {%s}",
         (
             input: string,
             discriminator: string,
-            precision?: number,
-            scale?: number
         ) => {
             expect(computeTypeOfNumericLiteral(input)!).toEqual({
                 discriminator,
-                precision,
-                scale,
             });
         }
     );
