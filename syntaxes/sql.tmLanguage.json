@@ -1,14 +1,16 @@
 {
   "name": "sql",
   "scopeName": "source.sql",
-  "fileTypes": [".sql"],
+  "fileTypes": [
+    ".sql"
+  ],
   "patterns": [
     {
       "include": "#comments"
     },
     {
       "name": "keyword.control.sql",
-      "match": "\\b([aA][lL][lL]|[aA][nN][dD]|[aA][sS]|[bB][oO][oO][lL][eE][aA][nN]|[cC][aA][sS][tT]|[cC][rR][eE][aA][tT][eE]|[dD][eE][cC]|[dD][eE][cC][iI][mM][aA][lL]|[dD][iI][sS][tT][iI][nN][cC][tT]|[dD][oO][uU][bB][lL][eE]|[fF][lL][oO][aA][tT]|[fF][rR][oO][mM]|[fF][uU][nN][cC][tT][iI][oO][nN]|[iI][nN][tT]|[iI][nN][tT][eE][gG][eE][rR]|[jJ][oO][iI][nN]|[nN][oO][tT]|[nN][uU][mM][eE][rR][iI][cC]|[oO][nN]|[oO][rR]|[pP][rR][eE][cC][iI][sS][iI][oO][nN]|[rR][eE][aA][lL]|[sS][eE][lL][eE][cC][tT]|[sS][mM][aA][lL][lL][iI][nN][tT]|[tT][aA][bB][lL][eE])\\b"
+      "match": "\\b([aA][lL][lL]|[aA][nN][dD]|[aA][sS]|[bB][oO][oO][lL][eE][aA][nN]|[cC][aA][sS][tT]|[cC][rR][eE][aA][tT][eE]|[dD][iI][sS][tT][iI][nN][cC][tT]|[fF][rR][oO][mM]|[fF][uU][nN][cC][tT][iI][oO][nN]|[iI][nN][tT]|[iI][nN][tT][eE][gG][eE][rR]|[jJ][oO][iI][nN]|[nN][oO][tT]|[oO][nN]|[oO][rR]|[rR][eE][aA][lL]|[sS][eE][lL][eE][cC][tT]|[tT][aA][bB][lL][eE])\\b"
     }
   ],
   "repository": {

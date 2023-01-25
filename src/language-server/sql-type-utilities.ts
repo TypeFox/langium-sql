@@ -5,7 +5,7 @@
  ******************************************************************************/
 import _ from "lodash";
 import { BinaryExpression, UnaryExpression } from "./generated/ast";
-import { isTypeANumber, TypeDescriptor } from "./sql-type-descriptors";
+import { isTypeABoolean, isTypeANumber, isTypeAReal, TypeDescriptor, Types } from "./sql-type-descriptors";
 
 const NumericLiteralPattern = /^(\d+)((\.(\d)+)?([eE]([\-+]?\d+))?)?$/;
 export function computeTypeOfNumericLiteral(
@@ -13,14 +13,9 @@ export function computeTypeOfNumericLiteral(
 ): TypeDescriptor | undefined {
     //TODO implement it properly, maybe with notes from here: https://crate.io/docs/sql-99/en/latest//chapters/03.html#choosing-the-right-data-type
     const match = NumericLiteralPattern.exec(text)!;
-    const integerPart = match[1].length;
     const fractionalPart = match[4]?.length ?? 0;
     const exponent = parseInt(match[6] ?? "0", 10);
-    return {
-        discriminator: "numeric",
-        precision: Math.max(0, integerPart + exponent),
-        scale: Math.max(0, fractionalPart - exponent),
-    };
+    return Math.max(0, fractionalPart - exponent) === 0 ? Types.Integer : Types.Real;
 }
 
 export function assertUnreachable(x: never): never {
@@ -39,11 +34,10 @@ export function computeTypeOfBinaryOperation(
         case "*":
         case "%":
             if (isTypeANumber(left) && isTypeANumber(right)) {
-                //TODO find a proper way
-                if (_.isEqual(left, right)) {
-                    return left;
+                if(isTypeAReal(left) || isTypeAReal(right)) {
+                    return Types.Real;
                 }
-                return undefined;
+                return Types.Integer;
             }
             break;
         case "<":
@@ -52,12 +46,19 @@ export function computeTypeOfBinaryOperation(
         case ">=":
         case "<>":
         case "=":
+            if (isTypeABoolean(left) && isTypeABoolean(right)) {
+                return Types.Boolean;
+            }
+            if (isTypeANumber(left) && isTypeANumber(right)) {
+                return Types.Boolean;
+            }
+            return undefined;
         case "AND":
         case "OR":
-            //TODO add proper checks for type compatibility
-            return {
-                discriminator: "boolean",
-            };
+            if (isTypeABoolean(left) && isTypeABoolean(right)) {
+                return Types.Boolean;
+            }
+            return undefined;
         default:
             assertUnreachable(operator);
     }

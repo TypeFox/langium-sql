@@ -5,17 +5,14 @@
  ******************************************************************************/
 
 export type NumberishTypeDescriptorDiscriminator =
-    | "smallint"
     | "integer"
-    | "numeric"
-    | "float"
-    | "decimal"
     | "real"
-    | "double";
+    ;
 
 export type TypeDescriptorDiscriminator =
     | "boolean"
-    | NumberishTypeDescriptorDiscriminator;
+    | NumberishTypeDescriptorDiscriminator
+    ;
 
 export function isTypeABoolean(
     type: TypeDescriptor
@@ -25,43 +22,53 @@ export function isTypeABoolean(
 
 export function isTypeANumber(
     type: TypeDescriptor
-): type is NumberishTypeDescriptor {
+): type is NumberTypeDescriptor {
     return [
-        "smallint",
         "integer",
-        "numeric",
-        "float",
-        "decimal",
         "real",
-        "double",
     ].includes(type.discriminator);
 }
+
+export function isTypeAReal(
+    type: TypeDescriptor
+): type is RealTypedescriptor {
+    return type.discriminator === "real";
+}
+
+export function isTypeAnInteger(
+    type: TypeDescriptor
+): type is IntegerTypedescriptor {
+    return type.discriminator === "integer";
+}
+
 
 export interface TypeDescriptorBase {
     discriminator: TypeDescriptorDiscriminator;
 }
 
-export interface ParameterlessNumericTypedescriptor extends TypeDescriptorBase {
-    discriminator: "smallint" | "integer" | "real" | "double";
+export interface RealTypedescriptor extends TypeDescriptorBase {
+    discriminator: "real";
 }
 
-export interface PreciseNumericTypeDescriptor extends TypeDescriptorBase {
-    discriminator: "float";
-    precision: number;
-}
-
-export interface ScaledNumericTypeDescriptor extends TypeDescriptorBase {
-    discriminator: "numeric" | "decimal";
-    precision: number;
-    scale: number;
+export interface IntegerTypedescriptor extends TypeDescriptorBase {
+    discriminator: "integer";
 }
 
 export interface BooleanTypeDesciptor extends TypeDescriptorBase {
     discriminator: "boolean";
 }
 
-export type NumberishTypeDescriptor =
-    | ParameterlessNumericTypedescriptor
-    | ScaledNumericTypeDescriptor
-    | PreciseNumericTypeDescriptor;
-export type TypeDescriptor = BooleanTypeDesciptor | NumberishTypeDescriptor;
+export type NumberTypeDescriptor = IntegerTypedescriptor|RealTypedescriptor;
+export type TypeDescriptor = BooleanTypeDesciptor | NumberTypeDescriptor;
+
+export const Types: Record<string, TypeDescriptor> = {
+    Boolean: {
+        discriminator: 'boolean'
+    },
+    Integer: {
+        discriminator: 'integer'
+    },
+    Real: {
+        discriminator: 'real'
+    }
+}

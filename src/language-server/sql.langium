@@ -124,13 +124,8 @@ NumericExpression: value=NUMBER;
 Type infers Type: 
     {infer BooleanType} 'BOOLEAN'
     //@see https://crate.io/docs/sql-99/en/latest//chapters/03.html
-    | {infer SmallIntType} 'SMALLINT'
     | {infer IntegerType} ('INTEGER'|'INT')
-    | {infer NumericType} 'NUMERIC' ('(' precision=IntegerLiteral (',' scale=IntegerLiteral)? ')')?
-    | {infer FloatType} 'FLOAT' ('(' precision=IntegerLiteral ')')?
-    | {infer DecimalType} ('DECIMAL'|'DEC') ('(' precision=IntegerLiteral (',' scale=IntegerLiteral)? ')')?
     | {infer RealType} 'REAL'
-    | {infer DoublePrecisionType} 'DOUBLE' 'PRECISION'
     ; 
 
 IntegerLiteral: value=NUMBER;

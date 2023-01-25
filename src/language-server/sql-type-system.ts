@@ -8,16 +8,11 @@ import _ from "lodash";
 import {
     Expression,
     isBooleanType,
-    isFloatType,
     isCastExpression,
     isColumnName,
-    isDecimalType,
-    isDoublePrecisionType,
     isExpression,
     isIntegerType,
-    isNumericType,
     isRealType,
-    isSmallIntType,
     Type,
     isNumericExpression,
     isTableRelatedColumnExpression,
@@ -25,7 +20,7 @@ import {
     isUnaryExpression,
     isParenthesisExpression,
 } from "./generated/ast";
-import { TypeDescriptor } from "./sql-type-descriptors";
+import { TypeDescriptor, Types } from "./sql-type-descriptors";
 import {
     assertUnreachable,
     computeTypeOfBinaryOperation,
@@ -83,50 +78,13 @@ export const createCachedComputeType = function (): ComputeTypeFunction {
 
     function getTypeOfDataType(dataType: Type): TypeDescriptor | undefined {
         if (isBooleanType(dataType)) {
-            return { discriminator: "boolean" };
-        }
-        if (isNumericType(dataType)) {
-            return {
-                discriminator: "numeric",
-                //TODO find correct default values
-                precision: dataType.precision?.value ?? 9,
-                scale: dataType.scale?.value ?? 0,
-            };
-        }
-        if (isDecimalType(dataType)) {
-            return {
-                discriminator: "decimal",
-                //TODO find correct default values
-                precision: dataType.precision?.value ?? 9,
-                scale: dataType.scale?.value ?? 0,
-            };
-        }
-        if (isDoublePrecisionType(dataType)) {
-            return {
-                discriminator: "double",
-            };
-        }
-        if (isSmallIntType(dataType)) {
-            return {
-                discriminator: "smallint",
-            };
+            return Types.Boolean;
         }
         if (isIntegerType(dataType)) {
-            return {
-                discriminator: "integer",
-            };
+            return Types.Integer;
         }
         if (isRealType(dataType)) {
-            return {
-                discriminator: "real",
-            };
-        }
-        if (isFloatType(dataType)) {
-            return {
-                discriminator: "float",
-                //TODO find correct default value
-                precision: dataType.precision?.value ?? 9,
-            };
+            return Types.Real;
         }
         assertUnreachable(dataType);
     }
