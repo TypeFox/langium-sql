@@ -12,12 +12,9 @@
     "moduleResolution": "node",
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "types": ["vitest/globals"]
   },
-  "types": [
-    "jest",
-    "jest-expect-message",
-  ],        
   "include": ["src/**/*.ts", "test/**/*.ts"],
   "exclude": ["out", "node_modules"]
 }

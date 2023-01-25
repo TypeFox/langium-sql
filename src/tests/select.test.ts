@@ -5,7 +5,6 @@
  ******************************************************************************/
 
 import { EmptyFileSystem, LangiumDocument } from "langium";
-import { describe, it, expect, beforeAll } from "vitest";
 import * as ast from "../language-server/generated/ast";
 import { ReportAs } from "../language-server/sql-error-codes";
 import { createSqlServices } from "../language-server/sql-module";
