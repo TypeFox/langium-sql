@@ -69,6 +69,18 @@ export function computeTypeOfUnaryOperation(
     operator: UnaryExpression["operator"],
     operandType: TypeDescriptor
 ): TypeDescriptor | undefined {
-    //TODO do it properly
+    switch(operator) {
+        case '+':
+        case '-':
+            if(isTypeANumber(operandType)) {
+                return operandType;
+            }
+            break;
+        case 'NOT':
+            if(isTypeABoolean(operandType)) {
+                return operandType;
+            }
+            break;
+    }
     return undefined;
 }
