@@ -1,25 +1,24 @@
 /******************************************************************************
- * Copyright 2022 TypeFox GmbH
+ * Copyright 2022-2023 TypeFox GmbH
  * This program and the accompanying materials are made available under the
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
 
 import {
-  createDefaultModule,
-  createDefaultSharedModule,
-  DefaultSharedModuleContext,
-  inject,
-  LangiumServices,
-  LangiumSharedServices,
-  Module,
-  PartialLangiumServices,
-  PartialLangiumSharedServices,
+    createDefaultModule,
+    createDefaultSharedModule,
+    DefaultSharedModuleContext,
+    inject,
+    LangiumServices,
+    LangiumSharedServices,
+    Module,
+    PartialLangiumServices,
+    PartialLangiumSharedServices,
 } from "langium";
 import {
-  SqlGeneratedModule,
-  SqlGeneratedSharedModule,
+    SqlGeneratedModule,
+    SqlGeneratedSharedModule,
 } from "./generated/module";
-import { SqlTableDefinitions, SqlTypeDefinitions } from "./sql-meta";
 import { SqlScopeProvider } from "./sql-scope";
 import { SqlValidationRegistry, SqlValidator } from "./sql-validator";
 import { SqlWorkspaceManager } from "./sql-workspace-manager";
@@ -28,41 +27,24 @@ import { SqlWorkspaceManager } from "./sql-workspace-manager";
  * Declaration of custom services - add your own service classes here.
  */
 export type SqlAddedServices = {
-  validation: {
-    SqlValidator: SqlValidator;
-  };
+    validation: {
+        SqlValidator: SqlValidator;
+    };
 };
 
 export type SqlSharedServices = {
-  sql: {
-    dataTypes: SqlTypeDefinitions;
-    tables: SqlTableDefinitions;
-  };
-  workspace: {
-    WorkspaceManager: SqlWorkspaceManager;
-  };
+    workspace: {
+        WorkspaceManager: SqlWorkspaceManager;
+    };
 };
 
 export const SqlSharedModule: Module<
-  LangiumSharedServices & SqlSharedServices,
-  PartialLangiumSharedServices & SqlSharedServices
+    LangiumSharedServices & SqlSharedServices,
+    PartialLangiumSharedServices & SqlSharedServices
 > = {
-  sql: {
-    dataTypes: () => ({
-      TEXT: {},
-      INT: {},
-      BOOLEAN: {},
-    }),
-    tables: () => ({
-      tab: {
-        id: { dataTypeName: "INT" },
-        name: { dataTypeName: "TEXT" },
-      },
-    }),
-  },
-  workspace: {
-    WorkspaceManager: (services) => new SqlWorkspaceManager(services),
-  },
+    workspace: {
+        WorkspaceManager: (services) => new SqlWorkspaceManager(services),
+    },
 };
 
 /**
@@ -77,16 +59,16 @@ export type SqlServices = LangiumServices & SqlAddedServices;
  * selected services, while the custom services must be fully specified.
  */
 export const SqlModule: Module<
-  SqlServices,
-  PartialLangiumServices & SqlAddedServices
+    SqlServices,
+    PartialLangiumServices & SqlAddedServices
 > = {
-  references: {
-    ScopeProvider: (services) => new SqlScopeProvider(services),
-  },
-  validation: {
-    ValidationRegistry: (services) => new SqlValidationRegistry(services),
-    SqlValidator: () => new SqlValidator(),
-  },
+    references: {
+        ScopeProvider: (services) => new SqlScopeProvider(services),
+    },
+    validation: {
+        ValidationRegistry: (services) => new SqlValidationRegistry(services),
+        SqlValidator: () => new SqlValidator(),
+    },
 };
 
 /**
@@ -105,19 +87,19 @@ export const SqlModule: Module<
  * @returns An object wrapping the shared services and the language-specific services
  */
 export function createSqlServices(context: DefaultSharedModuleContext): {
-  shared: LangiumSharedServices;
-  Sql: SqlServices;
+    shared: LangiumSharedServices;
+    Sql: SqlServices;
 } {
-  const shared = inject(
-    createDefaultSharedModule(context),
-    SqlGeneratedSharedModule,
-    SqlSharedModule as any
-  );
-  const Sql = inject(
-    createDefaultModule({ shared }),
-    SqlGeneratedModule,
-    SqlModule
-  );
-  shared.ServiceRegistry.register(Sql);
-  return { shared, Sql };
+    const shared = inject(
+        createDefaultSharedModule(context),
+        SqlGeneratedSharedModule,
+        SqlSharedModule as any
+    );
+    const Sql = inject(
+        createDefaultModule({ shared }),
+        SqlGeneratedModule,
+        SqlModule
+    );
+    shared.ServiceRegistry.register(Sql);
+    return { shared, Sql };
 }
