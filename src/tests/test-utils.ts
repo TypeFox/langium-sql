@@ -4,7 +4,6 @@
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
 import { LangiumDocument } from "langium";
-import { expect } from "vitest";
 import * as ast from "../language-server/generated/ast";
 import { SqlServices } from "../language-server/sql-module";
 import { URI } from "vscode-uri";
