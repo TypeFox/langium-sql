@@ -5,63 +5,63 @@
  ******************************************************************************/
 
 export type NumberishTypeDescriptorDiscriminator =
-  | "smallint"
-  | "integer"
-  | "numeric"
-  | "float"
-  | "decimal"
-  | "real"
-  | "double";
+    | "smallint"
+    | "integer"
+    | "numeric"
+    | "float"
+    | "decimal"
+    | "real"
+    | "double";
 
 export type TypeDescriptorDiscriminator =
-  | "boolean"
-  | NumberishTypeDescriptorDiscriminator;
+    | "boolean"
+    | NumberishTypeDescriptorDiscriminator;
 
 export function isTypeABoolean(
-  type: TypeDescriptor
+    type: TypeDescriptor
 ): type is BooleanTypeDesciptor {
-  return type.discriminator === 'boolean';
+    return type.discriminator === "boolean";
 }
 
 export function isTypeANumber(
-  type: TypeDescriptor
+    type: TypeDescriptor
 ): type is NumberishTypeDescriptor {
-  return [
-    "smallint",
-    "integer",
-    "numeric",
-    "float",
-    "decimal",
-    "real",
-    "double",
-  ].includes(type.discriminator);
+    return [
+        "smallint",
+        "integer",
+        "numeric",
+        "float",
+        "decimal",
+        "real",
+        "double",
+    ].includes(type.discriminator);
 }
 
 export interface TypeDescriptorBase {
-  discriminator: TypeDescriptorDiscriminator;
+    discriminator: TypeDescriptorDiscriminator;
 }
 
 export interface ParameterlessNumericTypedescriptor extends TypeDescriptorBase {
-  discriminator: "smallint" | "integer" | "real" | "double";
+    discriminator: "smallint" | "integer" | "real" | "double";
 }
 
 export interface PreciseNumericTypeDescriptor extends TypeDescriptorBase {
-  discriminator: "float";
-  precision: number;
+    discriminator: "float";
+    precision: number;
 }
 
 export interface ScaledNumericTypeDescriptor extends TypeDescriptorBase {
-  discriminator: "numeric" | "decimal";
-  precision: number;
-  scale: number;
+    discriminator: "numeric" | "decimal";
+    precision: number;
+    scale: number;
 }
 
 export interface BooleanTypeDesciptor extends TypeDescriptorBase {
-  discriminator: "boolean";
+    discriminator: "boolean";
 }
 
 export type NumberishTypeDescriptor =
-  | ParameterlessNumericTypedescriptor
-  | ScaledNumericTypeDescriptor
-  | PreciseNumericTypeDescriptor;
+    | ParameterlessNumericTypedescriptor
+    | ScaledNumericTypeDescriptor
+    | PreciseNumericTypeDescriptor;
 export type TypeDescriptor = BooleanTypeDesciptor | NumberishTypeDescriptor;

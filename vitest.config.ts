@@ -6,10 +6,10 @@
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
-  test: {
-    globals: false,
-    deps: {
-      interopDefault: true,
+    test: {
+        globals: false,
+        deps: {
+            interopDefault: true,
+        },
     },
-  },
 });
