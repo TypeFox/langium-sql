@@ -8,11 +8,11 @@ import { computeTypeOfNumericLiteral } from "../language-server/sql-type-utiliti
 
 describe("Type system utilities", () => {
     it.each([
-        ["1", "numeric", 1, 0],
-        ["1E-5", "numeric", 0, 5],
-        ["1E1", "numeric", 2, 0],
-        ["1E3", "numeric", 4, 0],
-        ["123456", "numeric", 6, 0],
+        ["1", "integer"],
+        ["1E-5", "real"],
+        ["1E1", "integer"],
+        ["1E3", "integer"],
+        ["123456", "integer"],
     ])(
         "typeof(%s) === {%s, prec: %i, scale: %i}",
         (

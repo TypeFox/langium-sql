@@ -193,7 +193,7 @@ describe("SELECT use cases", () => {
         let selectStatement: ast.SelectStatement;
 
         beforeAll(async () => {
-            document = await parse("SELECT CAST (12345 AS NUMERIC);");
+            document = await parse("SELECT CAST (12345 AS REAL);");
             selectStatement = asSelectStatement(document);
         });
 
@@ -206,7 +206,7 @@ describe("SELECT use cases", () => {
                 computeType,
                 selectStatement,
                 0,
-                "numeric"
+                "real"
             );
         });
 

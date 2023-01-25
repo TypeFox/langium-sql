@@ -126,6 +126,7 @@ Type infers Type:
     //@see https://crate.io/docs/sql-99/en/latest//chapters/03.html
     | {infer IntegerType} ('INTEGER'|'INT')
     | {infer RealType} 'REAL'
+    | {infer CharType} 'CHAR' ('(' length=IntegerLiteral ')')?
     ; 
 
 IntegerLiteral: value=NUMBER;

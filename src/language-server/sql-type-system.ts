@@ -19,6 +19,7 @@ import {
     isBinaryExpression,
     isUnaryExpression,
     isParenthesisExpression,
+    isCharType,
 } from "./generated/ast";
 import { TypeDescriptor, Types } from "./sql-type-descriptors";
 import {
@@ -85,6 +86,9 @@ export const createCachedComputeType = function (): ComputeTypeFunction {
         }
         if (isRealType(dataType)) {
             return Types.Real;
+        }
+        if(isCharType(dataType)) {
+            return Types.Char(dataType.length?.value);
         }
         assertUnreachable(dataType);
     }

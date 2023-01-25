@@ -4,14 +4,15 @@
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
 
-export type NumberishTypeDescriptorDiscriminator =
+export type NumberTypeDescriptorDiscriminator =
     | "integer"
     | "real"
     ;
 
 export type TypeDescriptorDiscriminator =
     | "boolean"
-    | NumberishTypeDescriptorDiscriminator
+    | NumberTypeDescriptorDiscriminator
+    | "text"
     ;
 
 export function isTypeABoolean(
@@ -31,26 +32,33 @@ export function isTypeANumber(
 
 export function isTypeAReal(
     type: TypeDescriptor
-): type is RealTypedescriptor {
+): type is RealTypeDescriptor {
     return type.discriminator === "real";
 }
 
 export function isTypeAnInteger(
     type: TypeDescriptor
-): type is IntegerTypedescriptor {
+): type is IntegerTypeDescriptor {
     return type.discriminator === "integer";
 }
 
+export function isTypeAText(
+    type: TypeDescriptor
+): type is CharTypeDescriptor {
+    return [
+        "text",
+    ].includes(type.discriminator);
+}
 
 export interface TypeDescriptorBase {
     discriminator: TypeDescriptorDiscriminator;
 }
 
-export interface RealTypedescriptor extends TypeDescriptorBase {
+export interface RealTypeDescriptor extends TypeDescriptorBase {
     discriminator: "real";
 }
 
-export interface IntegerTypedescriptor extends TypeDescriptorBase {
+export interface IntegerTypeDescriptor extends TypeDescriptorBase {
     discriminator: "integer";
 }
 
@@ -58,17 +66,29 @@ export interface BooleanTypeDesciptor extends TypeDescriptorBase {
     discriminator: "boolean";
 }
 
-export type NumberTypeDescriptor = IntegerTypedescriptor|RealTypedescriptor;
-export type TypeDescriptor = BooleanTypeDesciptor | NumberTypeDescriptor;
+export interface CharTypeDescriptor extends TypeDescriptorBase {
+    discriminator: "text";
+    length: number;
+}
 
-export const Types: Record<string, TypeDescriptor> = {
+export type TextualTypeDescriptor = CharTypeDescriptor;
+export type NumberTypeDescriptor = IntegerTypeDescriptor|RealTypeDescriptor;
+export type TypeDescriptor = BooleanTypeDesciptor | NumberTypeDescriptor | TextualTypeDescriptor;
+
+export const Types = {
     Boolean: {
         discriminator: 'boolean'
-    },
+    } as TypeDescriptor,
     Integer: {
         discriminator: 'integer'
-    },
+    } as TypeDescriptor,
     Real: {
         discriminator: 'real'
+    } as TypeDescriptor,
+    Char(length: number = 100): TypeDescriptor { //TODO find proper default value
+        return {
+            discriminator: 'text',
+            length
+        };
     }
 }
