@@ -13,7 +13,7 @@
     },
     {
       "name": "Attach to Language Server",
-      "type": "pwa-node",
+      "type": "node",
       "port": 6009,
       "request": "attach",
       "skipFiles": ["<node_internals>/**"],

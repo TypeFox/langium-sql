@@ -4,11 +4,13 @@
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
 import { LangiumDocument } from "langium";
+import { expect } from "vitest";
 import * as ast from "../language-server/generated/ast";
 import { SqlServices } from "../language-server/sql-module";
 import { URI } from "vscode-uri";
 import { TypeDescriptor, TypeDescriptorDiscriminator } from "../language-server/sql-type-descriptors";
 import { ComputeTypeFunction } from "../language-server/sql-type-system";
+
 export async function parseHelper(
     services: SqlServices,
     folder: string
