@@ -1,1 +1,1 @@
-SELECT id, name, birthday FROM tab;
+SELECT id, name, birthday FROM tab WHERE NOT 123;

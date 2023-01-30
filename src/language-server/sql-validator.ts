@@ -13,6 +13,7 @@ import * as ast from "./generated/ast";
 import _ from "lodash";
 import type { SqlServices } from "./sql-module";
 import { ReportAs } from "./sql-error-codes";
+import { computeType } from "./sql-type-system";
 
 /**
  * Registry for validation checks.
@@ -24,6 +25,8 @@ export class SqlValidationRegistry extends ValidationRegistry {
         const checks: ValidationChecks<ast.SqlAstType> = {
             SelectStatement: [validator.checkVariableNamesAreUnique],
             IntegerLiteral: [validator.checkIntegerLiteralIsWholeNumber],
+            BinaryExpression: [validator.checkBinaryExpressionType],
+            UnaryExpression: [validator.checkUnaryExpressionType],
         };
         this.register(checks, validator);
     }
@@ -33,6 +36,30 @@ export class SqlValidationRegistry extends ValidationRegistry {
  * Implementation of custom validations.
  */
 export class SqlValidator {
+    checkBinaryExpressionType(expr: ast.BinaryExpression, accept: ValidationAcceptor): void {
+        const left = computeType(expr.left);
+        const right = computeType(expr.right);
+        const returnType = computeType(expr);
+        if(left && right && !returnType) {
+            ReportAs.BinaryOperatorNotDefinedForGivenExpressions(expr, {
+                left,
+                right,
+                op: expr.operator
+            }, accept);
+        }
+    }
+
+    checkUnaryExpressionType(expr: ast.UnaryExpression, accept: ValidationAcceptor): void {
+        const operand = computeType(expr.value);
+        const returnType = computeType(expr);
+        if(operand && !returnType) {
+            ReportAs.UnaryOperatorNotDefinedForGivenExpression(expr, {
+                operand,
+                op: expr.operator
+            }, accept);
+        }
+    }
+
     checkVariableNamesAreUnique(
         query: ast.SelectStatement,
         accept: ValidationAcceptor

@@ -11,8 +11,7 @@ import { ReportAs } from "../language-server/sql-error-codes";
 import { createSqlServices } from "../language-server/sql-module";
 import { Types } from "../language-server/sql-type-descriptors";
 import {
-    ComputeTypeFunction,
-    createCachedComputeType,
+    computeType,
 } from "../language-server/sql-type-system";
 import {
     parseHelper,
@@ -30,11 +29,9 @@ import {
 const services = createSqlServices(EmptyFileSystem);
 
 describe("SELECT use cases", () => {
-    let computeType: ComputeTypeFunction;
     let parse: (input: string) => Promise<LangiumDocument<ast.SqlFile>>;
 
     beforeAll(async () => {
-        computeType = createCachedComputeType();
         parse = await parseHelper(services.Sql, __dirname);
     });
 
