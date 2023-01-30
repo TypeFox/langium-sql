@@ -35,7 +35,7 @@ export class SqlValidationRegistry extends ValidationRegistry {
 export class SqlValidator {
     checkWhereIsBoolean(clause: ast.WhereClause, accept: ValidationAcceptor): void {
         const type = computeType(clause.rowCondition);
-        if(type && !isTypeABoolean(type)) {
+         if(type && !isTypeABoolean(type)) {
             ReportAs.ExpressionMustReturnABoolean(clause.rowCondition, type!, accept);
         }
     }

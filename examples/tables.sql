@@ -1,9 +1,13 @@
-CREATE TABLE tab (
+CREATE TABLE employees (
     id INTEGER,
     name CHAR(200),
-    birthday REAL
+    birthday REAL,
+    salary REAL
 );
 
-CREATE FUNCTION SUM (
-      
-) AS INT;
+CREATE TABLE managers (
+    managerId INTEGER,
+    employeeId INTEGER
+);
+
+CREATE FUNCTION SUM (summand REAL) AS INT;

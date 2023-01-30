@@ -14,8 +14,7 @@
     },
     {
       "name": "string.quoted.single.sql",
-      "begin": "'",
-      "end": "\\\\.\\\\\\\\[^'\\\\]'"
+      "match": "'([^\\']|\\')*'"
     }
   ],
   "repository": {

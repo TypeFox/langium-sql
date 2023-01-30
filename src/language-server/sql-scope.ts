@@ -104,6 +104,18 @@ export class SqlScopeProvider extends DefaultScopeProvider {
                         )
                     );
                 }
+                if(source.joins) {
+                    for (const join of source.joins) {
+                        if(join.nextItem.name) {
+                            astDescriptions.push(
+                                this.astNodeDescriptionProvider.createDescription(
+                                    join.nextItem,
+                                    join.nextItem.name
+                                )
+                            );
+                        }
+                    }
+                }
             }
             return new StreamScope(stream(astDescriptions));
         }
