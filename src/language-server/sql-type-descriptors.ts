@@ -4,6 +4,8 @@
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
 
+import _ from "lodash";
+
 export type NumberTypeDescriptorDiscriminator =
     | "integer"
     | "real"
@@ -91,4 +93,8 @@ export const Types = {
             length
         };
     }
+}
+
+export function areTypesEqual(lhs: TypeDescriptor, rhs: TypeDescriptor): boolean {
+    return _.isEqual(lhs, rhs);
 }

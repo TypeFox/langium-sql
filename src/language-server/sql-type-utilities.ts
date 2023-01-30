@@ -4,8 +4,9 @@
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
 import _ from "lodash";
-import { BinaryExpression, UnaryExpression } from "./generated/ast";
-import { isTypeABoolean, isTypeANumber, isTypeAReal, TypeDescriptor, Types } from "./sql-type-descriptors";
+import { UnaryExpression } from "./generated/ast";
+import { areTypesEqual, isTypeABoolean, isTypeANumber, TypeDescriptor, Types } from "./sql-type-descriptors";
+import { BinaryOperator, BinaryOperators } from "./sql-type-operators";
 
 const NumericLiteralPattern = /^(\d+)((\.(\d)+)?([eE]([\-+]?\d+))?)?$/;
 export function computeTypeOfNumericLiteral(
@@ -23,44 +24,15 @@ export function assertUnreachable(x: never): never {
 }
 
 export function computeTypeOfBinaryOperation(
-    operator: BinaryExpression["operator"],
+    operator: BinaryOperator,
     left: TypeDescriptor,
     right: TypeDescriptor
 ): TypeDescriptor | undefined {
-    switch (operator) {
-        case "+":
-        case "-":
-        case "/":
-        case "*":
-        case "%":
-            if (isTypeANumber(left) && isTypeANumber(right)) {
-                if(isTypeAReal(left) || isTypeAReal(right)) {
-                    return Types.Real;
-                }
-                return Types.Integer;
-            }
-            break;
-        case "<":
-        case "<=":
-        case ">":
-        case ">=":
-        case "<>":
-        case "=":
-            if (isTypeABoolean(left) && isTypeABoolean(right)) {
-                return Types.Boolean;
-            }
-            if (isTypeANumber(left) && isTypeANumber(right)) {
-                return Types.Boolean;
-            }
-            return undefined;
-        case "AND":
-        case "OR":
-            if (isTypeABoolean(left) && isTypeABoolean(right)) {
-                return Types.Boolean;
-            }
-            return undefined;
-        default:
-            assertUnreachable(operator);
+    const candidates = BinaryOperators[operator];
+    for (const candidate of candidates) {
+        if(areTypesEqual(candidate.left, left) && areTypesEqual(candidate.right, right)) {
+            return candidate.returnType;
+        }
     }
     return undefined;
 }
