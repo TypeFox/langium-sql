@@ -30,12 +30,31 @@ FormalParameterDefinition:
 SelectStatement:
     'SELECT' ('ALL'|distinct?='DISTINCT')?
     select=SelectElements
-    from=FromClause? 
-    //groupBy=GroupByClause?
-    //having=HavingClause?
-    //orderBy=OrderByClause?
-    //limit=LimitClause? 
+    from=FromClause?
+    where=WhereClause?
+    groupBy=GroupByClause?
+    having=HavingClause?
+    orderBy=OrderByClause?
     ';';
+
+WhereClause:
+    'WHERE' rowCondition=Expression;
+
+HavingClause:
+    'HAVING' groupCondition=Expression
+    ;
+
+GroupByClause:
+    'GROUP' 'BY' specs+=Expression (',' specs+=Expression)*
+    ;
+
+OrderByClause:
+    'ORDER' 'BY' specs+=OrderBySpec (',' specs+=OrderBySpec)*
+    ;
+
+OrderBySpec:
+    scalar=Expression ('ASC'|'DESC')?
+    ;
 
 SelectElements:
     elements+=SelectElement (',' elements+=SelectElement)*

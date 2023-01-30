@@ -10,7 +10,7 @@
     },
     {
       "name": "keyword.control.sql",
-      "match": "\\b([aA][lL][lL]|[aA][nN][dD]|[aA][sS]|[bB][oO][oO][lL][eE][aA][nN]|[cC][aA][sS][tT]|[cC][hH][aA][rR]|[cC][rR][eE][aA][tT][eE]|[dD][iI][sS][tT][iI][nN][cC][tT]|[fF][aA][lL][sS][eE]|[fF][rR][oO][mM]|[fF][uU][nN][cC][tT][iI][oO][nN]|[iI][nN][tT]|[iI][nN][tT][eE][gG][eE][rR]|[jJ][oO][iI][nN]|[nN][oO][tT]|[oO][nN]|[oO][rR]|[rR][eE][aA][lL]|[sS][eE][lL][eE][cC][tT]|[tT][aA][bB][lL][eE]|[tT][rR][uU][eE])\\b"
+      "match": "\\b([aA][lL][lL]|[aA][nN][dD]|[aA][sS]|[aA][sS][cC]|[bB][oO][oO][lL][eE][aA][nN]|[bB][yY]|[cC][aA][sS][tT]|[cC][hH][aA][rR]|[cC][rR][eE][aA][tT][eE]|[dD][eE][sS][cC]|[dD][iI][sS][tT][iI][nN][cC][tT]|[fF][aA][lL][sS][eE]|[fF][rR][oO][mM]|[fF][uU][nN][cC][tT][iI][oO][nN]|[gG][rR][oO][uU][pP]|[hH][aA][vV][iI][nN][gG]|[iI][nN][tT]|[iI][nN][tT][eE][gG][eE][rR]|[jJ][oO][iI][nN]|[nN][oO][tT]|[oO][nN]|[oO][rR]|[oO][rR][dD][eE][rR]|[rR][eE][aA][lL]|[sS][eE][lL][eE][cC][tT]|[tT][aA][bB][lL][eE]|[tT][rR][uU][eE]|[wW][hH][eE][rR][eE])\\b"
     },
     {
       "name": "string.quoted.single.sql",
