@@ -24,6 +24,7 @@ import {
     isBooleanLiteral,
     isFunctionCall,
 } from "./generated/ast";
+import { canConvert } from "./sql-type-conversion";
 import { TypeDescriptor, Types } from "./sql-type-descriptors";
 import {
     assertUnreachable,
@@ -43,7 +44,9 @@ export function computeType(node: AstNode): TypeDescriptor | undefined {
 
 function computeTypeOfExpression(node: Expression): TypeDescriptor | undefined {
     if (isCastExpression(node)) {
-        return getTypeOfDataType(node.type);
+        const source = computeType(node.expr);
+        const target = getTypeOfDataType(node.type);
+        return source && target && canConvert(source, target, 'explicit') ? target : undefined;
     }
     if (isNumberLiteral(node)) {
         return computeTypeOfNumericLiteral(node.$cstNode!.text);

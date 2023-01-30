@@ -5,6 +5,7 @@
  ******************************************************************************/
 import _ from "lodash";
 import { UnaryExpression } from "./generated/ast";
+import { canConvert } from "./sql-type-conversion";
 import { areTypesEqual, TypeDescriptor, Types } from "./sql-type-descriptors";
 import { BinaryOperator, BinaryOperators, UnaryOperators } from "./sql-type-operators";
 
@@ -32,6 +33,10 @@ export function computeTypeOfBinaryOperation(
     for (const candidate of candidates) {
         if(areTypesEqual(candidate.left, left) && areTypesEqual(candidate.right, right)) {
             return candidate.returnType;
+        } else {
+            if(canConvert(left, candidate.left, 'implicit') && canConvert(right, candidate.right, 'implicit')) {
+                return candidate.returnType;
+            }
         }
     }
     return undefined;

@@ -21,7 +21,6 @@ import {
 } from "./generated/module";
 import { SqlScopeProvider } from "./sql-scope";
 import { SqlValidationRegistry, SqlValidator } from "./sql-validator";
-import { SqlWorkspaceManager } from "./sql-workspace-manager";
 
 /**
  * Declaration of custom services - add your own service classes here.
@@ -34,7 +33,6 @@ export type SqlAddedServices = {
 
 export type SqlSharedServices = {
     workspace: {
-        WorkspaceManager: SqlWorkspaceManager;
     };
 };
 
@@ -43,7 +41,6 @@ export const SqlSharedModule: Module<
     PartialLangiumSharedServices & SqlSharedServices
 > = {
     workspace: {
-        WorkspaceManager: (services) => new SqlWorkspaceManager(services),
     },
 };
 
