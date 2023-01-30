@@ -16,9 +16,6 @@ import { ReportAs } from "./sql-error-codes";
 import { computeType } from "./sql-type-system";
 import { isTypeABoolean } from "./sql-type-descriptors";
 
-/**
- * Registry for validation checks.
- */
 export class SqlValidationRegistry extends ValidationRegistry {
     constructor(services: SqlServices) {
         super(services);
@@ -35,9 +32,6 @@ export class SqlValidationRegistry extends ValidationRegistry {
     }
 }
 
-/**
- * Implementation of custom validations.
- */
 export class SqlValidator {
     checkWhereIsBoolean(clause: ast.WhereClause, accept: ValidationAcceptor): void {
         const type = computeType(clause.rowCondition);
