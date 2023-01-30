@@ -1,1 +1,1 @@
-SELECT id, name, birthday FROM tab WHERE NOT id ;
+SELECT id, name, birthday FROM tab WHERE NOT (birthday=birthday) GROUP BY birthday HAVING id=id ORDER BY name; 

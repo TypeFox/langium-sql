@@ -14,6 +14,7 @@ import _ from "lodash";
 import type { SqlServices } from "./sql-module";
 import { ReportAs } from "./sql-error-codes";
 import { computeType } from "./sql-type-system";
+import { isTypeABoolean } from "./sql-type-descriptors";
 
 /**
  * Registry for validation checks.
@@ -40,14 +41,14 @@ export class SqlValidationRegistry extends ValidationRegistry {
 export class SqlValidator {
     checkWhereIsBoolean(clause: ast.WhereClause, accept: ValidationAcceptor): void {
         const type = computeType(clause.rowCondition);
-        if(!ast.isBooleanType(type)) {
-            ReportAs.ExpressionMustReturnABoolean(clause.rowCondition, {}, accept);
+        if(type && !isTypeABoolean(type)) {
+            ReportAs.ExpressionMustReturnABoolean(clause.rowCondition, type!, accept);
         }
     }
     checkHavingIsBoolean(clause: ast.HavingClause, accept: ValidationAcceptor): void {
         const type = computeType(clause.groupCondition);
-        if(!ast.isBooleanType(type)) {
-            ReportAs.ExpressionMustReturnABoolean(clause.groupCondition, {}, accept);
+        if(type && !isTypeABoolean(type)) {
+            ReportAs.ExpressionMustReturnABoolean(clause.groupCondition, type!, accept);
         }
     }
     checkBinaryExpressionType(expr: ast.BinaryExpression, accept: ValidationAcceptor): void {

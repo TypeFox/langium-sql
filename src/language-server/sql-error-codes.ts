@@ -92,12 +92,12 @@ export const ReportAs = {
     ),
     ExpressionMustReturnABoolean: SqlErrorFactory.create<
         ast.Expression,
-        {}
+        TypeDescriptor
     >(
         "SQL00005",
         "error",
-        () =>
-            `Expressing must return a boolean.`,
+        operand =>
+            `Expression must return a boolean, not a '${operand.discriminator}'.`,
         (node) => ({ node })
     ),
 };

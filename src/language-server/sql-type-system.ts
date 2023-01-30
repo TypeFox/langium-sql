@@ -69,7 +69,7 @@ function computeTypeOfExpression(node: Expression): TypeDescriptor | undefined {
     }
     if (isColumnName(node)) {
         const dataType = node.column.ref?.dataType;
-        return dataType ? getTypeOfDataType(dataType) : undefined;
+        return dataType != null ? getTypeOfDataType(dataType) : undefined;
     }
     if (isFunctionCall(node)) {
         const dataType = node.functionName.function.ref?.returnType;
