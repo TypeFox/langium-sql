@@ -5,10 +5,56 @@
  ******************************************************************************/
 
 import _ from "lodash";
-import { BinaryExpression } from "./generated/ast";
+import { BinaryExpression, UnaryExpression } from "./generated/ast";
 import { TypeDescriptor, Types } from "./sql-type-descriptors";
 
+export type UnaryOperator = UnaryExpression["operator"];
 export type BinaryOperator = BinaryExpression["operator"];
+
+export interface UnaryOperatorDescriptor {
+    operandType: TypeDescriptor;
+    returnType: TypeDescriptor;
+}
+
+const IntegerReturnsInteger: UnaryOperatorDescriptor = {
+    operandType: Types.Integer,
+    returnType: Types.Integer
+}
+
+const RealReturnsReal: UnaryOperatorDescriptor = {
+    operandType: Types.Integer,
+    returnType: Types.Integer
+}
+
+const BooleanReturnsBoolean: UnaryOperatorDescriptor = {
+    operandType: Types.Integer,
+    returnType: Types.Integer
+}
+
+const ReversedUnaryOperators: Map<UnaryOperatorDescriptor, UnaryOperator[]> = new Map<UnaryOperatorDescriptor, UnaryOperator[]>();
+ReversedUnaryOperators.set(IntegerReturnsInteger, ['+', '-']);
+ReversedUnaryOperators.set(RealReturnsReal, ['+', '-']);
+ReversedUnaryOperators.set(BooleanReturnsBoolean, ['NOT']);
+
+const unaries = [...ReversedUnaryOperators.entries()].flatMap(([descr, operators]) => {
+    return operators.map(op => [op, descr] as const);
+});
+
+export type UnaryOperatorTable = Record<UnaryOperator, UnaryOperatorDescriptor[]>;
+
+function emptUnaryTable(): UnaryOperatorTable {
+    const result: any = {};
+    const indices: UnaryOperator[] = ["+", "-", "NOT"];
+    indices.forEach(op => result[op] = []);
+    return result as UnaryOperatorTable;
+}
+
+export const UnaryOperators = Object.entries(_.groupBy(unaries, ([op]) => op))
+    .reduce((lhs, rhs) => {
+        const key: UnaryOperator = rhs[0] as UnaryOperator;
+        lhs[key] = lhs[key].concat(rhs[1].map(descr => descr[1]));
+        return lhs;
+    }, emptUnaryTable());
 
 export interface BinaryOperatorDescriptor {
     left: TypeDescriptor;
@@ -53,21 +99,21 @@ const CharCharReturnsBoolean: BinaryOperatorDescriptor = {
     returnType: Types.Boolean
 }
 
-const ReveresedBinaryOperators: Map<BinaryOperatorDescriptor, BinaryOperator[]> = new Map<BinaryOperatorDescriptor, BinaryOperator[]>();
-ReveresedBinaryOperators.set(IntegerIntegerReturnsInteger, ["%", "*", "+", "-", "/"]);
-ReveresedBinaryOperators.set(RealRealReturnsReal, ["%", "*", "+", "-", "/"]);
-ReveresedBinaryOperators.set(IntegerIntegerReturnsBoolean, ["<", "<=", "<>", "=", ">", ">="]);
-ReveresedBinaryOperators.set(RealRealReturnsBoolean, ["<", "<=", "<>", "=", ">", ">="]);
-ReveresedBinaryOperators.set(CharCharReturnsBoolean, ["<", "<=", "<>", "=", ">", ">="]);
-ReveresedBinaryOperators.set(BooleanBooleanReturnsBoolean, ["<", "<=", "<>", "=", ">", ">=", "AND", "OR"]);
+const ReversedBinaryOperators: Map<BinaryOperatorDescriptor, BinaryOperator[]> = new Map<BinaryOperatorDescriptor, BinaryOperator[]>();
+ReversedBinaryOperators.set(IntegerIntegerReturnsInteger, ["%", "*", "+", "-", "/"]);
+ReversedBinaryOperators.set(RealRealReturnsReal, ["%", "*", "+", "-", "/"]);
+ReversedBinaryOperators.set(IntegerIntegerReturnsBoolean, ["<", "<=", "<>", "=", ">", ">="]);
+ReversedBinaryOperators.set(RealRealReturnsBoolean, ["<", "<=", "<>", "=", ">", ">="]);
+ReversedBinaryOperators.set(CharCharReturnsBoolean, ["<", "<=", "<>", "=", ">", ">="]);
+ReversedBinaryOperators.set(BooleanBooleanReturnsBoolean, ["<", "<=", "<>", "=", ">", ">=", "AND", "OR"]);
 
-const flatMap = [...ReveresedBinaryOperators.entries()].flatMap(([descr, operators]) => {
+const flatMap = [...ReversedBinaryOperators.entries()].flatMap(([descr, operators]) => {
     return operators.map(op => [op, descr] as const);
 });
 
 export type BinaryOperatorTable = Record<BinaryOperator, BinaryOperatorDescriptor[]>;
 
-function emptyTable(): BinaryOperatorTable {
+function emptyBinaryTable(): BinaryOperatorTable {
     const result: any = {};
     const indices: BinaryOperator[] = ["%", "*", "+", "-", "/", "<", "<=", "<>", "=", ">", ">=", "AND", "OR"];
     indices.forEach(op => result[op] = []);
@@ -79,4 +125,4 @@ export const BinaryOperators = Object.entries(_.groupBy(flatMap, ([op]) => op))
         const key: BinaryOperator = rhs[0] as BinaryOperator;
         lhs[key] = lhs[key].concat(rhs[1].map(descr => descr[1]));
         return lhs;
-    }, emptyTable());
+    }, emptyBinaryTable());

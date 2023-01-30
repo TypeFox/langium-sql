@@ -5,8 +5,8 @@
  ******************************************************************************/
 import _ from "lodash";
 import { UnaryExpression } from "./generated/ast";
-import { areTypesEqual, isTypeABoolean, isTypeANumber, TypeDescriptor, Types } from "./sql-type-descriptors";
-import { BinaryOperator, BinaryOperators } from "./sql-type-operators";
+import { areTypesEqual, TypeDescriptor, Types } from "./sql-type-descriptors";
+import { BinaryOperator, BinaryOperators, UnaryOperators } from "./sql-type-operators";
 
 const NumericLiteralPattern = /^(\d+)((\.(\d)+)?([eE]([\-+]?\d+))?)?$/;
 export function computeTypeOfNumericLiteral(
@@ -41,18 +41,11 @@ export function computeTypeOfUnaryOperation(
     operator: UnaryExpression["operator"],
     operandType: TypeDescriptor
 ): TypeDescriptor | undefined {
-    switch(operator) {
-        case '+':
-        case '-':
-            if(isTypeANumber(operandType)) {
-                return operandType;
-            }
-            break;
-        case 'NOT':
-            if(isTypeABoolean(operandType)) {
-                return operandType;
-            }
-            break;
+    const candidates = UnaryOperators[operator];
+    for (const candidate of candidates) {
+        if(areTypesEqual(candidate.operandType, operandType)) {
+            return candidate.returnType;
+        }
     }
     return undefined;
 }
