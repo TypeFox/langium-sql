@@ -54,7 +54,7 @@ const ConversionTable: Record<TypeConversionPair, TypeConverter> = {
         };
     }),
     "integer->integer": Identity,
-    "integer->real": Explicit(v => {
+    "integer->real": Implicit(v => {
         assert(v.type === 'integer');
         return {
             type: "real",
