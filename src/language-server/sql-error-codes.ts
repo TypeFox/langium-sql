@@ -90,6 +90,16 @@ export const ReportAs = {
             `Unary operator '${op}' is not defined for '${operand.discriminator}'.`,
         (node) => ({ node, property: "operator" })
     ),
+    ExpressionMustReturnABoolean: SqlErrorFactory.create<
+        ast.Expression,
+        {}
+    >(
+        "SQL00005",
+        "error",
+        () =>
+            `Expressing must return a boolean.`,
+        (node) => ({ node })
+    ),
 };
 
 export interface BinaryOperatorMismatch {

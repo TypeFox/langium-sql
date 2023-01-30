@@ -27,6 +27,8 @@ export class SqlValidationRegistry extends ValidationRegistry {
             IntegerLiteral: [validator.checkIntegerLiteralIsWholeNumber],
             BinaryExpression: [validator.checkBinaryExpressionType],
             UnaryExpression: [validator.checkUnaryExpressionType],
+            WhereClause: [validator.checkWhereIsBoolean],
+            HavingClause: [validator.checkHavingIsBoolean],
         };
         this.register(checks, validator);
     }
@@ -36,6 +38,18 @@ export class SqlValidationRegistry extends ValidationRegistry {
  * Implementation of custom validations.
  */
 export class SqlValidator {
+    checkWhereIsBoolean(clause: ast.WhereClause, accept: ValidationAcceptor): void {
+        const type = computeType(clause.rowCondition);
+        if(!ast.isBooleanType(type)) {
+            ReportAs.ExpressionMustReturnABoolean(clause.rowCondition, {}, accept);
+        }
+    }
+    checkHavingIsBoolean(clause: ast.HavingClause, accept: ValidationAcceptor): void {
+        const type = computeType(clause.groupCondition);
+        if(!ast.isBooleanType(type)) {
+            ReportAs.ExpressionMustReturnABoolean(clause.groupCondition, {}, accept);
+        }
+    }
     checkBinaryExpressionType(expr: ast.BinaryExpression, accept: ValidationAcceptor): void {
         const left = computeType(expr.left);
         const right = computeType(expr.right);

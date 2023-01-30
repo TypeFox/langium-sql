@@ -22,13 +22,13 @@ const IntegerReturnsInteger: UnaryOperatorDescriptor = {
 }
 
 const RealReturnsReal: UnaryOperatorDescriptor = {
-    operandType: Types.Integer,
-    returnType: Types.Integer
+    operandType: Types.Real,
+    returnType: Types.Real
 }
 
 const BooleanReturnsBoolean: UnaryOperatorDescriptor = {
-    operandType: Types.Integer,
-    returnType: Types.Integer
+    operandType: Types.Boolean,
+    returnType: Types.Boolean
 }
 
 const ReversedUnaryOperators: Map<UnaryOperatorDescriptor, UnaryOperator[]> = new Map<UnaryOperatorDescriptor, UnaryOperator[]>();
