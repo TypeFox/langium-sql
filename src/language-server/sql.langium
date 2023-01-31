@@ -5,14 +5,14 @@ entry SqlFile:
     ;
 
 Statement:
-    FunctionDefinition | TableDefinition | SelectStatement;
+    (FunctionDefinition | TableDefinition | SelectStatement) ';';
 
 
 //DEFINITION/////////////////////////////////////////////////////////
 TableDefinition:
     'CREATE' 'TABLE' name=Identifier '('(
         columns+=ColumnDefinition (',' columns+=ColumnDefinition)*
-    )?')' ';';
+    )?')';
 
 ColumnDefinition:
     name=Identifier dataType=Type;
@@ -20,7 +20,7 @@ ColumnDefinition:
 FunctionDefinition:
     'CREATE' 'FUNCTION' name=Identifier '('
         (params+=FormalParameterDefinition (',' params+=FormalParameterDefinition)*)?
-    ')' 'AS' returnType=Type ';';
+    ')' 'AS' returnType=Type;
 
 FormalParameterDefinition:
     name=Identifier dataType=Type
@@ -34,8 +34,7 @@ SelectStatement:
     where=WhereClause?
     groupBy=GroupByClause?
     having=HavingClause?
-    orderBy=OrderByClause?
-    ';';
+    orderBy=OrderByClause?;
 
 WhereClause:
     'WHERE' rowCondition=Expression;
@@ -60,10 +59,10 @@ SelectElements:
     elements+=SelectElement (',' elements+=SelectElement)*
     ;
     
-SelectElement:
+SelectElement infers SelectElement:
     {infer AllStar}'*'
     | {infer AllTable}variableName=TableVariableName '.' '*'
-    | Expression
+    | {infer ExpressionQuery} expr=Expression
     ;
     
 FromClause: 'FROM' sources=TableSources;
@@ -122,6 +121,7 @@ PrimaryExpression infers Expression:
     | {infer CastExpression} CastExpression
     | {infer UnaryExpression} operator=('NOT'|'-'|'+') value=PrimaryExpression
     | {infer ParenthesisExpression} '(' expression=Expression ')'
+    | {infer SubQueryExpression} '(' subQuery=SelectStatement ')'
     | {infer FunctionCall} functionName=FunctionName '(' params=SelectElements? ')'
     | {infer ColumnName} ColumnName
     ;
@@ -159,6 +159,5 @@ terminal STRING returns string: /\'(\\.|\\\\|[^'\\])*\'/;
 terminal ID: /[_a-zA-Z][\w_]*/;
 terminal NUMBER returns number: /\d+((\.\d+)?([eE][\-+]?\d+)?)?/;
 
-
 hidden terminal ML_COMMENT: /\/\*[\s\S]*?\*\//;
-hidden terminal SL_COMMENT: /\/\/[^\n\r]*/;
+hidden terminal SL_COMMENT: /(\/\/|\-\-)[^\n\r]*/;

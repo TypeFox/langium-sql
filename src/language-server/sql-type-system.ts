@@ -3,6 +3,7 @@
  * This program and the accompanying materials are made available under the
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
+import assert from "assert";
 import { AstNode } from "langium";
 import _ from "lodash";
 import {
@@ -23,9 +24,15 @@ import {
     isStringLiteral,
     isBooleanLiteral,
     isFunctionCall,
+    isSubQueryExpression,
+    SelectStatement,
+    isAllStar,
+    isAllTable,
+    isExpressionQuery,
+    TableSource,
 } from "./generated/ast";
 import { canConvert } from "./sql-type-conversion";
-import { TypeDescriptor, Types } from "./sql-type-descriptors";
+import { ColumnTypeDescriptor, RowTypeDescriptor, TypeDescriptor, Types } from "./sql-type-descriptors";
 import {
     assertUnreachable,
     computeTypeOfBinaryOperation,
@@ -86,7 +93,41 @@ function computeTypeOfExpression(node: Expression): TypeDescriptor | undefined {
         }
         return undefined;
     }
+    if(isSubQueryExpression(node)) {
+        return getTypeOfQuerySelectItems(node.subQuery);
+    }
     assertUnreachable(node);
+}
+
+function getTypeOfQuerySelectItems(selectStatement: SelectStatement): TypeDescriptor {
+    const columnTypes = selectStatement.select.elements.map(e => {
+        if(isAllStar(e)) {
+            assert(selectStatement.from != null);
+            const rows = selectStatement.from.sources.list.map(src => getTypesOfTableSources(src));
+            return {
+                discriminator: 'row',
+                columnTypes: rows.flatMap(t => t.columnTypes)
+            };
+        } else if(isAllTable(e)) {
+            assert(selectStatement.from != null);
+            const columns = e.variableName.variable.ref?.tableName.table.ref?.columns ?? [];
+            return {
+                discriminator: 'row',
+                columnTypes: columns.map<ColumnTypeDescriptor>(c => ({name: c.name, type: computeType(c.dataType)!}))
+            };
+        } else if(isExpressionQuery(e)) {
+            return {
+                discriminator: 'row',
+                columnTypes: [{name: undefined, type: computeType(e.expr)!}]
+            };
+        }
+        assertUnreachable(e);
+        return undefined!;
+    });
+    return {
+        discriminator: 'row',
+        columnTypes: columnTypes.flatMap(c=> c.columnTypes)
+    }
 }
 
 function getTypeOfDataType(dataType: Type): TypeDescriptor | undefined {
@@ -104,3 +145,19 @@ function getTypeOfDataType(dataType: Type): TypeDescriptor | undefined {
     }
     assertUnreachable(dataType);
 }
+
+function getTypesOfTableSources(source: TableSource): RowTypeDescriptor {
+    const result: RowTypeDescriptor = {discriminator: 'row', columnTypes: []};
+    const items = [source.item].concat(source.joins.map(j => j.nextItem));
+    const tablesByVariableName = items.map(i => i.tableName.table.ref).filter((t) => t);
+    for (const table of tablesByVariableName) {
+        for (const column of table!.columns) {
+            result.columnTypes.push({
+                name: column.name,
+                type: computeType(column.dataType)!
+            })
+        }
+    }
+    return result;
+}
+

@@ -14,7 +14,8 @@
     },
     {
       "name": "string.quoted.single.sql",
-      "match": "'([^\\']|\\')*'"
+      "begin": "'",
+      "end": "\\\\.\\\\\\\\[^'\\\\]'"
     }
   ],
   "repository": {
@@ -36,7 +37,7 @@
           }
         },
         {
-          "begin": "//",
+          "begin": "//--",
           "beginCaptures": {
             "1": {
               "name": "punctuation.whitespace.comment.leading.sql"

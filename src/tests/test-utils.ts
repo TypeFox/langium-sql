@@ -8,7 +8,10 @@ import { expect } from "vitest";
 import * as ast from "../language-server/generated/ast";
 import { SqlServices } from "../language-server/sql-module";
 import { URI } from "vscode-uri";
-import { TypeDescriptor, TypeDescriptorDiscriminator } from "../language-server/sql-type-descriptors";
+import {
+    TypeDescriptor,
+    TypeDescriptorDiscriminator,
+} from "../language-server/sql-type-descriptors";
 import { ComputeTypeFunction } from "../language-server/sql-type-system";
 
 export async function parseHelper(
@@ -91,14 +94,18 @@ export function expectSelectItemToBeColumnName(
     expect(selectStatement.select.elements.length).toBeGreaterThan(
         selectElementIndex
     );
-    const element = selectStatement.select.elements[selectElementIndex];
+    const element = (selectStatement.select.elements[selectElementIndex] as ast.ExpressionQuery).expr;
     expect((element as ast.ColumnName).column.ref!.name).toBe(columnName);
     expect((element as ast.ColumnName).column.ref!.$container.name).toBe(
         tableName
     );
 }
 
-export function expectSelectItemsToBeOfType(selectStatement: ast.SelectStatement, computeType: ComputeTypeFunction, types: TypeDescriptor[]): void {
+export function expectSelectItemsToBeOfType(
+    selectStatement: ast.SelectStatement,
+    computeType: ComputeTypeFunction,
+    types: TypeDescriptor[]
+): void {
     expect(selectStatement.select.elements.length).toBe(types.length);
     selectStatement.select.elements.forEach((element, index) => {
         expect(computeType(element)).toStrictEqual(types[index]);
@@ -114,8 +121,10 @@ export function expectSelectItemToBeNumeric(
         selectElementIndex
     );
     const element = selectStatement.select.elements[selectElementIndex];
-    expect(element.$type).toBe(ast.NumberLiteral);
-    expect((element as ast.NumberLiteral).value).toBe(value);
+    expect(element.$type).toBe(ast.ExpressionQuery);
+    const query = (element as ast.ExpressionQuery).expr;
+    expect(query.$type === ast.NumberLiteral);
+    expect((query as ast.NumberLiteral).value).toBe(value);
 }
 
 export function expectSelectItemToBeColumnNameRelativeToVariable(
@@ -129,18 +138,14 @@ export function expectSelectItemToBeColumnNameRelativeToVariable(
         selectElementIndex
     );
     const element = selectStatement.select.elements[selectElementIndex];
-    expect(
-        (element as ast.TableRelatedColumnExpression).variableName.variable.ref!
-            .name
-    ).toBe(variableName);
-    expect(
-        (element as ast.TableRelatedColumnExpression).variableName.variable.ref!
-            .tableName.table.ref!.name
-    ).toBe(tableName);
-    expect(
-        (element as ast.TableRelatedColumnExpression).columnName!.column.ref!
-            .name
-    ).toBe(columnName);
+    expect(ast.isExpressionQuery(element)).toBeTruthy();
+    const exprQuery = (element as ast.ExpressionQuery)
+        .expr as ast.TableRelatedColumnExpression;
+    expect(exprQuery.variableName.variable.ref!.name).toBe(variableName);
+    expect(exprQuery.variableName.variable.ref!.tableName.table.ref!.name).toBe(
+        tableName
+    );
+    expect(exprQuery.columnName!.column.ref!.name).toBe(columnName);
 }
 
 export function expectSelectItemToBeAllStarRelativeToVariable(

@@ -99,4 +99,9 @@ export class SqlValidator {
             );
         }
     }
+
+    //TODO check SelectStatement: if any select item is AllStar, there must be at least one table source
+    //TODO check SelectStatement: if any select item is AllTable, there must be at least one table source with that name
+    //TODO check TableDefinition: needs min 1 field
+    //TODO check SelectStatement: if is within an expression, query should have only one column
 }
