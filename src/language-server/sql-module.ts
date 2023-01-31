@@ -34,7 +34,7 @@ export type SqlAddedServices = {
 
 export type SqlSharedServices = {
     workspace: {
-        WorkspaceManager: SqlWorkspaceManager;
+        WorkspaceManager: SqlWorkspaceManager
     };
 };
 
@@ -43,7 +43,7 @@ export const SqlSharedModule: Module<
     PartialLangiumSharedServices & SqlSharedServices
 > = {
     workspace: {
-        WorkspaceManager: (services) => new SqlWorkspaceManager(services),
+        WorkspaceManager: (services) => new SqlWorkspaceManager(services)
     },
 };
 

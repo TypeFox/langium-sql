@@ -4,8 +4,10 @@
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
 import _ from "lodash";
-import { BinaryExpression, UnaryExpression } from "./generated/ast";
-import { isTypeABoolean, isTypeANumber, isTypeAReal, TypeDescriptor, Types } from "./sql-type-descriptors";
+import { UnaryExpression } from "./generated/ast";
+import { canConvert } from "./sql-type-conversion";
+import { areTypesEqual, TypeDescriptor, Types } from "./sql-type-descriptors";
+import { BinaryOperator, BinaryOperators, UnaryOperators } from "./sql-type-operators";
 
 const NumericLiteralPattern = /^(\d+)((\.(\d)+)?([eE]([\-+]?\d+))?)?$/;
 export function computeTypeOfNumericLiteral(
@@ -23,44 +25,19 @@ export function assertUnreachable(x: never): never {
 }
 
 export function computeTypeOfBinaryOperation(
-    operator: BinaryExpression["operator"],
+    operator: BinaryOperator,
     left: TypeDescriptor,
     right: TypeDescriptor
 ): TypeDescriptor | undefined {
-    switch (operator) {
-        case "+":
-        case "-":
-        case "/":
-        case "*":
-        case "%":
-            if (isTypeANumber(left) && isTypeANumber(right)) {
-                if(isTypeAReal(left) || isTypeAReal(right)) {
-                    return Types.Real;
-                }
-                return Types.Integer;
+    const candidates = BinaryOperators[operator];
+    for (const candidate of candidates) {
+        if(areTypesEqual(candidate.left, left) && areTypesEqual(candidate.right, right)) {
+            return candidate.returnType;
+        } else {
+            if(canConvert(left, candidate.left, 'implicit') && canConvert(right, candidate.right, 'implicit')) {
+                return candidate.returnType;
             }
-            break;
-        case "<":
-        case "<=":
-        case ">":
-        case ">=":
-        case "<>":
-        case "=":
-            if (isTypeABoolean(left) && isTypeABoolean(right)) {
-                return Types.Boolean;
-            }
-            if (isTypeANumber(left) && isTypeANumber(right)) {
-                return Types.Boolean;
-            }
-            return undefined;
-        case "AND":
-        case "OR":
-            if (isTypeABoolean(left) && isTypeABoolean(right)) {
-                return Types.Boolean;
-            }
-            return undefined;
-        default:
-            assertUnreachable(operator);
+        }
     }
     return undefined;
 }
@@ -69,18 +46,11 @@ export function computeTypeOfUnaryOperation(
     operator: UnaryExpression["operator"],
     operandType: TypeDescriptor
 ): TypeDescriptor | undefined {
-    switch(operator) {
-        case '+':
-        case '-':
-            if(isTypeANumber(operandType)) {
-                return operandType;
-            }
-            break;
-        case 'NOT':
-            if(isTypeABoolean(operandType)) {
-                return operandType;
-            }
-            break;
+    const candidates = UnaryOperators[operator];
+    for (const candidate of candidates) {
+        if(areTypesEqual(candidate.operandType, operandType)) {
+            return candidate.returnType;
+        }
     }
     return undefined;
 }

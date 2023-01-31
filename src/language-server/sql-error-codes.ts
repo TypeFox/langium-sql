@@ -6,6 +6,8 @@
 
 import { AstNode, DiagnosticInfo, ValidationAcceptor } from "langium";
 import * as ast from "./generated/ast";
+import { TypeDescriptor } from "./sql-type-descriptors";
+import { BinaryOperator, UnaryOperator } from "./sql-type-operators";
 
 type SqlErrorSeverity = "error" | "warning" | "info" | "hint";
 
@@ -68,4 +70,45 @@ export const ReportAs = {
         ({ value }) => `Value '${value}' is not an integer.`,
         (node) => ({ node, property: "value" })
     ),
+    BinaryOperatorNotDefinedForGivenExpressions: SqlErrorFactory.create<
+        ast.BinaryExpression,
+        BinaryOperatorMismatch
+    >(
+        "SQL00003",
+        "error",
+        ({ op, left, right }) =>
+            `Binary operator '${op}' is not defined for ('${left.discriminator}', '${right.discriminator}').`,
+        (node) => ({ node, property: "operator" })
+    ),
+    UnaryOperatorNotDefinedForGivenExpression: SqlErrorFactory.create<
+        ast.UnaryExpression,
+        UnaryOperatorMismatch
+    >(
+        "SQL00004",
+        "error",
+        ({ op, operand }) =>
+            `Unary operator '${op}' is not defined for '${operand.discriminator}'.`,
+        (node) => ({ node, property: "operator" })
+    ),
+    ExpressionMustReturnABoolean: SqlErrorFactory.create<
+        ast.Expression,
+        TypeDescriptor
+    >(
+        "SQL00005",
+        "error",
+        operand =>
+            `Expression must return a boolean, not a '${operand.discriminator}'.`,
+        (node) => ({ node })
+    ),
 };
+
+export interface BinaryOperatorMismatch {
+    op: BinaryOperator;
+    left: TypeDescriptor;
+    right: TypeDescriptor;
+}
+
+export interface UnaryOperatorMismatch {
+    op: UnaryOperator;
+    operand: TypeDescriptor;
+}
