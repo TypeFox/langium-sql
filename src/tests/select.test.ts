@@ -50,6 +50,10 @@ describe("SELECT use cases", () => {
             expect(selectStatement.select.elements).toHaveLength(1);
             expect(selectStatement.select.elements[0].$type).toBe(ast.AllStar);
         });
+
+        it('should have expected types', () => {
+            expectSelectItemsToBeOfType(selectStatement, [Types.Integer, Types.Char()]);
+        });
     });
 
     describe("SELECT * FROM tab_non_existing", () => {
@@ -225,5 +229,11 @@ describe("SELECT use cases", () => {
     it("'SELECT (SELECT * FROM tab);' should have validation errors about too many columns within the sub query", async () => {
         const document = await parse("SELECT (SELECT * FROM tab);");
         expectValidationIssues(document, 1, ReportAs.SubQueriesWithinSelectStatementsMustHaveExactlyOneColumn.Code);
+    });
+
+    it("'SELECT * FROM (SELECT * FROM tab);'", async () => {
+        const document = await parse("SELECT * FROM (SELECT * FROM tab);");
+        const selectStatement = asSelectStatement(document);
+        expectSelectItemsToBeOfType(selectStatement, [Types.Integer, Types.Char()]);
     });
 });

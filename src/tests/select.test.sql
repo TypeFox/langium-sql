@@ -1,4 +1,4 @@
 CREATE TABLE tab (
     id INTEGER,
-    name TEXT
+    name CHAR(100)
 );

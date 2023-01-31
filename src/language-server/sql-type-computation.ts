@@ -32,6 +32,7 @@ import {
     TableSource,
     isTableSourceItem,
     isSubQuerySourceItem,
+    isType,
 } from "./generated/ast";
 import { canConvert } from "./sql-type-conversion";
 import { ColumnTypeDescriptor, RowTypeDescriptor, TypeDescriptor, Types } from "./sql-type-descriptors";
@@ -47,6 +48,8 @@ export type ComputeTypeFunction = (node: AstNode) => TypeDescriptor | undefined;
 export function computeType(node: AstNode): TypeDescriptor | undefined {
     if (isExpression(node)) {
         return computeTypeOfExpression(node);
+    } else if(isType(node)) {
+        return getTypeOfDataType(node);
     }
     return undefined;
 }
