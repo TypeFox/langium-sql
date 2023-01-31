@@ -116,8 +116,16 @@ export const ReportAs = {
         "SQL00007",
         "error",
         () => `Table definition requires at least one column.`,
-        (node) => ({ node, property: 'name' })
+        (node) => ({ node, property: "name" })
     ),
+    SubQueriesWithinSelectStatementsMustHaveExactlyOneColumn:
+        SqlErrorFactory.create<ast.SubQueryExpression, {}>(
+            "SQL00008",
+            "error",
+            () =>
+                `Sub queries within select statements must have exactly one column.`,
+            (node) => ({ node, property: "subQuery" })
+        ),
 };
 
 export interface BinaryOperatorMismatch {

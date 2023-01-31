@@ -94,12 +94,12 @@ function computeTypeOfExpression(node: Expression): TypeDescriptor | undefined {
         return undefined;
     }
     if(isSubQueryExpression(node)) {
-        return getTypeOfQuerySelectItems(node.subQuery);
+        return computeTypeOfSelectStatement(node.subQuery);
     }
     assertUnreachable(node);
 }
 
-export function getTypeOfQuerySelectItems(selectStatement: SelectStatement): TypeDescriptor {
+export function computeTypeOfSelectStatement(selectStatement: SelectStatement): TypeDescriptor {
     const columnTypes = selectStatement.select.elements.map(e => {
         if(isAllStar(e)) {
             assert(selectStatement.from != null);

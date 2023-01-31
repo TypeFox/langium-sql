@@ -13,7 +13,7 @@ import * as ast from "./generated/ast";
 import _ from "lodash";
 import type { SqlServices } from "./sql-module";
 import { ReportAs } from "./sql-error-codes";
-import { computeType } from "./sql-type-system";
+import { computeType, computeTypeOfSelectStatement } from "./sql-type-computation";
 import { isTypeABoolean } from "./sql-type-descriptors";
 
 export class SqlValidationRegistry extends ValidationRegistry {
@@ -31,6 +31,7 @@ export class SqlValidationRegistry extends ValidationRegistry {
             UnaryExpression: [validator.checkUnaryExpressionType],
             WhereClause: [validator.checkWhereIsBoolean],
             HavingClause: [validator.checkHavingIsBoolean],
+            SubQueryExpression: [validator.checkIfSubQuerySelectsExactlyOneValue]
         };
         this.register(checks, validator);
     }
@@ -115,6 +116,14 @@ export class SqlValidator {
     checkIfTableDefinitionHasAtLeastOneColumn(tableDefinition: ast.TableDefinition, accept: ValidationAcceptor): void {
         if(tableDefinition.columns.length === 0) {
             ReportAs.TableDefinitionRequiresAtLeastOneColumn(tableDefinition, {}, accept);
+        }
+    }
+
+    //TODO does not hold for insertions! INSERT INTO employees SELECT id, name FROM xxx
+    checkIfSubQuerySelectsExactlyOneValue(subQueryExpression: ast.SubQueryExpression, accept: ValidationAcceptor) {
+        const type = computeTypeOfSelectStatement(subQueryExpression.subQuery);
+        if(type.discriminator === 'row' && type.columnTypes.length > 1) {
+            ReportAs.SubQueriesWithinSelectStatementsMustHaveExactlyOneColumn(subQueryExpression, {}, accept);
         }
     }
 

@@ -12,7 +12,7 @@ import {
     TypeDescriptor,
     TypeDescriptorDiscriminator,
 } from "../language-server/sql-type-descriptors";
-import { ComputeTypeFunction, getTypeOfQuerySelectItems } from "../language-server/sql-type-system";
+import { ComputeTypeFunction, computeTypeOfSelectStatement } from "../language-server/sql-type-computation";
 import assert from "assert";
 
 export async function parseHelper(
@@ -114,7 +114,7 @@ export function expectSelectItemsToBeOfType(
     selectStatement: ast.SelectStatement,
     types: TypeDescriptor[]
 ): void {
-    const row = getTypeOfQuerySelectItems(selectStatement);
+    const row = computeTypeOfSelectStatement(selectStatement);
     assert(row.discriminator === 'row');
     expect(row.columnTypes.map(m => m.type)).toStrictEqual(types);
 }

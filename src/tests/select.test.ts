@@ -223,18 +223,15 @@ describe("SELECT use cases", () => {
         });
     });
 
-    describe("SELECT *;", () => {
-        let document: LangiumDocument<ast.SqlFile>;
-        let selectStatement: ast.SelectStatement;
+    it("'SELECT *;' should have validation errors about all-star without sources", async () => {
+        const document = await parse("SELECT *;");
 
-        beforeAll(async () => {
-            document = await parse("SELECT *;");
-            selectStatement = asSelectStatement(document);
-        });
+        expectNoErrors(document, {exceptFor: 'validator'});
+        expect(document.diagnostics![0].code).toBe(ReportAs.AllStarSelectionRequiresTableSources.Code);
+    });
 
-        it("should have validation errors about all-star without sources", () => {
-            expectNoErrors(document, {exceptFor: 'validator'});
-            expect(document.diagnostics![0].code).toBe(ReportAs.AllStarSelectionRequiresTableSources.Code);
-        });
+    it("'SELECT (SELECT * FROM tab);' should have validation errors about too many columns within the sub query", async () => {
+        const document = await parse("SELECT (SELECT * FROM tab);");
+        expectValidationIssues(document, 1, ReportAs.SubQueriesWithinSelectStatementsMustHaveExactlyOneColumn.Code);
     });
 });
