@@ -96,9 +96,27 @@ export const ReportAs = {
     >(
         "SQL00005",
         "error",
-        operand =>
+        (operand) =>
             `Expression must return a boolean, not a '${operand.discriminator}'.`,
         (node) => ({ node })
+    ),
+    AllStarSelectionRequiresTableSources: SqlErrorFactory.create<
+        ast.SelectStatement,
+        {}
+    >(
+        "SQL00006",
+        "error",
+        () => `All-star selection requires table sources (FROM is missing).`,
+        (node) => ({ node })
+    ),
+    TableDefinitionRequiresAtLeastOneColumn: SqlErrorFactory.create<
+        ast.TableDefinition,
+        {}
+    >(
+        "SQL00007",
+        "error",
+        () => `Table definition requires at least one column.`,
+        (node) => ({ node, property: 'name' })
     ),
 };
 

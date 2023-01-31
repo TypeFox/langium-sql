@@ -12,7 +12,8 @@ import {
     TypeDescriptor,
     TypeDescriptorDiscriminator,
 } from "../language-server/sql-type-descriptors";
-import { ComputeTypeFunction } from "../language-server/sql-type-system";
+import { ComputeTypeFunction, getTypeOfQuerySelectItems } from "../language-server/sql-type-system";
+import assert from "assert";
 
 export async function parseHelper(
     services: SqlServices,
@@ -62,10 +63,18 @@ export function expectNoErrors(
     expect(result.parseResult.parserErrors.length > 0).toBe(parser);
     expect((result.diagnostics?.length ?? 0) > 0).toBe(validator);
 }
+
+export function asTableDefinition(result: LangiumDocument<ast.SqlFile>) {
+    const file = result.parseResult.value;
+    expect(file.statements).toHaveLength(1);
+    expect(file.statements[0].$type).toBe(ast.TableDefinition);
+    return file.statements[0] as ast.TableDefinition;
+}
+
 export function asSelectStatement(result: LangiumDocument<ast.SqlFile>) {
     const file = result.parseResult.value;
     expect(file.statements).toHaveLength(1);
-    expect(file.statements[0].$type).toBe("SelectStatement");
+    expect(file.statements[0].$type).toBe(ast.SelectStatement);
     return file.statements[0] as ast.SelectStatement;
 }
 
@@ -103,13 +112,11 @@ export function expectSelectItemToBeColumnName(
 
 export function expectSelectItemsToBeOfType(
     selectStatement: ast.SelectStatement,
-    computeType: ComputeTypeFunction,
     types: TypeDescriptor[]
 ): void {
-    expect(selectStatement.select.elements.length).toBe(types.length);
-    selectStatement.select.elements.forEach((element, index) => {
-        expect(computeType(element)).toStrictEqual(types[index]);
-    });
+    const row = getTypeOfQuerySelectItems(selectStatement);
+    assert(row.discriminator === 'row');
+    expect(row.columnTypes.map(m => m.type)).toStrictEqual(types);
 }
 
 export function expectSelectItemToBeNumeric(

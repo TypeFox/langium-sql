@@ -21,7 +21,11 @@ export class SqlValidationRegistry extends ValidationRegistry {
         super(services);
         const validator = services.validation.SqlValidator;
         const checks: ValidationChecks<ast.SqlAstType> = {
-            SelectStatement: [validator.checkVariableNamesAreUnique],
+            TableDefinition: [validator.checkIfTableDefinitionHasAtLeastOneColumn],
+            SelectStatement: [
+                validator.checkVariableNamesAreUnique,
+                validator.checkIfSelectStatementWithAllStarSelectItemHasAtLeastOneTableSource
+            ],
             IntegerLiteral: [validator.checkIntegerLiteralIsWholeNumber],
             BinaryExpression: [validator.checkBinaryExpressionType],
             UnaryExpression: [validator.checkUnaryExpressionType],
@@ -100,8 +104,19 @@ export class SqlValidator {
         }
     }
 
-    //TODO check SelectStatement: if any select item is AllStar, there must be at least one table source
-    //TODO check SelectStatement: if any select item is AllTable, there must be at least one table source with that name
-    //TODO check TableDefinition: needs min 1 field
+    checkIfSelectStatementWithAllStarSelectItemHasAtLeastOneTableSource(selectStatement: ast.SelectStatement, accept: ValidationAcceptor): void {
+        if(selectStatement.select.elements.filter(ast.isAllStar).length > 0) {
+            if(!selectStatement.from) {
+                ReportAs.AllStarSelectionRequiresTableSources(selectStatement, {}, accept);
+            }
+        }
+    }
+
+    checkIfTableDefinitionHasAtLeastOneColumn(tableDefinition: ast.TableDefinition, accept: ValidationAcceptor): void {
+        if(tableDefinition.columns.length === 0) {
+            ReportAs.TableDefinitionRequiresAtLeastOneColumn(tableDefinition, {}, accept);
+        }
+    }
+
     //TODO check SelectStatement: if is within an expression, query should have only one column
 }

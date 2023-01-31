@@ -99,7 +99,7 @@ function computeTypeOfExpression(node: Expression): TypeDescriptor | undefined {
     assertUnreachable(node);
 }
 
-function getTypeOfQuerySelectItems(selectStatement: SelectStatement): TypeDescriptor {
+export function getTypeOfQuerySelectItems(selectStatement: SelectStatement): TypeDescriptor {
     const columnTypes = selectStatement.select.elements.map(e => {
         if(isAllStar(e)) {
             assert(selectStatement.from != null);

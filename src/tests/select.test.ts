@@ -11,9 +11,6 @@ import { ReportAs } from "../language-server/sql-error-codes";
 import { createSqlServices } from "../language-server/sql-module";
 import { Types } from "../language-server/sql-type-descriptors";
 import {
-    computeType,
-} from "../language-server/sql-type-system";
-import {
     parseHelper,
     expectNoErrors,
     asSelectStatement,
@@ -200,7 +197,7 @@ describe("SELECT use cases", () => {
         });
 
         it("should be evaluated as number", () => {
-            expectSelectItemsToBeOfType(selectStatement, computeType, [Types.Real]);
+            expectSelectItemsToBeOfType(selectStatement, [Types.Real]);
         });
 
         it("should have no from clause", () => {
@@ -222,7 +219,22 @@ describe("SELECT use cases", () => {
         });
 
         it("should be evaluated with given types", () => {
-            expectSelectItemsToBeOfType(selectStatement, computeType, [Types.Integer, Types.Real, Types.Boolean, Types.Boolean, Types.Char()]);
+            expectSelectItemsToBeOfType(selectStatement, [Types.Integer, Types.Real, Types.Boolean, Types.Boolean, Types.Char()]);
+        });
+    });
+
+    describe("SELECT *;", () => {
+        let document: LangiumDocument<ast.SqlFile>;
+        let selectStatement: ast.SelectStatement;
+
+        beforeAll(async () => {
+            document = await parse("SELECT *;");
+            selectStatement = asSelectStatement(document);
+        });
+
+        it("should have validation errors about all-star without sources", () => {
+            expectNoErrors(document, {exceptFor: 'validator'});
+            expect(document.diagnostics![0].code).toBe(ReportAs.AllStarSelectionRequiresTableSources.Code);
         });
     });
 });
