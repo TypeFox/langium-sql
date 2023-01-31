@@ -1,2 +1,2 @@
 --select expression must be single value
-SELECT (SELECT id FROM employees);
+SELECT (SELECT id, name FROM employees);

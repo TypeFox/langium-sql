@@ -53,7 +53,7 @@ interface NumericValue {
 
 export const ReportAs = {
     DuplicatedVariableName: SqlErrorFactory.create<
-        ast.TableSourceItem,
+        ast.SourceItem,
         Nameable
     >(
         "SQL00001",

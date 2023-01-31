@@ -70,15 +70,16 @@ FromClause: 'FROM' sources=TableSources;
 TableSources: list+=TableSource (',' list+=TableSource)*;
 
 TableSource:
-    item=TableSourceItem joins+=JoinPart*
+    item=SourceItem joins+=JoinPart*
     ;
 
 JoinPart:
-    'JOIN' nextItem=TableSourceItem ('ON' joinOn=Expression)?
+    'JOIN' nextItem=SourceItem ('ON' joinOn=Expression)?
     ;
 
-TableSourceItem
-    : tableName=TableName ('AS'? name=Identifier)?
+SourceItem infers SourceItem
+    : {infer TableSourceItem} tableName=TableName ('AS'? name=Identifier)?
+    | {infer SubQuerySourceItem} '(' subQuery=SelectStatement ')' ('AS'? name=Identifier)?
     ;
 
 TableVariableName:

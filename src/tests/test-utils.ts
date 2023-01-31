@@ -12,7 +12,10 @@ import {
     TypeDescriptor,
     TypeDescriptorDiscriminator,
 } from "../language-server/sql-type-descriptors";
-import { ComputeTypeFunction, computeTypeOfSelectStatement } from "../language-server/sql-type-computation";
+import {
+    ComputeTypeFunction,
+    computeTypeOfSelectStatement,
+} from "../language-server/sql-type-computation";
 import assert from "assert";
 
 export async function parseHelper(
@@ -83,15 +86,13 @@ export function expectTableLinked(
     tableName: string
 ) {
     expect(selectStatement.from).not.toBeUndefined();
-    expect(
-        selectStatement.from!.sources.list[0].item.tableName
-    ).not.toBeUndefined();
-    expect(
-        selectStatement.from!.sources.list[0].item.tableName!.table.ref
-    ).not.toBeUndefined();
-    expect(
-        selectStatement.from!.sources.list[0].item.tableName!.table.ref!.name
-    ).toBe(tableName);
+    expect(ast.isTableSourceItem(selectStatement.from!.sources.list[0]!.item))
+        .toBeTruthy;
+    const tableSource = selectStatement.from!.sources.list[0]
+        .item as ast.TableSourceItem;
+    expect(tableSource.tableName).not.toBeUndefined();
+    expect(tableSource.tableName!.table.ref).not.toBeUndefined();
+    expect(tableSource.tableName!.table.ref!.name).toBe(tableName);
 }
 
 export function expectSelectItemToBeColumnName(
@@ -103,7 +104,11 @@ export function expectSelectItemToBeColumnName(
     expect(selectStatement.select.elements.length).toBeGreaterThan(
         selectElementIndex
     );
-    const element = (selectStatement.select.elements[selectElementIndex] as ast.ExpressionQuery).expr;
+    const element = (
+        selectStatement.select.elements[
+            selectElementIndex
+        ] as ast.ExpressionQuery
+    ).expr;
     expect((element as ast.ColumnName).column.ref!.name).toBe(columnName);
     expect((element as ast.ColumnName).column.ref!.$container.name).toBe(
         tableName
@@ -115,8 +120,8 @@ export function expectSelectItemsToBeOfType(
     types: TypeDescriptor[]
 ): void {
     const row = computeTypeOfSelectStatement(selectStatement);
-    assert(row.discriminator === 'row');
-    expect(row.columnTypes.map(m => m.type)).toStrictEqual(types);
+    assert(row.discriminator === "row");
+    expect(row.columnTypes.map((m) => m.type)).toStrictEqual(types);
 }
 
 export function expectSelectItemToBeNumeric(

@@ -46,14 +46,6 @@ describe("SELECT use cases", () => {
         it("should link table", async () =>
             expectTableLinked(selectStatement, "tab"));
 
-        it(`should link select element'´'s cross-reference against the correct definition`, () => {
-            expect(selectStatement.from).not.toBeUndefined();
-            expect(
-                selectStatement.from!.sources.list[0].item.tableName!.table.ref!
-                    .name
-            ).toBe("tab");
-        });
-
         it("should select all-star", () => {
             expect(selectStatement.select.elements).toHaveLength(1);
             expect(selectStatement.select.elements[0].$type).toBe(ast.AllStar);

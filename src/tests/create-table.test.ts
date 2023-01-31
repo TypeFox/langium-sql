@@ -17,7 +17,7 @@ import {
 
 const services = createSqlServices(EmptyFileSystem);
 
-describe("SELECT use cases", () => {
+describe("CREATE TABLE use cases", () => {
     let parse: (input: string) => Promise<LangiumDocument<ast.SqlFile>>;
 
     beforeAll(async () => {

@@ -3,8 +3,13 @@
  * This program and the accompanying materials are made available under the
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
-import { describe, expect, it } from "vitest";
+import { EmptyFileSystem, LangiumDocument } from "langium";
+import { beforeAll, describe, expect, it } from "vitest";
+import { SqlFile } from "../language-server/generated/ast";
+import { createSqlServices } from "../language-server/sql-module";
+import { Types } from "../language-server/sql-type-descriptors";
 import { computeTypeOfNumericLiteral } from "../language-server/sql-type-utilities";
+import { parseHelper, expectNoErrors, expectSelectItemsToBeOfType, asSelectStatement } from "./test-utils";
 
 describe("Type system utilities", () => {
     it.each([
@@ -24,4 +29,22 @@ describe("Type system utilities", () => {
             });
         }
     );
+});
+
+
+const services = createSqlServices(EmptyFileSystem);
+
+describe("Type system", () => {
+    let parse: (input: string) => Promise<LangiumDocument<SqlFile>>;
+
+    beforeAll(async () => {
+        parse = await parseHelper(services.Sql, __dirname);
+    });
+
+    it("addition of integer and real results in real", async () => {
+        const document = await parse("SELECT 1+1.5;");
+        const selectStatement = asSelectStatement(document);
+        expectNoErrors(document);
+        expectSelectItemsToBeOfType(selectStatement, [Types.Real])
+    });
 });

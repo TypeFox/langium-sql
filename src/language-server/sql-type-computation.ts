@@ -30,6 +30,8 @@ import {
     isAllTable,
     isExpressionQuery,
     TableSource,
+    isTableSourceItem,
+    isSubQuerySourceItem,
 } from "./generated/ast";
 import { canConvert } from "./sql-type-conversion";
 import { ColumnTypeDescriptor, RowTypeDescriptor, TypeDescriptor, Types } from "./sql-type-descriptors";
@@ -99,7 +101,7 @@ function computeTypeOfExpression(node: Expression): TypeDescriptor | undefined {
     assertUnreachable(node);
 }
 
-export function computeTypeOfSelectStatement(selectStatement: SelectStatement): TypeDescriptor {
+export function computeTypeOfSelectStatement(selectStatement: SelectStatement): RowTypeDescriptor {
     const columnTypes = selectStatement.select.elements.map(e => {
         if(isAllStar(e)) {
             assert(selectStatement.from != null);
@@ -149,13 +151,23 @@ function getTypeOfDataType(dataType: Type): TypeDescriptor | undefined {
 function getTypesOfTableSources(source: TableSource): RowTypeDescriptor {
     const result: RowTypeDescriptor = {discriminator: 'row', columnTypes: []};
     const items = [source.item].concat(source.joins.map(j => j.nextItem));
-    const tablesByVariableName = items.map(i => i.tableName.table.ref).filter((t) => t);
-    for (const table of tablesByVariableName) {
-        for (const column of table!.columns) {
-            result.columnTypes.push({
-                name: column.name,
-                type: computeType(column.dataType)!
-            })
+    for (const item of items) {
+        if(isTableSourceItem(item)) {
+            if(item.tableName.table.ref) {
+                for (const column of item.tableName.table.ref!.columns) {
+                    result.columnTypes.push({
+                        name: column.name,
+                        type: computeType(column.dataType)!
+                    })
+                }
+            }
+        } else if(isSubQuerySourceItem(item)) {
+            const rowType = computeTypeOfSelectStatement(item.subQuery);
+            for (const columnType of rowType.columnTypes) {
+                result.columnTypes.push(columnType);
+            }
+        } else {
+            assertUnreachable(item);
         }
     }
     return result;
