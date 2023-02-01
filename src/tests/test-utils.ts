@@ -17,6 +17,8 @@ import {
     computeTypeOfSelectStatement,
 } from "../language-server/sql-type-computation";
 import assert from "assert";
+import { isAllTable } from "../language-server/generated/ast";
+import { getColumnsForSelectStatement } from "../language-server/sql-type-utilities";
 
 export async function parseHelper(
     services: SqlServices,
@@ -110,7 +112,7 @@ export function expectSelectItemToBeColumnName(
         ] as ast.ExpressionQuery
     ).expr;
     expect((element as ast.ColumnName).column.ref!.name).toBe(columnName);
-    expect((element as ast.ColumnName).column.ref!.$container.name).toBe(
+    expect(((element as ast.ColumnName).column.ref!.$container as ast.TableDefinition).name).toBe(
         tableName
     );
 }
@@ -122,6 +124,12 @@ export function expectSelectItemsToBeOfType(
     const row = computeTypeOfSelectStatement(selectStatement);
     assert(row.discriminator === "row");
     expect(row.columnTypes.map((m) => m.type)).toStrictEqual(types);
+}
+
+export function expectSelectItemsToHaveNames(selectStatement: ast.SelectStatement, expectedNames: (string|undefined)[]) {
+    const columnDescriptors = getColumnsForSelectStatement(selectStatement);
+    const actualNames = columnDescriptors.map(ad => ad ? ad.name : undefined);
+    expect(actualNames).toStrictEqual(expectedNames);
 }
 
 export function expectSelectItemToBeNumeric(
@@ -154,6 +162,7 @@ export function expectSelectItemToBeColumnNameRelativeToVariable(
     const exprQuery = (element as ast.ExpressionQuery)
         .expr as ast.TableRelatedColumnExpression;
     expect(exprQuery.variableName.variable.ref!.name).toBe(variableName);
+    assert(ast.isTableSourceItem(exprQuery.variableName.variable.ref));
     expect(exprQuery.variableName.variable.ref!.tableName.table.ref!.name).toBe(
         tableName
     );
@@ -170,13 +179,12 @@ export function expectSelectItemToBeAllStarRelativeToVariable(
         selectElementIndex
     );
     const element = selectStatement.select.elements[selectElementIndex];
-    expect((element as ast.AllTable).variableName.variable.ref!.name).toBe(
+    assert(isAllTable(element));
+    expect(element.variableName.variable.ref!.name).toBe(
         variableName
     );
-    expect(
-        (element as ast.AllTable).variableName.variable.ref!.tableName.table
-            .ref!.name
-    ).toBe(tableName);
+    assert(ast.isTableSourceItem(element.variableName.variable.ref));
+    expect(element.variableName.variable.ref!.tableName.table.ref!.name).toBe(tableName);
 }
 
 export function expectValidationIssues(
@@ -203,3 +211,4 @@ export function expectSelectItemToBeCastToType(
     expect(element.$type).toBe(ast.CastExpression);
     expect(computeType(element)!.discriminator).toBe(type);
 }
+

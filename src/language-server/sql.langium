@@ -62,7 +62,7 @@ SelectElements:
 SelectElement infers SelectElement:
     {infer AllStar}'*'
     | {infer AllTable}variableName=TableVariableName '.' '*'
-    | {infer ExpressionQuery} expr=Expression
+    | {infer ExpressionQuery} expr=Expression ('AS' name=Identifier)?
     ;
     
 FromClause: 'FROM' sources=TableSources;
@@ -82,8 +82,10 @@ SourceItem infers SourceItem
     | {infer SubQuerySourceItem} '(' subQuery=SelectStatement ')' ('AS'? name=Identifier)?
     ;
 
+type TableVariableSource = TableSourceItem|SubQuerySourceItem;
+
 TableVariableName:
-    variable=[TableSourceItem:Identifier]
+    variable=[TableVariableSource:Identifier]
     ;
 
 TableName: table=[TableDefinition:Identifier];
@@ -135,8 +137,9 @@ FunctionName:
     function=[FunctionDefinition:Identifier]
     ;
 
-ColumnName:
-    column=[ColumnDefinition:Identifier];
+type ColumnNameSource = ColumnDefinition|ExpressionQuery;
+
+ColumnName: column=[ColumnNameSource:Identifier];
 
 Identifier returns string:
     ID;
@@ -147,7 +150,6 @@ BooleanLiteral: value=('TRUE'|'FALSE');
 
 Type infers Type: 
     {infer BooleanType} 'BOOLEAN'
-    //@see https://crate.io/docs/sql-99/en/latest//chapters/03.html
     | {infer IntegerType} ('INTEGER'|'INT')
     | {infer RealType} 'REAL'
     | {infer CharType} 'CHAR' ('(' length=IntegerLiteral ')')?

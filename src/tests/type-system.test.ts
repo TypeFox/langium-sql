@@ -8,8 +8,8 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { SqlFile } from "../language-server/generated/ast";
 import { createSqlServices } from "../language-server/sql-module";
 import { Types } from "../language-server/sql-type-descriptors";
-import { computeTypeOfNumericLiteral } from "../language-server/sql-type-utilities";
-import { parseHelper, expectNoErrors, expectSelectItemsToBeOfType, asSelectStatement } from "./test-utils";
+import { computeTypeOfNumericLiteral } from "../language-server/sql-type-computation";
+import { parseHelper, expectNoErrors, expectSelectItemsToBeOfType, asSelectStatement, expectSelectItemsToHaveNames } from "./test-utils";
 
 describe("Type system utilities", () => {
     it.each([
@@ -46,5 +46,6 @@ describe("Type system", () => {
         const selectStatement = asSelectStatement(document);
         expectNoErrors(document);
         expectSelectItemsToBeOfType(selectStatement, [Types.Real])
+        expectSelectItemsToHaveNames(selectStatement, [undefined])
     });
 });

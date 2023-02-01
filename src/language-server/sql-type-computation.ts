@@ -33,14 +33,13 @@ import {
     isTableSourceItem,
     isSubQuerySourceItem,
     isType,
+    isColumnDefinition,
 } from "./generated/ast";
 import { canConvert } from "./sql-type-conversion";
-import { ColumnTypeDescriptor, RowTypeDescriptor, TypeDescriptor, Types } from "./sql-type-descriptors";
+import { areTypesEqual, ColumnTypeDescriptor, RowTypeDescriptor, TypeDescriptor, Types } from "./sql-type-descriptors";
+import { BinaryOperator, BinaryOperators, UnaryOperator, UnaryOperators } from "./sql-type-operators";
 import {
     assertUnreachable,
-    computeTypeOfBinaryOperation,
-    computeTypeOfNumericLiteral,
-    computeTypeOfUnaryOperation,
 } from "./sql-type-utilities";
 
 export type ComputeTypeFunction = (node: AstNode) => TypeDescriptor | undefined;
@@ -49,7 +48,7 @@ export function computeType(node: AstNode): TypeDescriptor | undefined {
     if (isExpression(node)) {
         return computeTypeOfExpression(node);
     } else if(isType(node)) {
-        return getTypeOfDataType(node);
+        return computeTypeOfDataType(node);
     }
     return undefined;
 }
@@ -57,15 +56,32 @@ export function computeType(node: AstNode): TypeDescriptor | undefined {
 function computeTypeOfExpression(node: Expression): TypeDescriptor | undefined {
     if (isCastExpression(node)) {
         const source = computeType(node.expr);
-        const target = getTypeOfDataType(node.type);
+        const target = computeTypeOfDataType(node.type);
         return source && target && canConvert(source, target, 'explicit') ? target : undefined;
     }
     if (isNumberLiteral(node)) {
         return computeTypeOfNumericLiteral(node.$cstNode!.text);
     }
-    if (isTableRelatedColumnExpression(node)) {
-        const dataType = node.columnName.column.ref?.dataType;
-        return dataType ? getTypeOfDataType(dataType) : undefined;
+    if (isTableRelatedColumnExpression(node)) { //variable.columnName
+        const varRef = node.variableName.variable.ref;
+        if(!varRef) {
+            return undefined;
+        } else if(isTableSourceItem(varRef)) { //tableVariable.columnName
+            const ref = node.columnName.column.ref;
+            if(!isColumnDefinition(ref)) {
+                return undefined;
+            }
+            return computeType(ref.dataType);
+        } else if(isSubQuerySourceItem(varRef)) {//subqueryVariable.selectItemName
+            const ref = node.columnName.column.ref;
+            if(!isExpressionQuery(ref)) {
+                return undefined;
+            }
+            return computeType(ref.expr);
+        } else {
+            assertUnreachable(varRef);
+            return undefined;
+        }
     }
     if (isParenthesisExpression(node)) {
         return computeType(node.expression);
@@ -83,12 +99,21 @@ function computeTypeOfExpression(node: Expression): TypeDescriptor | undefined {
         return Types.Boolean;
     }
     if (isColumnName(node)) {
-        const dataType = node.column.ref?.dataType;
-        return dataType != null ? getTypeOfDataType(dataType) : undefined;
+        const ref = node.column.ref;
+        if(!ref) {
+            return undefined;
+        } else if(isExpressionQuery(ref)) {
+            return computeType(ref.expr);
+        } else if(isColumnDefinition(ref)) {
+            return computeType(ref.dataType);
+        } else {
+            assertUnreachable(ref);
+            return undefined;
+        }
     }
     if (isFunctionCall(node)) {
         const dataType = node.functionName.function.ref?.returnType;
-        return dataType ? getTypeOfDataType(dataType) : undefined;
+        return dataType ? computeTypeOfDataType(dataType) : undefined;
     }
     if (isBinaryExpression(node)) {
         const left = computeType(node.left);
@@ -108,18 +133,25 @@ export function computeTypeOfSelectStatement(selectStatement: SelectStatement): 
     const columnTypes = selectStatement.select.elements.map(e => {
         if(isAllStar(e)) {
             assert(selectStatement.from != null);
-            const rows = selectStatement.from.sources.list.map(src => getTypesOfTableSources(src));
+            const rows = selectStatement.from.sources.list.map(src => computeColumnTypesOfTableSource(src));
             return {
                 discriminator: 'row',
                 columnTypes: rows.flatMap(t => t.columnTypes)
             };
         } else if(isAllTable(e)) {
             assert(selectStatement.from != null);
-            const columns = e.variableName.variable.ref?.tableName.table.ref?.columns ?? [];
-            return {
-                discriminator: 'row',
-                columnTypes: columns.map<ColumnTypeDescriptor>(c => ({name: c.name, type: computeType(c.dataType)!}))
-            };
+            const ref = e.variableName.variable.ref!;
+            if(isTableSourceItem(ref)) {
+                const columns = ref.tableName.table.ref?.columns ?? [];
+                return {
+                    discriminator: 'row',
+                    columnTypes: columns.map<ColumnTypeDescriptor>(c => ({name: c.name, type: computeType(c.dataType)!}))
+                };    
+            } else if(isSubQuerySourceItem(ref)) {
+                return computeTypeOfSelectStatement(ref.subQuery);
+            } else {
+                assertUnreachable(ref);
+            }
         } else if(isExpressionQuery(e)) {
             return {
                 discriminator: 'row',
@@ -135,23 +167,7 @@ export function computeTypeOfSelectStatement(selectStatement: SelectStatement): 
     }
 }
 
-function getTypeOfDataType(dataType: Type): TypeDescriptor | undefined {
-    if (isBooleanType(dataType)) {
-        return Types.Boolean;
-    }
-    if (isIntegerType(dataType)) {
-        return Types.Integer;
-    }
-    if (isRealType(dataType)) {
-        return Types.Real;
-    }
-    if (isCharType(dataType)) {
-        return Types.Char(dataType.length?.value);
-    }
-    assertUnreachable(dataType);
-}
-
-function getTypesOfTableSources(source: TableSource): RowTypeDescriptor {
+function computeColumnTypesOfTableSource(source: TableSource): RowTypeDescriptor {
     const result: RowTypeDescriptor = {discriminator: 'row', columnTypes: []};
     const items = [source.item].concat(source.joins.map(j => j.nextItem));
     for (const item of items) {
@@ -176,3 +192,59 @@ function getTypesOfTableSources(source: TableSource): RowTypeDescriptor {
     return result;
 }
 
+function computeTypeOfDataType(dataType: Type): TypeDescriptor | undefined {
+    if (isBooleanType(dataType)) {
+        return Types.Boolean;
+    }
+    if (isIntegerType(dataType)) {
+        return Types.Integer;
+    }
+    if (isRealType(dataType)) {
+        return Types.Real;
+    }
+    if (isCharType(dataType)) {
+        return Types.Char(dataType.length?.value);
+    }
+    assertUnreachable(dataType);
+}
+
+const NumericLiteralPattern = /^(\d+)((\.(\d)+)?([eE]([\-+]?\d+))?)?$/;
+export function computeTypeOfNumericLiteral(
+    text: string
+): TypeDescriptor | undefined {
+    const match = NumericLiteralPattern.exec(text)!;
+    const fractionalPart = match[4]?.length ?? 0;
+    const exponent = parseInt(match[6] ?? "0", 10);
+    return Math.max(0, fractionalPart - exponent) === 0 ? Types.Integer : Types.Real;
+}
+
+export function computeTypeOfBinaryOperation(
+    operator: BinaryOperator,
+    left: TypeDescriptor,
+    right: TypeDescriptor
+): TypeDescriptor | undefined {
+    const candidates = BinaryOperators[operator];
+    for (const candidate of candidates) {
+        if(areTypesEqual(candidate.left, left) && areTypesEqual(candidate.right, right)) {
+            return candidate.returnType;
+        } else {
+            if(canConvert(left, candidate.left, 'implicit') && canConvert(right, candidate.right, 'implicit')) {
+                return candidate.returnType;
+            }
+        }
+    }
+    return undefined;
+}
+
+export function computeTypeOfUnaryOperation(
+    operator: UnaryOperator,
+    operandType: TypeDescriptor
+): TypeDescriptor | undefined {
+    const candidates = UnaryOperators[operator];
+    for (const candidate of candidates) {
+        if(areTypesEqual(candidate.operandType, operandType)) {
+            return candidate.returnType;
+        }
+    }
+    return undefined;
+}

@@ -12,8 +12,10 @@ FROM managers m JOIN employees e ON m.employeeId=e.id
 GROUP BY m.managerId;
 --sub query in select expression
 SELECT (SELECT id FROM employees);
---sub query in table sources
-SELECT t.id FROM (SELECT id FROM employees) t;
+--named sub query in table sources
+SELECT tab.id FROM (SELECT id, name FROM employees) tab;
+--unnamed sub query in table sources
+SELECT id FROM (SELECT * FROM employees);
 --sub query used for IN operator
 SELECT id, name FROM employees WHERE id NOT IN (SELECT employeeId FROM managers WHERE managerId=123);
 --implicit type conversion

@@ -3,54 +3,87 @@
  * This program and the accompanying materials are made available under the
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
-import _ from "lodash";
-import { UnaryExpression } from "./generated/ast";
-import { canConvert } from "./sql-type-conversion";
-import { areTypesEqual, TypeDescriptor, Types } from "./sql-type-descriptors";
-import { BinaryOperator, BinaryOperators, UnaryOperators } from "./sql-type-operators";
-
-const NumericLiteralPattern = /^(\d+)((\.(\d)+)?([eE]([\-+]?\d+))?)?$/;
-export function computeTypeOfNumericLiteral(
-    text: string
-): TypeDescriptor | undefined {
-    //TODO implement it properly, maybe with notes from here: https://crate.io/docs/sql-99/en/latest//chapters/03.html#choosing-the-right-data-type
-    const match = NumericLiteralPattern.exec(text)!;
-    const fractionalPart = match[4]?.length ?? 0;
-    const exponent = parseInt(match[6] ?? "0", 10);
-    return Math.max(0, fractionalPart - exponent) === 0 ? Types.Integer : Types.Real;
-}
+import { AstNode } from "langium";
+import { Expression, isAllStar, isAllTable, isColumnName, isExpressionQuery, isFunctionCall, isSubQuerySourceItem, isTableSourceItem, SelectStatement, TableSource } from "./generated/ast";
 
 export function assertUnreachable(x: never): never {
     throw new Error("Didn't expect to get here");
 }
 
-export function computeTypeOfBinaryOperation(
-    operator: BinaryOperator,
-    left: TypeDescriptor,
-    right: TypeDescriptor
-): TypeDescriptor | undefined {
-    const candidates = BinaryOperators[operator];
-    for (const candidate of candidates) {
-        if(areTypesEqual(candidate.left, left) && areTypesEqual(candidate.right, right)) {
-            return candidate.returnType;
-        } else {
-            if(canConvert(left, candidate.left, 'implicit') && canConvert(right, candidate.right, 'implicit')) {
-                return candidate.returnType;
-            }
-        }
-    }
-    return undefined;
+export interface ColumnDescriptor {
+    name?: string;
+    node: AstNode;
+    typedNode: AstNode;
+    isScopedByVariable: boolean;
 }
 
-export function computeTypeOfUnaryOperation(
-    operator: UnaryExpression["operator"],
-    operandType: TypeDescriptor
-): TypeDescriptor | undefined {
-    const candidates = UnaryOperators[operator];
-    for (const candidate of candidates) {
-        if(areTypesEqual(candidate.operandType, operandType)) {
-            return candidate.returnType;
+export function getColumnsForSelectStatement(selectStatement: SelectStatement): ColumnDescriptor[] {
+    return selectStatement.select.elements.flatMap(e => {
+        if(isAllStar(e)) {
+            if(!selectStatement.from) {
+                return [];
+            }
+            const fromAllSources = selectStatement.from.sources.list.map(getColumnsForTableSource);
+            return fromAllSources.flatMap(t => t);
+        } else if(isAllTable(e)) {
+            if(!selectStatement.from) {
+                return [];
+            }
+            const ref = e.variableName.variable.ref!;
+            if(isTableSourceItem(ref)) {
+                const columns = ref.tableName.table.ref?.columns ?? [];
+                return columns.map<ColumnDescriptor>(c => ({
+                    name: c.name,
+                    typedNode: c.dataType,
+                    node: c,
+                    isScopedByVariable: true
+                }));
+            } else if(isSubQuerySourceItem(ref)) {
+                return getColumnsForSelectStatement(ref.subQuery);
+            } else {
+                assertUnreachable(ref);
+            }
+        } else if(isExpressionQuery(e)) {
+            return [{
+                name: e.name ?? getNameForExpression(e.expr), 
+                typedNode: e.expr,
+                node: e,
+                isScopedByVariable: false
+            }];
         }
+        assertUnreachable(e);
+        return [];
+    });
+}
+
+function getColumnsForTableSource(source: TableSource): ColumnDescriptor[] {
+    const items = [source.item].concat(source.joins.map(j => j.nextItem));
+    return items.flatMap(item => {
+        if(isTableSourceItem(item)) {
+            if(item.tableName.table.ref) {
+                return item.tableName.table.ref.columns.map(column => ({
+                    name: column.name,
+                    typedNode: column.dataType,
+                    node: column,
+                    isScopedByVariable: item.name != null
+                }));
+            }
+            return [];
+        } else if(isSubQuerySourceItem(item)) {
+            return getColumnsForSelectStatement(item.subQuery);
+        } else {
+            assertUnreachable(item);
+            return [];
+        }
+    });
+}
+
+function getNameForExpression(expr: Expression): string | undefined {
+    if(isFunctionCall(expr)) {
+        return expr.functionName.function.$refText;
+    } else if(isColumnName(expr)) {
+        return expr.column.$refText;
+    } else {
+        return undefined;
     }
-    return undefined;
 }
