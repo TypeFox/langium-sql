@@ -3,7 +3,6 @@
  * This program and the accompanying materials are made available under the
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
-import assert from "assert";
 import { AstNode } from "langium";
 import _ from "lodash";
 import {
@@ -26,20 +25,17 @@ import {
     isFunctionCall,
     isSubQueryExpression,
     SelectStatement,
-    isAllStar,
-    isAllTable,
     isExpressionQuery,
-    TableSource,
     isTableSourceItem,
     isSubQuerySourceItem,
     isType,
     isColumnDefinition,
 } from "./generated/ast";
 import { canConvert } from "./sql-type-conversion";
-import { areTypesEqual, ColumnTypeDescriptor, RowTypeDescriptor, TypeDescriptor, Types } from "./sql-type-descriptors";
+import { areTypesEqual, RowTypeDescriptor, TypeDescriptor, Types } from "./sql-type-descriptors";
 import { BinaryOperator, BinaryOperators, UnaryOperator, UnaryOperators } from "./sql-type-operators";
 import {
-    assertUnreachable,
+    assertUnreachable, getColumnsForSelectStatement,
 } from "./sql-type-utilities";
 
 export type ComputeTypeFunction = (node: AstNode) => TypeDescriptor | undefined;
@@ -130,66 +126,13 @@ function computeTypeOfExpression(node: Expression): TypeDescriptor | undefined {
 }
 
 export function computeTypeOfSelectStatement(selectStatement: SelectStatement): RowTypeDescriptor {
-    const columnTypes = selectStatement.select.elements.map(e => {
-        if(isAllStar(e)) {
-            assert(selectStatement.from != null);
-            const rows = selectStatement.from.sources.list.map(src => computeColumnTypesOfTableSource(src));
-            return {
-                discriminator: 'row',
-                columnTypes: rows.flatMap(t => t.columnTypes)
-            };
-        } else if(isAllTable(e)) {
-            assert(selectStatement.from != null);
-            const ref = e.variableName.variable.ref!;
-            if(isTableSourceItem(ref)) {
-                const columns = ref.tableName.table.ref?.columns ?? [];
-                return {
-                    discriminator: 'row',
-                    columnTypes: columns.map<ColumnTypeDescriptor>(c => ({name: c.name, type: computeType(c.dataType)!}))
-                };    
-            } else if(isSubQuerySourceItem(ref)) {
-                return computeTypeOfSelectStatement(ref.subQuery);
-            } else {
-                assertUnreachable(ref);
-            }
-        } else if(isExpressionQuery(e)) {
-            return {
-                discriminator: 'row',
-                columnTypes: [{name: undefined, type: computeType(e.expr)!}]
-            };
-        }
-        assertUnreachable(e);
-        return undefined!;
-    });
     return {
-        discriminator: 'row',
-        columnTypes: columnTypes.flatMap(c=> c.columnTypes)
-    }
-}
-
-function computeColumnTypesOfTableSource(source: TableSource): RowTypeDescriptor {
-    const result: RowTypeDescriptor = {discriminator: 'row', columnTypes: []};
-    const items = [source.item].concat(source.joins.map(j => j.nextItem));
-    for (const item of items) {
-        if(isTableSourceItem(item)) {
-            if(item.tableName.table.ref) {
-                for (const column of item.tableName.table.ref!.columns) {
-                    result.columnTypes.push({
-                        name: column.name,
-                        type: computeType(column.dataType)!
-                    })
-                }
-            }
-        } else if(isSubQuerySourceItem(item)) {
-            const rowType = computeTypeOfSelectStatement(item.subQuery);
-            for (const columnType of rowType.columnTypes) {
-                result.columnTypes.push(columnType);
-            }
-        } else {
-            assertUnreachable(item);
-        }
-    }
-    return result;
+        discriminator: "row",
+        columnTypes: getColumnsForSelectStatement(selectStatement).map(c => ({
+            name: c.name,
+            type: computeType(c.typedNode)!
+        }))
+    };
 }
 
 function computeTypeOfDataType(dataType: Type): TypeDescriptor | undefined {
