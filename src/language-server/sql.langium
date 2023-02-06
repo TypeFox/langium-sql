@@ -126,7 +126,7 @@ PrimaryExpression infers Expression:
     | {infer ParenthesisExpression} '(' expression=Expression ')'
     | {infer SubQueryExpression} '(' subQuery=SelectStatement ')'
     | {infer FunctionCall} functionName=FunctionName '(' params=SelectElements? ')'
-    | {infer ColumnName} ColumnName
+    | {infer ColumnNameExpression} columnName=ColumnName
     ;
 
 CastExpression:

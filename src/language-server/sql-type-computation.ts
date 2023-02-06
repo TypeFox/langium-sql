@@ -9,7 +9,6 @@ import {
     Expression,
     isBooleanType,
     isCastExpression,
-    isColumnName,
     isExpression,
     isIntegerType,
     isRealType,
@@ -30,6 +29,7 @@ import {
     isSubQuerySourceItem,
     isType,
     isColumnDefinition,
+    isColumnNameExpression,
 } from "./generated/ast";
 import { canConvert } from "./sql-type-conversion";
 import { areTypesEqual, RowTypeDescriptor, TypeDescriptor, Types } from "./sql-type-descriptors";
@@ -94,8 +94,8 @@ function computeTypeOfExpression(node: Expression): TypeDescriptor | undefined {
     if (isBooleanLiteral(node)) {
         return Types.Boolean;
     }
-    if (isColumnName(node)) {
-        const ref = node.column.ref;
+    if (isColumnNameExpression(node)) {
+        const ref = node.columnName.column.ref;
         if(!ref) {
             return undefined;
         } else if(isExpressionQuery(ref)) {

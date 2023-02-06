@@ -111,8 +111,8 @@ export function expectSelectItemToBeColumnName(
             selectElementIndex
         ] as ast.ExpressionQuery
     ).expr;
-    expect((element as ast.ColumnName).column.ref!.name).toBe(columnName);
-    expect(((element as ast.ColumnName).column.ref!.$container as ast.TableDefinition).name).toBe(
+    expect((element as ast.ColumnNameExpression).columnName.column.ref!.name).toBe(columnName);
+    expect(((element as ast.ColumnNameExpression).columnName.column.ref!.$container as ast.TableDefinition).name).toBe(
         tableName
     );
 }

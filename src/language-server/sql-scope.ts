@@ -18,6 +18,7 @@ import {
 } from "langium";
 import {
     isColumnName,
+    isColumnNameExpression,
     isSelectStatement,
     isSubQuerySourceItem,
     isTableName,
@@ -68,6 +69,18 @@ export class SqlScopeProvider extends DefaultScopeProvider {
                 } else {
                     assertUnreachable(ref);
                 }
+            } else if(hasContainerOfType(context.container, isColumnNameExpression)) {
+                const expression = getContainerOfType(
+                    context.container,
+                    isColumnNameExpression
+                )!;
+                const selectStatement = getContainerOfType(
+                    expression,
+                    isSelectStatement
+                );
+                const columns = getColumnsForSelectStatement(selectStatement!);
+                const astDescriptions = columns.filter(c => !c.isScopedByVariable && c.name).map(c => this.descriptions.createDescription(c.node, c.name!));
+                return new StreamScope(stream(astDescriptions));
             } else {
                 const selectStatement = getContainerOfType(
                     context.container,

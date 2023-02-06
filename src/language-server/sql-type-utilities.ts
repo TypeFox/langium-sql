@@ -4,7 +4,7 @@
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
 import { AstNode } from "langium";
-import { Expression, isAllStar, isAllTable, isColumnName, isExpressionQuery, isFunctionCall, isSubQuerySourceItem, isTableRelatedColumnExpression, isTableSourceItem, SelectStatement, TableSource } from "./generated/ast";
+import { isAllStar, isAllTable, isColumnNameExpression, isExpressionQuery, isFunctionCall, isSubQuerySourceItem, isTableRelatedColumnExpression, isTableSourceItem, SelectStatement, TableSource } from "./generated/ast";
 
 export function assertUnreachable(x: never): never {
     throw new Error("Didn't expect to get here");
@@ -44,14 +44,39 @@ export function getColumnsForSelectStatement(selectStatement: SelectStatement): 
                 assertUnreachable(ref);
             }
         } else if(isExpressionQuery(e)) {
-            return [{
-                name: e.name ?? getNameForExpression(e.expr), 
-                typedNode: e.expr,
-                node: e,
-                isScopedByVariable: false
-            }];
+            if(e.name) {
+                return [{
+                    name: e.name!, 
+                    typedNode: e.expr,
+                    node: e,
+                    isScopedByVariable: false
+                }];
+            } else {
+                const expr = e.expr;
+                if(isTableRelatedColumnExpression(expr)) {
+                    return [{
+                        name: expr.columnName.column.$refText,
+                        node: e as AstNode,
+                        isScopedByVariable: true,
+                        typedNode: expr.columnName.column.ref as AstNode
+                    }];
+                } else if(isFunctionCall(expr)) {
+                    return [{
+                        name: expr.functionName.function.$refText,
+                        isScopedByVariable: false,
+                        node: e as AstNode,
+                        typedNode: expr.functionName.function.ref as AstNode
+                     }];
+                } else if(isColumnNameExpression(expr)) {
+                    return [{
+                        name: expr.columnName.column.$refText, 
+                        typedNode: expr.columnName.column.ref as AstNode,
+                        node: e as AstNode,
+                        isScopedByVariable: false
+                    }];
+                }
+            }
         }
-        assertUnreachable(e);
         return [];
     });
 }
@@ -78,14 +103,3 @@ function getColumnsForTableSource(source: TableSource): ColumnDescriptor[] {
     });
 }
 
-function getNameForExpression(expr: Expression): string | undefined {
-    if(isTableRelatedColumnExpression(expr)) {
-        return expr.columnName.column.$refText;
-    } else if(isFunctionCall(expr)) {
-        return expr.functionName.function.$refText;
-    } else if(isColumnName(expr)) {
-        return expr.column.$refText;
-    } else {
-        return undefined;
-    }
-}
