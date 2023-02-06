@@ -20,10 +20,7 @@ export interface ColumnDescriptor {
 export function getColumnsForSelectStatement(selectStatement: SelectStatement): ColumnDescriptor[] {
     return selectStatement.select.elements.flatMap(e => {
         if(isAllStar(e)) {
-            if(!selectStatement.from) {
-                return [];
-            }
-            const fromAllSources = selectStatement.from.sources.list.map(getColumnsForTableSource);
+            const fromAllSources = selectStatement.from?.sources.list.flatMap(getColumnsForTableSource) ?? [];
             return fromAllSources.flatMap(t => t);
         } else if(isAllTable(e)) {
             if(!selectStatement.from) {
@@ -47,8 +44,8 @@ export function getColumnsForSelectStatement(selectStatement: SelectStatement): 
             if(e.name) {
                 return [{
                     name: e.name!, 
-                    typedNode: e.expr,
-                    node: e,
+                    typedNode: e.expr as AstNode,
+                    node: e as AstNode,
                     isScopedByVariable: false
                 }];
             } else {
@@ -58,32 +55,23 @@ export function getColumnsForSelectStatement(selectStatement: SelectStatement): 
                         name: expr.columnName.column.$refText,
                         node: e as AstNode,
                         isScopedByVariable: true,
-                        typedNode: e.expr
+                        typedNode: expr.columnName.column.ref as AstNode
                     }];
                 } else if(isFunctionCall(expr)) {
                     return [{
                         name: expr.functionName.function.$refText,
                         isScopedByVariable: false,
                         node: e as AstNode,
-                        typedNode: e.expr
+                        typedNode: expr.functionName.function.ref!.returnType as AstNode
                      }];
                 } else if(isColumnNameExpression(expr)) {
-                    const columnSource = expr.columnName.column.ref;
-                    if(isColumnDefinition(columnSource)) {
-                        return [{
-                            name: expr.columnName.column.$refText, 
-                            typedNode: columnSource.dataType,
-                            node: e as AstNode,
-                            isScopedByVariable: false
-                        }];
-                    } else if(isExpressionQuery(columnSource)) {
-                        return [{
-                            name: expr.columnName.column.$refText, 
-                            typedNode: columnSource.expr,
-                            node: e as AstNode,
-                            isScopedByVariable: false
-                        }];
-                    }
+                    /*const fromAllSources = selectStatement.from?.sources.list.flatMap(getColumnsForTableSource) ?? [];
+                    return [{
+                        name: expr.columnName.column.$refText, 
+                        typedNode: columnSource.dataType as AstNode,
+                        node: e as AstNode,
+                        isScopedByVariable: false
+                    }];*/
                 } else {
                     return [{
                         name: undefined,
