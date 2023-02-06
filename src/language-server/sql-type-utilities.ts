@@ -4,7 +4,7 @@
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
 import { AstNode } from "langium";
-import { isAllStar, isAllTable, isColumnNameExpression, isExpressionQuery, isFunctionCall, isSubQuerySourceItem, isTableRelatedColumnExpression, isTableSourceItem, SelectStatement, TableSource } from "./generated/ast";
+import { isAllStar, isAllTable, isColumnDefinition, isColumnNameExpression, isExpressionQuery, isFunctionCall, isSubQuerySourceItem, isTableRelatedColumnExpression, isTableSourceItem, SelectStatement, TableSource } from "./generated/ast";
 
 export function assertUnreachable(x: never): never {
     throw new Error("Didn't expect to get here");
@@ -58,22 +58,39 @@ export function getColumnsForSelectStatement(selectStatement: SelectStatement): 
                         name: expr.columnName.column.$refText,
                         node: e as AstNode,
                         isScopedByVariable: true,
-                        typedNode: expr.columnName.column.ref as AstNode
+                        typedNode: e.expr
                     }];
                 } else if(isFunctionCall(expr)) {
                     return [{
                         name: expr.functionName.function.$refText,
                         isScopedByVariable: false,
                         node: e as AstNode,
-                        typedNode: expr.functionName.function.ref as AstNode
+                        typedNode: e.expr
                      }];
                 } else if(isColumnNameExpression(expr)) {
+                    const columnSource = expr.columnName.column.ref;
+                    if(isColumnDefinition(columnSource)) {
+                        return [{
+                            name: expr.columnName.column.$refText, 
+                            typedNode: columnSource.dataType,
+                            node: e as AstNode,
+                            isScopedByVariable: false
+                        }];
+                    } else if(isExpressionQuery(columnSource)) {
+                        return [{
+                            name: expr.columnName.column.$refText, 
+                            typedNode: columnSource.expr,
+                            node: e as AstNode,
+                            isScopedByVariable: false
+                        }];
+                    }
+                } else {
                     return [{
-                        name: expr.columnName.column.$refText, 
-                        typedNode: expr.columnName.column.ref as AstNode,
-                        node: e as AstNode,
-                        isScopedByVariable: false
-                    }];
+                        name: undefined,
+                        isScopedByVariable: false,
+                        node: e,
+                        typedNode: e.expr
+                    }]
                 }
             }
         }
