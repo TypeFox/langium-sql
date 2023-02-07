@@ -65,13 +65,8 @@ export function getColumnsForSelectStatement(selectStatement: SelectStatement): 
                         typedNode: expr.functionName.function.ref!.returnType as AstNode
                      }];
                 } else if(isColumnNameExpression(expr)) {
-                    /*const fromAllSources = selectStatement.from?.sources.list.flatMap(getColumnsForTableSource) ?? [];
-                    return [{
-                        name: expr.columnName.column.$refText, 
-                        typedNode: columnSource.dataType as AstNode,
-                        node: e as AstNode,
-                        isScopedByVariable: false
-                    }];*/
+                    const fromAllSources = selectStatement.from?.sources.list.flatMap(getColumnsForTableSource) ?? [];
+                    return fromAllSources.filter(s => !s.isScopedByVariable).map(s => s);
                 } else {
                     return [{
                         name: undefined,
