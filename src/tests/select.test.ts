@@ -73,10 +73,13 @@ describe("SELECT use cases", () => {
         expect(document.diagnostics![0].code).toBe(ReportAs.AllStarSelectionRequiresTableSources.Code);
     });
 
-    it("Select element is sub query", async () => {
-        const document = await parse("SELECT (SELECT id FROM tab);");
+    it("Select element is sub query of sub query of ...", async () => {
+        const document = await parse("SELECT (SELECT (SELECT (SELECT (SELECT id FROM tab))));");
+        const selectStatement = asSelectStatement(document);
 
         expectNoErrors(document);
+        expectSelectItemsToHaveNames(selectStatement, ['id']);
+        expectSelectItemsToBeOfType(selectStatement, [Types.Integer]);
     });
 
     it("Reselect from sub query", async () => {

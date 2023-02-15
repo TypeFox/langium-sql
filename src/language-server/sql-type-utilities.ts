@@ -4,7 +4,7 @@
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
 import { AstNode, Reference } from "langium";
-import { ColumnNameExpression, ColumnNameSource, isAllStar, isAllTable, isColumnDefinition, isColumnNameExpression, isExpressionQuery, isFunctionCall, isSubQuerySourceItem, isTableRelatedColumnExpression, isTableSourceItem, SelectStatement, TableSource } from "./generated/ast";
+import { ColumnNameSource, isAllStar, isAllTable, isColumnDefinition, isColumnNameExpression, isExpressionQuery, isFunctionCall, isSubQueryExpression, isSubQuerySourceItem, isTableRelatedColumnExpression, isTableSourceItem, SelectStatement, TableSource } from "./generated/ast";
 
 export function assertUnreachable(x: never): never {
     throw new Error("Didn't expect to get here");
@@ -68,13 +68,9 @@ export function getColumnsForSelectStatement(selectStatement: SelectStatement): 
                     } else {
                         return resolveColumnNameTypedNode(expr, expr.columnName.column);
                     }
-                } else {
-                    return [{
-                        name: undefined,
-                        isScopedByVariable: false,
-                        node: e,
-                        typedNode: e.expr
-                    }]
+                } else if(isSubQueryExpression(expr)) {
+                    const columns = getColumnsForSelectStatement(expr.subQuery);
+                    return [columns[0]]
                 }
             }
         }
