@@ -3,8 +3,8 @@
  * This program and the accompanying materials are made available under the
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
-import { AstNode } from "langium";
-import { isAllStar, isAllTable, isColumnDefinition, isColumnNameExpression, isExpressionQuery, isFunctionCall, isSubQuerySourceItem, isTableRelatedColumnExpression, isTableSourceItem, SelectStatement, TableSource } from "./generated/ast";
+import { AstNode, Reference } from "langium";
+import { ColumnNameExpression, ColumnNameSource, isAllStar, isAllTable, isColumnDefinition, isColumnNameExpression, isExpressionQuery, isFunctionCall, isSubQuerySourceItem, isTableRelatedColumnExpression, isTableSourceItem, SelectStatement, TableSource } from "./generated/ast";
 
 export function assertUnreachable(x: never): never {
     throw new Error("Didn't expect to get here");
@@ -20,7 +20,7 @@ export interface ColumnDescriptor {
 export function getColumnsForSelectStatement(selectStatement: SelectStatement): ColumnDescriptor[] {
     return selectStatement.select.elements.flatMap(e => {
         if(isAllStar(e)) {
-            const fromAllSources = selectStatement.from?.sources.list.flatMap(getColumnsForTableSource) ?? [];
+            const fromAllSources = getColumnCandidatesForSelectStatement(selectStatement);
             return fromAllSources.flatMap(t => t);
         } else if(isAllTable(e)) {
             if(!selectStatement.from) {
@@ -51,12 +51,7 @@ export function getColumnsForSelectStatement(selectStatement: SelectStatement): 
             } else {
                 const expr = e.expr;
                 if(isTableRelatedColumnExpression(expr)) {
-                    return [{
-                        name: expr.columnName.column.$refText,
-                        node: e as AstNode,
-                        isScopedByVariable: true,
-                        typedNode: expr.columnName.column.ref as AstNode
-                    }];
+                    return resolveColumnNameTypedNode(e, expr.columnName.column);
                 } else if(isFunctionCall(expr)) {
                     return [{
                         name: expr.functionName.function.$refText,
@@ -65,8 +60,14 @@ export function getColumnsForSelectStatement(selectStatement: SelectStatement): 
                         typedNode: expr.functionName.function.ref!.returnType as AstNode
                      }];
                 } else if(isColumnNameExpression(expr)) {
-                    const fromAllSources = selectStatement.from?.sources.list.flatMap(getColumnsForTableSource) ?? [];
-                    return fromAllSources.filter(s => !s.isScopedByVariable).map(s => s);
+                    const fromAllSources = getColumnCandidatesForSelectStatement(selectStatement);
+                    const name = expr.columnName.column.$refText;
+                    const column = fromAllSources.find(s => !s.isScopedByVariable && s.name === name)
+                    if(column) {
+                        return [column];
+                    } else {
+                        return resolveColumnNameTypedNode(expr, expr.columnName.column);
+                    }
                 } else {
                     return [{
                         name: undefined,
@@ -79,6 +80,26 @@ export function getColumnsForSelectStatement(selectStatement: SelectStatement): 
         }
         return [];
     });
+}
+
+function resolveColumnNameTypedNode(expression: AstNode, columnName: Reference<ColumnNameSource>) {
+    const ref = columnName.ref;
+    let typed: AstNode = expression;
+    if (isExpressionQuery(ref)) {
+        typed = ref.expr;
+    } else if (isColumnDefinition(ref)) {
+        typed = ref.dataType;
+    }
+    return [{
+        name: ref?.name,
+        isScopedByVariable: false,
+        node: expression,
+        typedNode: typed
+    }];
+}
+
+export function getColumnCandidatesForSelectStatement(selectStatement: SelectStatement) {
+    return selectStatement.from?.sources.list.flatMap(getColumnsForTableSource) ?? [];
 }
 
 function getColumnsForTableSource(source: TableSource): ColumnDescriptor[] {

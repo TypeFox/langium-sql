@@ -1,1 +1,1 @@
-SELECT (SELECT id FROM employees);
+SELECT  FROM employees e; 

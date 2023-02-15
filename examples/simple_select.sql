@@ -17,6 +17,6 @@ SELECT tab.id FROM (SELECT id, name FROM employees) tab;
 --unnamed sub query in table sources
 SELECT id FROM (SELECT * FROM employees);
 --sub query used for IN operator
-SELECT id, name FROM employees WHERE id NOT IN (SELECT employeeId FROM managers WHERE managerId=123);
+SELECT id, nnn FROM employees WHERE id NOT IN (SELECT employeeId FROM managers WHERE managerId=123);
 --implicit type conversion
 SELECT 1 + 1.12345;

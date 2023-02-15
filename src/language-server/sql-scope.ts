@@ -28,7 +28,7 @@ import {
     SelectStatement,
     TableDefinition,
 } from "./generated/ast";
-import { assertUnreachable, getColumnsForSelectStatement } from "./sql-type-utilities";
+import { assertUnreachable, getColumnCandidatesForSelectStatement } from "./sql-type-utilities";
 
 export class SqlScopeProvider extends DefaultScopeProvider {
     private readonly astNodeDescriptionProvider: AstNodeDescriptionProvider;
@@ -65,7 +65,9 @@ export class SqlScopeProvider extends DefaultScopeProvider {
                         )
                     );
                 } else if(isSubQuerySourceItem(ref)) {
-                    return new StreamScope(stream(this.getColumnNamesForSelectStatement(ref.subQuery)));
+                    const columns = getColumnCandidatesForSelectStatement(ref.subQuery);
+                    const astDescriptions = columns.filter(c => !c.isScopedByVariable && c.name).map(c => this.descriptions.createDescription(c.node, c.name!));
+                    return new StreamScope(stream(astDescriptions));
                 } else {
                     assertUnreachable(ref);
                 }
@@ -78,7 +80,7 @@ export class SqlScopeProvider extends DefaultScopeProvider {
                     expression,
                     isSelectStatement
                 );
-                const columns = getColumnsForSelectStatement(selectStatement!);
+                const columns = getColumnCandidatesForSelectStatement(selectStatement!);
                 const astDescriptions = columns.filter(c => !c.isScopedByVariable && c.name).map(c => this.descriptions.createDescription(c.node, c.name!));
                 return new StreamScope(stream(astDescriptions));
             } else {
@@ -86,7 +88,7 @@ export class SqlScopeProvider extends DefaultScopeProvider {
                     context.container,
                     isSelectStatement
                 );
-                const columns = getColumnsForSelectStatement(selectStatement!);
+                const columns = getColumnCandidatesForSelectStatement(selectStatement!);
                 const astDescriptions = columns.filter(c => !c.isScopedByVariable && c.name).map(c => this.descriptions.createDescription(c.node, c.name!));
                 return new StreamScope(stream(astDescriptions));
             }
@@ -138,10 +140,5 @@ export class SqlScopeProvider extends DefaultScopeProvider {
         return new StreamScope(
             this.indexManager.allElements(TableDefinition)
         );
-    }
-
-    getColumnNamesForSelectStatement(query: SelectStatement): AstNodeDescription[] {
-        const columns = getColumnsForSelectStatement(query);
-        return columns.filter(c => c.name).map(c => this.descriptions.createDescription(c.node, c.name!));
     }
 }

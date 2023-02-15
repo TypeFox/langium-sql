@@ -92,8 +92,8 @@ describe("SELECT use cases", () => {
         );
         const selectStatement = asSelectStatement(document);
         expectNoErrors(document);
-        expectSelectItemsToBeOfType(selectStatement, [Types.Integer, Types.Char(), Types.Integer, Types.Char()]);
         expectSelectItemsToHaveNames(selectStatement, ['id', 'name', 'id', 'name']);
+        expectSelectItemsToBeOfType(selectStatement, [Types.Integer, Types.Char(), Types.Integer, Types.Char()]);
     });
 
     it("Column reference to nowhere", async () => {
