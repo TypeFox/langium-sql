@@ -85,6 +85,7 @@ describe("SELECT use cases", () => {
     it("Reselect from sub query", async () => {
         const document = await parse("SELECT * FROM (SELECT * FROM tab);");
         const selectStatement = asSelectStatement(document);
+        expectSelectItemsToHaveNames(selectStatement, ["id", "name"]);
         expectSelectItemsToBeOfType(selectStatement, [Types.Integer, Types.Char()]);
     });
     
