@@ -23,7 +23,8 @@ function Implicit(convert: (value: Value) => Value): TypeConverter {
 function Explicit(convert: (value: Value) => Value): TypeConverter {
     return {kind: 'explicit', convert};
 }
-const ConversionTable: Record<TypeConversionPair, TypeConverter> = {
+const Forbidden: TypeConverter|undefined = undefined;
+const ConversionTable: Record<TypeConversionPair, TypeConverter|undefined> = {
     "boolean->boolean": Identity,
     "boolean->integer": Implicit(v => {
         assert(v.type === 'boolean');
@@ -111,12 +112,21 @@ const ConversionTable: Record<TypeConversionPair, TypeConverter> = {
             value: parseFloat(v.value)
         };
     }),
-    "text->text": Identity
+    "text->text": Identity,
+    "boolean->row": Forbidden,
+    "text->row": Forbidden,
+    "row->boolean": Forbidden,
+    "row->text": Forbidden,
+    "row->row": Identity,
+    "row->integer": Forbidden,
+    "row->real": Forbidden,
+    "integer->row": Forbidden,
+    "real->row": Forbidden
 };
 
 export function getConvertFunction(source: TypeDescriptor, target: TypeDescriptor, kind: TypeConversionKind): TypeConvertFunction|null {
     const entry = ConversionTable[`${source.discriminator}->${target.discriminator}`];
-    if(kind === "explicit" || entry.kind === 'implicit') {
+    if(entry != null && (kind === "explicit" || entry.kind === 'implicit')) {
         return (v: Value) => entry.convert(v);
     } else {
         return null;
@@ -125,7 +135,7 @@ export function getConvertFunction(source: TypeDescriptor, target: TypeDescripto
 
 export function canConvert(source: TypeDescriptor, target: TypeDescriptor, kind: TypeConversionKind = 'implicit'): boolean {
     const entry = ConversionTable[`${source.discriminator}->${target.discriminator}`];
-    if(kind === "explicit" || entry.kind === 'implicit') {
+    if(entry != null && (kind === "explicit" || entry.kind === 'implicit')) {
         return true;
     } else {
         return false;

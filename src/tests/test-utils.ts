@@ -8,8 +8,17 @@ import { expect } from "vitest";
 import * as ast from "../language-server/generated/ast";
 import { SqlServices } from "../language-server/sql-module";
 import { URI } from "vscode-uri";
-import { TypeDescriptor, TypeDescriptorDiscriminator } from "../language-server/sql-type-descriptors";
-import { ComputeTypeFunction } from "../language-server/sql-type-system";
+import {
+    TypeDescriptor,
+    TypeDescriptorDiscriminator,
+} from "../language-server/sql-type-descriptors";
+import {
+    ComputeTypeFunction,
+    computeTypeOfSelectStatement,
+} from "../language-server/sql-type-computation";
+import assert from "assert";
+import { isAllTable } from "../language-server/generated/ast";
+import { getColumnsForSelectStatement } from "../language-server/sql-type-utilities";
 
 export async function parseHelper(
     services: SqlServices,
@@ -59,10 +68,18 @@ export function expectNoErrors(
     expect(result.parseResult.parserErrors.length > 0).toBe(parser);
     expect((result.diagnostics?.length ?? 0) > 0).toBe(validator);
 }
+
+export function asTableDefinition(result: LangiumDocument<ast.SqlFile>) {
+    const file = result.parseResult.value;
+    expect(file.statements).toHaveLength(1);
+    expect(file.statements[0].$type).toBe(ast.TableDefinition);
+    return file.statements[0] as ast.TableDefinition;
+}
+
 export function asSelectStatement(result: LangiumDocument<ast.SqlFile>) {
     const file = result.parseResult.value;
     expect(file.statements).toHaveLength(1);
-    expect(file.statements[0].$type).toBe("SelectStatement");
+    expect(file.statements[0].$type).toBe(ast.SelectStatement);
     return file.statements[0] as ast.SelectStatement;
 }
 
@@ -71,15 +88,13 @@ export function expectTableLinked(
     tableName: string
 ) {
     expect(selectStatement.from).not.toBeUndefined();
-    expect(
-        selectStatement.from!.sources.list[0].item.tableName
-    ).not.toBeUndefined();
-    expect(
-        selectStatement.from!.sources.list[0].item.tableName!.table.ref
-    ).not.toBeUndefined();
-    expect(
-        selectStatement.from!.sources.list[0].item.tableName!.table.ref!.name
-    ).toBe(tableName);
+    expect(ast.isTableSourceItem(selectStatement.from!.sources.list[0]!.item))
+        .toBeTruthy;
+    const tableSource = selectStatement.from!.sources.list[0]
+        .item as ast.TableSourceItem;
+    expect(tableSource.tableName).not.toBeUndefined();
+    expect(tableSource.tableName!.table.ref).not.toBeUndefined();
+    expect(tableSource.tableName!.table.ref!.name).toBe(tableName);
 }
 
 export function expectSelectItemToBeColumnName(
@@ -91,18 +106,30 @@ export function expectSelectItemToBeColumnName(
     expect(selectStatement.select.elements.length).toBeGreaterThan(
         selectElementIndex
     );
-    const element = selectStatement.select.elements[selectElementIndex];
-    expect((element as ast.ColumnName).column.ref!.name).toBe(columnName);
-    expect((element as ast.ColumnName).column.ref!.$container.name).toBe(
+    const element = (
+        selectStatement.select.elements[
+            selectElementIndex
+        ] as ast.ExpressionQuery
+    ).expr;
+    expect((element as ast.ColumnNameExpression).columnName.column.ref!.name).toBe(columnName);
+    expect(((element as ast.ColumnNameExpression).columnName.column.ref!.$container as ast.TableDefinition).name).toBe(
         tableName
     );
 }
 
-export function expectSelectItemsToBeOfType(selectStatement: ast.SelectStatement, computeType: ComputeTypeFunction, types: TypeDescriptor[]): void {
-    expect(selectStatement.select.elements.length).toBe(types.length);
-    selectStatement.select.elements.forEach((element, index) => {
-        expect(computeType(element)).toStrictEqual(types[index]);
-    });
+export function expectSelectItemsToBeOfType(
+    selectStatement: ast.SelectStatement,
+    types: TypeDescriptor[]
+): void {
+    const row = computeTypeOfSelectStatement(selectStatement);
+    assert(row.discriminator === "row");
+    expect(row.columnTypes.map((m) => m.type)).toStrictEqual(types);
+}
+
+export function expectSelectItemsToHaveNames(selectStatement: ast.SelectStatement, expectedNames: (string|undefined)[]) {
+    const columnDescriptors = getColumnsForSelectStatement(selectStatement);
+    const actualNames = columnDescriptors.map(ad => ad ? ad.name : undefined);
+    expect(actualNames).toStrictEqual(expectedNames);
 }
 
 export function expectSelectItemToBeNumeric(
@@ -114,8 +141,10 @@ export function expectSelectItemToBeNumeric(
         selectElementIndex
     );
     const element = selectStatement.select.elements[selectElementIndex];
-    expect(element.$type).toBe(ast.NumberLiteral);
-    expect((element as ast.NumberLiteral).value).toBe(value);
+    expect(element.$type).toBe(ast.ExpressionQuery);
+    const query = (element as ast.ExpressionQuery).expr;
+    expect(query.$type === ast.NumberLiteral);
+    expect((query as ast.NumberLiteral).value).toBe(value);
 }
 
 export function expectSelectItemToBeColumnNameRelativeToVariable(
@@ -129,18 +158,15 @@ export function expectSelectItemToBeColumnNameRelativeToVariable(
         selectElementIndex
     );
     const element = selectStatement.select.elements[selectElementIndex];
-    expect(
-        (element as ast.TableRelatedColumnExpression).variableName.variable.ref!
-            .name
-    ).toBe(variableName);
-    expect(
-        (element as ast.TableRelatedColumnExpression).variableName.variable.ref!
-            .tableName.table.ref!.name
-    ).toBe(tableName);
-    expect(
-        (element as ast.TableRelatedColumnExpression).columnName!.column.ref!
-            .name
-    ).toBe(columnName);
+    expect(ast.isExpressionQuery(element)).toBeTruthy();
+    const exprQuery = (element as ast.ExpressionQuery)
+        .expr as ast.TableRelatedColumnExpression;
+    expect(exprQuery.variableName.variable.ref!.name).toBe(variableName);
+    assert(ast.isTableSourceItem(exprQuery.variableName.variable.ref));
+    expect(exprQuery.variableName.variable.ref!.tableName.table.ref!.name).toBe(
+        tableName
+    );
+    expect(exprQuery.columnName!.column.ref!.name).toBe(columnName);
 }
 
 export function expectSelectItemToBeAllStarRelativeToVariable(
@@ -153,13 +179,12 @@ export function expectSelectItemToBeAllStarRelativeToVariable(
         selectElementIndex
     );
     const element = selectStatement.select.elements[selectElementIndex];
-    expect((element as ast.AllTable).variableName.variable.ref!.name).toBe(
+    assert(isAllTable(element));
+    expect(element.variableName.variable.ref!.name).toBe(
         variableName
     );
-    expect(
-        (element as ast.AllTable).variableName.variable.ref!.tableName.table
-            .ref!.name
-    ).toBe(tableName);
+    assert(ast.isTableSourceItem(element.variableName.variable.ref));
+    expect(element.variableName.variable.ref!.tableName.table.ref!.name).toBe(tableName);
 }
 
 export function expectValidationIssues(
@@ -186,3 +211,4 @@ export function expectSelectItemToBeCastToType(
     expect(element.$type).toBe(ast.CastExpression);
     expect(computeType(element)!.discriminator).toBe(type);
 }
+

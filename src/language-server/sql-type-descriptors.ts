@@ -15,6 +15,7 @@ export type TypeDescriptorDiscriminator =
     | "boolean"
     | NumberTypeDescriptorDiscriminator
     | "text"
+    | "row"
     ;
 
 export function isTypeABoolean(
@@ -44,6 +45,12 @@ export function isTypeAnInteger(
     return type.discriminator === "integer";
 }
 
+export function isTypeARow(
+    type: TypeDescriptor
+): type is IntegerTypeDescriptor {
+    return type.discriminator === "row";
+}
+
 export function isTypeAText(
     type: TypeDescriptor
 ): type is CharTypeDescriptor {
@@ -54,6 +61,16 @@ export function isTypeAText(
 
 export interface TypeDescriptorBase {
     discriminator: TypeDescriptorDiscriminator;
+}
+
+export interface RowTypeDescriptor extends TypeDescriptorBase {
+    discriminator: "row";
+    columnTypes: ColumnTypeDescriptor[];
+}
+
+export interface ColumnTypeDescriptor {
+    name: string|undefined;
+    type: TypeDescriptor;
 }
 
 export interface RealTypeDescriptor extends TypeDescriptorBase {
@@ -75,7 +92,7 @@ export interface CharTypeDescriptor extends TypeDescriptorBase {
 
 export type TextualTypeDescriptor = CharTypeDescriptor;
 export type NumberTypeDescriptor = IntegerTypeDescriptor|RealTypeDescriptor;
-export type TypeDescriptor = BooleanTypeDesciptor | NumberTypeDescriptor | TextualTypeDescriptor;
+export type TypeDescriptor = BooleanTypeDesciptor | NumberTypeDescriptor | TextualTypeDescriptor | RowTypeDescriptor;
 
 export const Types = {
     Boolean: {

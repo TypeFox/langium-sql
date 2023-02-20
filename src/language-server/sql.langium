@@ -5,14 +5,14 @@ entry SqlFile:
     ;
 
 Statement:
-    FunctionDefinition | TableDefinition | SelectStatement;
+    (FunctionDefinition | TableDefinition | SelectStatement) ';';
 
 
 //DEFINITION/////////////////////////////////////////////////////////
 TableDefinition:
     'CREATE' 'TABLE' name=Identifier '('(
         columns+=ColumnDefinition (',' columns+=ColumnDefinition)*
-    )?')' ';';
+    )?')';
 
 ColumnDefinition:
     name=Identifier dataType=Type;
@@ -20,7 +20,7 @@ ColumnDefinition:
 FunctionDefinition:
     'CREATE' 'FUNCTION' name=Identifier '('
         (params+=FormalParameterDefinition (',' params+=FormalParameterDefinition)*)?
-    ')' 'AS' returnType=Type ';';
+    ')' 'AS' returnType=Type;
 
 FormalParameterDefinition:
     name=Identifier dataType=Type
@@ -34,8 +34,7 @@ SelectStatement:
     where=WhereClause?
     groupBy=GroupByClause?
     having=HavingClause?
-    orderBy=OrderByClause?
-    ';';
+    orderBy=OrderByClause?;
 
 WhereClause:
     'WHERE' rowCondition=Expression;
@@ -60,10 +59,10 @@ SelectElements:
     elements+=SelectElement (',' elements+=SelectElement)*
     ;
     
-SelectElement:
+SelectElement infers SelectElement:
     {infer AllStar}'*'
     | {infer AllTable}variableName=TableVariableName '.' '*'
-    | Expression
+    | {infer ExpressionQuery} expr=Expression ('AS' name=Identifier)?
     ;
     
 FromClause: 'FROM' sources=TableSources;
@@ -71,19 +70,22 @@ FromClause: 'FROM' sources=TableSources;
 TableSources: list+=TableSource (',' list+=TableSource)*;
 
 TableSource:
-    item=TableSourceItem joins+=JoinPart*
+    item=SourceItem joins+=JoinPart*
     ;
 
 JoinPart:
-    'JOIN' nextItem=TableSourceItem ('ON' joinOn=Expression)?
+    'JOIN' nextItem=SourceItem ('ON' joinOn=Expression)?
     ;
 
-TableSourceItem
-    : tableName=TableName ('AS'? name=Identifier)?
+SourceItem infers SourceItem
+    : {infer TableSourceItem} tableName=TableName ('AS'? name=Identifier)?
+    | {infer SubQuerySourceItem} '(' subQuery=SelectStatement ')' ('AS'? name=Identifier)?
     ;
+
+type TableVariableSource = TableSourceItem|SubQuerySourceItem;
 
 TableVariableName:
-    variable=[TableSourceItem:Identifier]
+    variable=[TableVariableSource:Identifier]
     ;
 
 TableName: table=[TableDefinition:Identifier];
@@ -122,8 +124,9 @@ PrimaryExpression infers Expression:
     | {infer CastExpression} CastExpression
     | {infer UnaryExpression} operator=('NOT'|'-'|'+') value=PrimaryExpression
     | {infer ParenthesisExpression} '(' expression=Expression ')'
+    | {infer SubQueryExpression} '(' subQuery=SelectStatement ')'
     | {infer FunctionCall} functionName=FunctionName '(' params=SelectElements? ')'
-    | {infer ColumnName} ColumnName
+    | {infer ColumnNameExpression} columnName=ColumnName
     ;
 
 CastExpression:
@@ -134,8 +137,9 @@ FunctionName:
     function=[FunctionDefinition:Identifier]
     ;
 
-ColumnName:
-    column=[ColumnDefinition:Identifier];
+type ColumnNameSource = ColumnDefinition|ExpressionQuery;
+
+ColumnName: column=[ColumnNameSource:Identifier];
 
 Identifier returns string:
     ID;
@@ -146,7 +150,6 @@ BooleanLiteral: value=('TRUE'|'FALSE');
 
 Type infers Type: 
     {infer BooleanType} 'BOOLEAN'
-    //@see https://crate.io/docs/sql-99/en/latest//chapters/03.html
     | {infer IntegerType} ('INTEGER'|'INT')
     | {infer RealType} 'REAL'
     | {infer CharType} 'CHAR' ('(' length=IntegerLiteral ')')?
@@ -159,6 +162,5 @@ terminal STRING returns string: /\'(\\.|\\\\|[^'\\])*\'/;
 terminal ID: /[_a-zA-Z][\w_]*/;
 terminal NUMBER returns number: /\d+((\.\d+)?([eE][\-+]?\d+)?)?/;
 
-
 hidden terminal ML_COMMENT: /\/\*[\s\S]*?\*\//;
-hidden terminal SL_COMMENT: /\/\/[^\n\r]*/;
+hidden terminal SL_COMMENT: /(\/\/|\-\-)[^\n\r]*/;

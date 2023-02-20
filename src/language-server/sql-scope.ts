@@ -18,12 +18,17 @@ import {
 } from "langium";
 import {
     isColumnName,
+    isColumnNameExpression,
     isSelectStatement,
+    isSubQuerySourceItem,
     isTableName,
     isTableRelatedColumnExpression,
+    isTableSourceItem,
     isTableVariableName,
     SelectStatement,
+    TableDefinition,
 } from "./generated/ast";
+import { assertUnreachable, getColumnCandidatesForSelectStatement } from "./sql-type-utilities";
 
 export class SqlScopeProvider extends DefaultScopeProvider {
     private readonly astNodeDescriptionProvider: AstNodeDescriptionProvider;
@@ -46,28 +51,46 @@ export class SqlScopeProvider extends DefaultScopeProvider {
                     context.container,
                     isTableRelatedColumnExpression
                 )!;
-                const columns =
-                    tableRelated.variableName.variable.ref!.tableName.table.ref!
-                        .columns;
-                return new StreamScope(
-                    stream(
-                        columns.map((c) =>
-                            this.astNodeDescriptionProvider.createDescription(
-                                c,
-                                c.name
+                const ref = tableRelated.variableName.variable.ref!;
+                if(isTableSourceItem(ref)) {
+                    const columns = ref.tableName.table.ref!.columns;
+                    return new StreamScope(
+                        stream(
+                            columns.map((c) =>
+                                this.astNodeDescriptionProvider.createDescription(
+                                    c,
+                                    c.name
+                                )
                             )
                         )
-                    )
+                    );
+                } else if(isSubQuerySourceItem(ref)) {
+                    const columns = getColumnCandidatesForSelectStatement(ref.subQuery);
+                    const astDescriptions = columns.filter(c => !c.isScopedByVariable && c.name).map(c => this.descriptions.createDescription(c.node, c.name!));
+                    return new StreamScope(stream(astDescriptions));
+                } else {
+                    assertUnreachable(ref);
+                }
+            } else if(hasContainerOfType(context.container, isColumnNameExpression)) {
+                const expression = getContainerOfType(
+                    context.container,
+                    isColumnNameExpression
+                )!;
+                const selectStatement = getContainerOfType(
+                    expression,
+                    isSelectStatement
                 );
+                const columns = getColumnCandidatesForSelectStatement(selectStatement!);
+                const astDescriptions = columns.filter(c => !c.isScopedByVariable && c.name).map(c => this.descriptions.createDescription(c.node, c.name!));
+                return new StreamScope(stream(astDescriptions));
             } else {
                 const selectStatement = getContainerOfType(
                     context.container,
                     isSelectStatement
                 );
-                return this.getColumnsForSelectStatement(
-                    context,
-                    selectStatement!
-                );
+                const columns = getColumnCandidatesForSelectStatement(selectStatement!);
+                const astDescriptions = columns.filter(c => !c.isScopedByVariable && c.name).map(c => this.descriptions.createDescription(c.node, c.name!));
+                return new StreamScope(stream(astDescriptions));
             }
         }
         if (isTableName(context.container) && context.property === "table") {
@@ -96,46 +119,13 @@ export class SqlScopeProvider extends DefaultScopeProvider {
         if (selectStatement.from) {
             const astDescriptions: AstNodeDescription[] = [];
             for (const source of selectStatement.from.sources.list) {
-                if (source.item.name) {
-                    astDescriptions.push(
-                        this.astNodeDescriptionProvider.createDescription(
-                            source.item,
-                            source.item.name
-                        )
-                    );
-                }
-                if(source.joins) {
-                    for (const join of source.joins) {
-                        if(join.nextItem.name) {
-                            astDescriptions.push(
-                                this.astNodeDescriptionProvider.createDescription(
-                                    join.nextItem,
-                                    join.nextItem.name
-                                )
-                            );
-                        }
-                    }
-                }
-            }
-            return new StreamScope(stream(astDescriptions));
-        }
-        return super.getScope(context);
-    }
-
-    private getColumnsForSelectStatement(
-        context: ReferenceInfo,
-        selectStatement: SelectStatement
-    ): Scope {
-        if (selectStatement.from) {
-            const astDescriptions: AstNodeDescription[] = [];
-            for (const source of selectStatement.from.sources.list) {
-                if (!source.item.name && source.item.tableName.table.ref) {
-                    for (const column of source.item.tableName.table.ref
-                        .columns) {
+                const items = [source.item].concat(source.joins.map(j => j.nextItem));
+                for (const item of items) {
+                    if(item.name) {
                         astDescriptions.push(
                             this.astNodeDescriptionProvider.createDescription(
-                                column,
-                                column.name
+                                item,
+                                item.name
                             )
                         );
                     }
@@ -148,7 +138,7 @@ export class SqlScopeProvider extends DefaultScopeProvider {
 
     private getTablesFromGlobalScope(_context: ReferenceInfo): Scope {
         return new StreamScope(
-            this.indexManager.allElements("TableDefinition")
+            this.indexManager.allElements(TableDefinition)
         );
     }
 }

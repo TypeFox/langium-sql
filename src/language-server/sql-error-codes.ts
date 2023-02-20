@@ -53,7 +53,7 @@ interface NumericValue {
 
 export const ReportAs = {
     DuplicatedVariableName: SqlErrorFactory.create<
-        ast.TableSourceItem,
+        ast.SourceItem,
         Nameable
     >(
         "SQL00001",
@@ -96,10 +96,36 @@ export const ReportAs = {
     >(
         "SQL00005",
         "error",
-        operand =>
+        (operand) =>
             `Expression must return a boolean, not a '${operand.discriminator}'.`,
         (node) => ({ node })
     ),
+    AllStarSelectionRequiresTableSources: SqlErrorFactory.create<
+        ast.SelectStatement,
+        {}
+    >(
+        "SQL00006",
+        "error",
+        () => `All-star selection requires table sources (FROM is missing).`,
+        (node) => ({ node })
+    ),
+    TableDefinitionRequiresAtLeastOneColumn: SqlErrorFactory.create<
+        ast.TableDefinition,
+        {}
+    >(
+        "SQL00007",
+        "error",
+        () => `Table definition requires at least one column.`,
+        (node) => ({ node, property: "name" })
+    ),
+    SubQueriesWithinSelectStatementsMustHaveExactlyOneColumn:
+        SqlErrorFactory.create<ast.SubQueryExpression, {}>(
+            "SQL00008",
+            "error",
+            () =>
+                `Sub queries within select statements must have exactly one column.`,
+            (node) => ({ node, property: "subQuery" })
+        ),
 };
 
 export interface BinaryOperatorMismatch {
