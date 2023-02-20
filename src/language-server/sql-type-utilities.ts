@@ -71,6 +71,12 @@ export function getColumnsForSelectStatement(selectStatement: SelectStatement): 
                 } else if(isSubQueryExpression(expr)) {
                     const columns = getColumnsForSelectStatement(expr.subQuery);
                     return [columns[0]]
+                } else {
+                    return [{
+                        node: e,
+                        typedNode: e.expr,
+                        isScopedByVariable: false
+                    }]
                 }
             }
         }

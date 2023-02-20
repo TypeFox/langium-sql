@@ -1,1 +1,1 @@
-SELECT  FROM employees e; 
+SELECT TRUE FROM employees e; 
