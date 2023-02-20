@@ -26,12 +26,13 @@ export async function parseHelper(
 ): Promise<(input: string) => Promise<LangiumDocument<ast.SqlFile>>> {
     const metaData = services.LanguageMetaData;
     const documentBuilder = services.shared.workspace.DocumentBuilder;
-    await services.shared.workspace.WorkspaceManager.initializeWorkspace([
+    await services.shared.workspace.WorkspaceManager.initializeWorkspace([]);
+    /*[
         {
             name: "workspace",
             uri: folder,
         },
-    ]);
+    ]*/
     return async (input) => {
         const randomNumber = Math.floor(Math.random() * 10000000) + 1000000;
         const uri = URI.parse(

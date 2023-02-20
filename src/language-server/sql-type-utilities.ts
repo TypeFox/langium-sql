@@ -28,7 +28,7 @@ export function getColumnsForSelectStatement(selectStatement: SelectStatement): 
             }
             const ref = e.variableName.variable.ref!;
             if(isTableSourceItem(ref)) {
-                const columns = ref.tableName.table.ref?.columns ?? [];
+                const columns = ref.tableName.table.ref?.columns.filter(isColumnDefinition) ?? [];
                 return columns.map<ColumnDescriptor>(c => ({
                     name: c.name,
                     typedNode: c.dataType,
@@ -109,7 +109,7 @@ function getColumnsForTableSource(source: TableSource): ColumnDescriptor[] {
     return items.flatMap(item => {
         if(isTableSourceItem(item)) {
             if(item.tableName.table.ref) {
-                return item.tableName.table.ref.columns.map(column => ({
+                return item.tableName.table.ref.columns.filter(isColumnDefinition).map(column => ({
                     name: column.name,
                     typedNode: column.dataType,
                     node: column,

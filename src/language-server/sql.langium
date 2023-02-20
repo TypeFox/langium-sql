@@ -11,11 +11,32 @@ Statement:
 //DEFINITION/////////////////////////////////////////////////////////
 TableDefinition:
     'CREATE' 'TABLE' name=Identifier '('(
-        columns+=ColumnDefinition (',' columns+=ColumnDefinition)*
+        columns+=TableContentDefinition (',' columns+=TableContentDefinition)* trailingComma?=','?
     )?')';
 
+TableContentDefinition:
+    ColumnDefinition
+    | PrimaryKeyDefinition
+    | KeyDefinition
+    | ConstraintDefinition
+    ;
+
 ColumnDefinition:
-    name=Identifier dataType=Type;
+    name=Identifier dataType=Type (negated?='NOT' null?='NULL')?;
+
+PrimaryKeyDefinition:
+    'PRIMARY' 'KEY' '(' primaryKeys+=[ColumnDefinition] (',' primaryKeys+=[ColumnDefinition])* ')'
+    ;
+
+
+KeyDefinition:
+    unique?='UNIQUE'? 'KEY' name=Identifier '(' keys+=[ColumnDefinition] (',' keys+=[ColumnDefinition])* ')'
+    ;
+
+ConstraintDefinition:
+    'CONSTRAINT' name=Identifier 'FOREIGN' 'KEY' '(' from=[ColumnDefinition] ')' 'REFERENCES' table=[TableDefinition] '(' to=[ColumnDefinition] ')'
+    ('ON' 'DELETE' cascadeDeletion?='CASCADE')?
+    ;
 
 FunctionDefinition:
     'CREATE' 'FUNCTION' name=Identifier '('
@@ -74,7 +95,7 @@ TableSource:
     ;
 
 JoinPart:
-    'JOIN' nextItem=SourceItem ('ON' joinOn=Expression)?
+    'JOIN' nextItem=SourceItem ('ON' joinOn=Expression | 'USING' '(' usingOn=Expression ')')?
     ;
 
 SourceItem infers SourceItem
@@ -153,6 +174,8 @@ Type infers Type:
     | {infer IntegerType} ('INTEGER'|'INT')
     | {infer RealType} 'REAL'
     | {infer CharType} 'CHAR' ('(' length=IntegerLiteral ')')?
+    | {infer EnumType} 'ENUM' '(' members+=STRING (',' members+=STRING)* ')'
+    | {infer DateTimeType} 'DATETIME'
     ; 
 
 IntegerLiteral: value=NUMBER;

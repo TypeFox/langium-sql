@@ -30,6 +30,8 @@ import {
     isType,
     isColumnDefinition,
     isColumnNameExpression,
+    isEnumType,
+    isDateTimeType,
 } from "./generated/ast";
 import { canConvert } from "./sql-type-conversion";
 import { areTypesEqual, RowTypeDescriptor, TypeDescriptor, Types } from "./sql-type-descriptors";
@@ -147,6 +149,12 @@ function computeTypeOfDataType(dataType: Type): TypeDescriptor | undefined {
     }
     if (isCharType(dataType)) {
         return Types.Char(dataType.length?.value);
+    }
+    if(isEnumType(dataType)) {
+        return Types.Enum(dataType.members);
+    }
+    if(isDateTimeType(dataType)) {
+        return Types.DateTime;
     }
     assertUnreachable(dataType);
 }

@@ -3,8 +3,36 @@
  * This program and the accompanying materials are made available under the
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
-import {describe} from 'vitest'
+import { EmptyFileSystem, LangiumDocument } from 'langium';
+import { join } from 'path';
+import {beforeAll, describe, it} from 'vitest'
+import { SqlFile } from '../../language-server/generated/ast';
+import { createSqlServices } from '../../language-server/sql-module';
+import { expectNoErrors, parseHelper } from '../test-utils';
+
+const services = createSqlServices(EmptyFileSystem);
 
 describe('Syntax coverage', () => {
+    let parse: (input: string) => Promise<LangiumDocument<SqlFile>>;
 
+    beforeAll(async () => {
+        parse = await parseHelper(services.Sql, join(__dirname, 'stdlib'));
+    });
+
+    async function expectParseable(content: string) {
+        expectNoErrors(await parse(content));
+    }
+
+    it('test', () => {
+        expectParseable('SELECT * FROM airline;');
+        expectParseable("SELECT a.* FROM airline a;");
+        expectParseable(`
+            SELECT firstname, lastname, flightno
+            FROM booking
+                JOIN passenger USING (passenger_id)
+                JOIN flight USING (flight_id)
+            WHERE
+                lastname = 'Maier';
+        `);
+    });
 });
