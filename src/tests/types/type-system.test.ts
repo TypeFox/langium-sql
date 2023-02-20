@@ -5,11 +5,11 @@
  ******************************************************************************/
 import { EmptyFileSystem, LangiumDocument } from "langium";
 import { beforeAll, describe, expect, it } from "vitest";
-import { SqlFile } from "../language-server/generated/ast";
-import { createSqlServices } from "../language-server/sql-module";
-import { Types } from "../language-server/sql-type-descriptors";
-import { computeTypeOfNumericLiteral } from "../language-server/sql-type-computation";
-import { parseHelper, expectNoErrors, expectSelectItemsToBeOfType, asSelectStatement, expectSelectItemsToHaveNames } from "./test-utils";
+import { SqlFile } from "../../language-server/generated/ast";
+import { createSqlServices } from "../../language-server/sql-module";
+import { Types } from "../../language-server/sql-type-descriptors";
+import { computeTypeOfNumericLiteral } from "../../language-server/sql-type-computation";
+import { parseHelper, expectNoErrors, expectSelectItemsToBeOfType, asSelectStatement, expectSelectItemsToHaveNames } from "../test-utils";
 
 describe("Type system utilities", () => {
     it.each([

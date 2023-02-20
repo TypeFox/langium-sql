@@ -6,10 +6,10 @@
 
 import { EmptyFileSystem, LangiumDocument } from "langium";
 import { beforeAll, describe, expect, it } from "vitest";
-import * as ast from "../language-server/generated/ast";
-import { ReportAs } from "../language-server/sql-error-codes";
-import { createSqlServices } from "../language-server/sql-module";
-import { Types } from "../language-server/sql-type-descriptors";
+import * as ast from "../../../language-server/generated/ast";
+import { ReportAs } from "../../../language-server/sql-error-codes";
+import { createSqlServices } from "../../../language-server/sql-module";
+import { Types } from "../../../language-server/sql-type-descriptors";
 import {
     parseHelper,
     expectNoErrors,
@@ -19,7 +19,7 @@ import {
     expectSelectItemToBeNumeric,
     expectSelectItemsToBeOfType,
     expectSelectItemsToHaveNames,
-} from "./test-utils";
+} from "../../test-utils";
 
 const services = createSqlServices(EmptyFileSystem);
 
