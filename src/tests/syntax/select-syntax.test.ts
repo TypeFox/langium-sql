@@ -20,19 +20,24 @@ describe('Syntax coverage', () => {
     });
 
     async function expectParseable(content: string) {
-        expectNoErrors(await parse(content));
+        const document = await parse(content);
+        expectNoErrors(document);
     }
 
-    it('test', () => {
-        expectParseable('SELECT * FROM airline;');
-        expectParseable("SELECT a.* FROM airline a;");
-        expectParseable(`
-            SELECT firstname, lastname, flightno
-            FROM booking
-                JOIN passenger USING (passenger_id)
-                JOIN flight USING (flight_id)
-            WHERE
-                lastname = 'Maier';
-        `);
-    });
+    it('TP1', () => expectParseable('SELECT * FROM airline;'));
+    it('TP2', () => expectParseable('SELECT a.* FROM airline a;'));
+    it('TP3', () => expectParseable(`
+        SELECT firstname, lastname, flightno
+        FROM booking
+            JOIN passenger USING (passenger_id)
+            JOIN flight USING (flight_id)
+        WHERE
+            lastname = 'Maier';
+    `));
+    it('TP4', () => expectParseable(`SELECT booking_id, flight_id FROM booking JOIN flight USING (flight_id) WHERE flight_id=5;`));
+    it('TP5', () => expectParseable(`SELECT COUNT(*) FROM booking WHERE flight_id=172;`));
+
+    it('FP1', () => expectParseable(`
+        SELECT * FROM passenger WHERE lastname LIKE '%meier%' AND firstname LIKE '%ryan%';
+    `));
 });

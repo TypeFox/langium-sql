@@ -143,7 +143,7 @@ const ConversionTable: Record<TypeConversionPair, TypeConverter|undefined> = {
     "datetime->row": Forbidden,
     "datetime->text": Forbidden,
     "datetime->enum": Forbidden,
-    "datetime->datetime": Forbidden,
+    "datetime->datetime": Identity,
     "datetime->integer": Forbidden,
     "datetime->real": Forbidden,
     "integer->datetime": Forbidden,
