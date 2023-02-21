@@ -32,6 +32,8 @@ import {
     isColumnNameExpression,
     isEnumType,
     isDateTimeType,
+    isCteColumnName,
+    isFunctionDefinition,
 } from "./generated/ast";
 import { canConvert } from "./sql-type-conversion";
 import { areTypesEqual, RowTypeDescriptor, TypeDescriptor, Types } from "./sql-type-descriptors";
@@ -104,14 +106,20 @@ function computeTypeOfExpression(node: Expression): TypeDescriptor | undefined {
             return computeType(ref.expr);
         } else if(isColumnDefinition(ref)) {
             return computeType(ref.dataType);
+        } else if(isCteColumnName(ref)) {
+            throw new Error('TODO')
         } else {
             assertUnreachable(ref);
             return undefined;
         }
     }
     if (isFunctionCall(node)) {
-        const dataType = node.functionName.function.ref?.returnType;
-        return dataType ? computeTypeOfDataType(dataType) : undefined;
+        const functionLike = node.functionName.function.ref!;
+        if(isFunctionDefinition(functionLike)) {
+            return computeTypeOfDataType(functionLike.returnType);
+        } else {
+            assertUnreachable(functionLike);
+        }
     }
     if (isBinaryExpression(node)) {
         const left = computeType(node.left);
@@ -137,7 +145,7 @@ export function computeTypeOfSelectStatement(selectStatement: SelectStatement): 
     };
 }
 
-function computeTypeOfDataType(dataType: Type): TypeDescriptor | undefined {
+export function computeTypeOfDataType(dataType: Type): TypeDescriptor | undefined {
     if (isBooleanType(dataType)) {
         return Types.Boolean;
     }

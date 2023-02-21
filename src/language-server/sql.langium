@@ -49,6 +49,7 @@ FormalParameterDefinition:
 //END DEFINITION/////////////////////////////////////////////////////////
 
 SelectStatement:
+    with=WithClause?
     'SELECT' ('ALL'|distinct?='DISTINCT')?
     select=SelectElements
     from=FromClause?
@@ -56,6 +57,16 @@ SelectStatement:
     groupBy=GroupByClause?
     having=HavingClause?
     orderBy=OrderByClause?;
+
+WithClause: 'WITH' 'RECURSIVE'? ctes+=CommonTableExpression (',' ctes+=CommonTableExpression)*;
+
+CteColumnName: name=Identifier;
+
+CommonTableExpression:
+    name=Identifier
+    ('(' columnNames+=CteColumnName (',' columnNames+=CteColumnName)* ')')?
+    'AS' statement=SelectStatement
+    ;
 
 WhereClause:
     'WHERE' rowCondition=Expression;
@@ -109,7 +120,9 @@ TableVariableName:
     variable=[TableVariableSource:Identifier]
     ;
 
-TableName: table=[TableDefinition:Identifier];
+type TableLike = TableDefinition|CommonTableExpression;
+
+TableName: table=[TableLike:Identifier];
 
 Expression: OrExpression;
 
@@ -163,7 +176,8 @@ type ColumnNameSource = ColumnDefinition|ExpressionQuery;
 ColumnName: column=[ColumnNameSource:Identifier];
 
 Identifier returns string:
-    ID;
+    ID
+    ;
 
 NumberLiteral: value=NUMBER;
 StringLiteral: value=STRING;
