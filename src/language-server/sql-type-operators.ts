@@ -5,11 +5,11 @@
  ******************************************************************************/
 
 import _ from "lodash";
-import { BinaryExpression, UnaryExpression } from "./generated/ast";
+import { BinaryExpression, NegatableExpression, UnaryExpression } from "./generated/ast";
 import { TypeDescriptor, Types } from "./sql-type-descriptors";
 
 export type UnaryOperator = UnaryExpression["operator"];
-export type BinaryOperator = BinaryExpression["operator"];
+export type BinaryOperator = BinaryExpression["operator"] | NegatableExpression['operator'];
 
 export interface UnaryOperatorDescriptor {
     operandType: TypeDescriptor;
@@ -99,13 +99,21 @@ const CharCharReturnsBoolean: BinaryOperatorDescriptor = {
     returnType: Types.Boolean
 }
 
+const CharCharReturnsChar: BinaryOperatorDescriptor = {
+    left: Types.Char(),
+    right: Types.Char(),
+    returnType: Types.Char()
+}
+
+
 const ReversedBinaryOperators: Map<BinaryOperatorDescriptor, BinaryOperator[]> = new Map<BinaryOperatorDescriptor, BinaryOperator[]>();
 ReversedBinaryOperators.set(IntegerIntegerReturnsInteger, ["%", "*", "+", "-", "/"]);
 ReversedBinaryOperators.set(RealRealReturnsReal, ["%", "*", "+", "-", "/"]);
 ReversedBinaryOperators.set(IntegerIntegerReturnsBoolean, ["<", "<=", "<>", "=", ">", ">="]);
 ReversedBinaryOperators.set(RealRealReturnsBoolean, ["<", "<=", "<>", "=", ">", ">="]);
-ReversedBinaryOperators.set(CharCharReturnsBoolean, ["<", "<=", "<>", "=", ">", ">="]);
+ReversedBinaryOperators.set(CharCharReturnsBoolean, ["<", "<=", "<>", "=", ">", ">=", "LIKE"]);
 ReversedBinaryOperators.set(BooleanBooleanReturnsBoolean, ["<", "<=", "<>", "=", ">", ">=", "AND", "OR"]);
+ReversedBinaryOperators.set(CharCharReturnsChar, ['||', 'LIKE']);
 
 const flatMap = [...ReversedBinaryOperators.entries()].flatMap(([descr, operators]) => {
     return operators.map(op => [op, descr] as const);
@@ -115,7 +123,7 @@ export type BinaryOperatorTable = Record<BinaryOperator, BinaryOperatorDescripto
 
 function emptyBinaryTable(): BinaryOperatorTable {
     const result: any = {};
-    const indices: BinaryOperator[] = ["%", "*", "+", "-", "/", "<", "<=", "<>", "=", ">", ">=", "AND", "OR"];
+    const indices: BinaryOperator[] = ["%", "*", "+", "-", "/", "<", "<=", "<>", "=", ">", ">=", "AND", "OR", "||", "IS", "LIKE", "IN"];
     indices.forEach(op => result[op] = []);
     return result as BinaryOperatorTable;
 }

@@ -26,6 +26,7 @@ export class SqlValidationRegistry extends ValidationRegistry {
                 validator.checkVariableNamesAreUnique,
                 validator.checkIfSelectStatementWithAllStarSelectItemHasAtLeastOneTableSource
             ],
+            Expression: [validator.checkIfExpressionHasType],
             IntegerLiteral: [validator.checkIntegerLiteralIsWholeNumber],
             BinaryExpression: [validator.checkBinaryExpressionType],
             UnaryExpression: [validator.checkUnaryExpressionType],
@@ -38,6 +39,12 @@ export class SqlValidationRegistry extends ValidationRegistry {
 }
 
 export class SqlValidator {
+    checkIfExpressionHasType(expr: ast.Expression, accept: ValidationAcceptor): void {
+        const type = computeType(expr);
+        if(!type) {
+           ReportAs.CannotDeriveTypeOfExpression(expr, {}, accept);
+       }
+    }
     checkWhereIsBoolean(clause: ast.WhereClause, accept: ValidationAcceptor): void {
         const type = computeType(clause.rowCondition);
          if(type && !isTypeABoolean(type)) {

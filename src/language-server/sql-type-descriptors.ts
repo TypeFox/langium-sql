@@ -16,6 +16,8 @@ export type TypeDescriptorDiscriminator =
     | NumberTypeDescriptorDiscriminator
     | "text"
     | "row"
+    | 'enum'
+    | 'datetime'
     ;
 
 export function isTypeABoolean(
@@ -39,6 +41,12 @@ export function isTypeAReal(
     return type.discriminator === "real";
 }
 
+export function isTypeADateTime(
+    type: TypeDescriptor
+): type is DateTimeTypeDescriptor {
+    return type.discriminator === "datetime";
+}
+
 export function isTypeAnInteger(
     type: TypeDescriptor
 ): type is IntegerTypeDescriptor {
@@ -49,6 +57,12 @@ export function isTypeARow(
     type: TypeDescriptor
 ): type is IntegerTypeDescriptor {
     return type.discriminator === "row";
+}
+
+export function isTypeAnEnum(
+    type: TypeDescriptor
+): type is EnumTypeDescriptor {
+    return type.discriminator === "enum";
 }
 
 export function isTypeAText(
@@ -77,6 +91,11 @@ export interface RealTypeDescriptor extends TypeDescriptorBase {
     discriminator: "real";
 }
 
+export interface EnumTypeDescriptor extends TypeDescriptorBase {
+    discriminator: "enum";
+    members: string[];
+}
+
 export interface IntegerTypeDescriptor extends TypeDescriptorBase {
     discriminator: "integer";
 }
@@ -90,9 +109,13 @@ export interface CharTypeDescriptor extends TypeDescriptorBase {
     length: number;
 }
 
+export interface DateTimeTypeDescriptor extends TypeDescriptorBase {
+    discriminator: "datetime";
+}
+
 export type TextualTypeDescriptor = CharTypeDescriptor;
 export type NumberTypeDescriptor = IntegerTypeDescriptor|RealTypeDescriptor;
-export type TypeDescriptor = BooleanTypeDesciptor | NumberTypeDescriptor | TextualTypeDescriptor | RowTypeDescriptor;
+export type TypeDescriptor = BooleanTypeDesciptor | NumberTypeDescriptor | TextualTypeDescriptor | RowTypeDescriptor | EnumTypeDescriptor | DateTimeTypeDescriptor;
 
 export const Types = {
     Boolean: {
@@ -104,11 +127,17 @@ export const Types = {
     Real: {
         discriminator: 'real'
     } as TypeDescriptor,
+    DateTime: {
+        discriminator: 'datetime'
+    } as TypeDescriptor,
     Char(length: number = 100): TypeDescriptor { //TODO find proper default value
         return {
             discriminator: 'text',
             length
         };
+    },
+    Enum(members: string[]): TypeDescriptor {
+        return {discriminator: 'enum', members};
     }
 }
 

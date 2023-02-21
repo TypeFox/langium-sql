@@ -11,11 +11,32 @@ Statement:
 //DEFINITION/////////////////////////////////////////////////////////
 TableDefinition:
     'CREATE' 'TABLE' name=Identifier '('(
-        columns+=ColumnDefinition (',' columns+=ColumnDefinition)*
+        columns+=TableContentDefinition (',' columns+=TableContentDefinition)* trailingComma?=','?
     )?')';
 
+TableContentDefinition:
+    ColumnDefinition
+    | PrimaryKeyDefinition
+    | KeyDefinition
+    | ConstraintDefinition
+    ;
+
 ColumnDefinition:
-    name=Identifier dataType=Type;
+    name=Identifier dataType=Type (negated?='NOT' null?='NULL')?;
+
+PrimaryKeyDefinition:
+    'PRIMARY' 'KEY' '(' primaryKeys+=[ColumnDefinition] (',' primaryKeys+=[ColumnDefinition])* ')'
+    ;
+
+
+KeyDefinition:
+    unique?='UNIQUE'? 'KEY' name=Identifier '(' keys+=[ColumnDefinition] (',' keys+=[ColumnDefinition])* ')'
+    ;
+
+ConstraintDefinition:
+    'CONSTRAINT' name=Identifier 'FOREIGN' 'KEY' '(' from=[ColumnDefinition] ')' 'REFERENCES' table=[TableDefinition] '(' to=[ColumnDefinition] ')'
+    ('ON' 'DELETE' cascadeDeletion?='CASCADE')?
+    ;
 
 FunctionDefinition:
     'CREATE' 'FUNCTION' name=Identifier '('
@@ -28,6 +49,7 @@ FormalParameterDefinition:
 //END DEFINITION/////////////////////////////////////////////////////////
 
 SelectStatement:
+    with=WithClause?
     'SELECT' ('ALL'|distinct?='DISTINCT')?
     select=SelectElements
     from=FromClause?
@@ -35,6 +57,16 @@ SelectStatement:
     groupBy=GroupByClause?
     having=HavingClause?
     orderBy=OrderByClause?;
+
+WithClause: 'WITH' 'RECURSIVE'? ctes+=CommonTableExpression (',' ctes+=CommonTableExpression)*;
+
+CteColumnName: name=Identifier;
+
+CommonTableExpression:
+    name=Identifier
+    ('(' columnNames+=CteColumnName (',' columnNames+=CteColumnName)* ')')?
+    'AS' statement=SelectStatement
+    ;
 
 WhereClause:
     'WHERE' rowCondition=Expression;
@@ -74,7 +106,7 @@ TableSource:
     ;
 
 JoinPart:
-    'JOIN' nextItem=SourceItem ('ON' joinOn=Expression)?
+    'JOIN' nextItem=SourceItem ('ON' joinOn=Expression | 'USING' '(' usingOn=Expression ')')?
     ;
 
 SourceItem infers SourceItem
@@ -88,9 +120,15 @@ TableVariableName:
     variable=[TableVariableSource:Identifier]
     ;
 
-TableName: table=[TableDefinition:Identifier];
+type TableLike = TableDefinition|CommonTableExpression;
 
-Expression: OrExpression;
+TableName: table=[TableLike:Identifier];
+
+Expression: ConcatExpression;
+
+ConcatExpression infers Expression:
+    OrExpression ({infer BinaryExpression.left=current} operator='||' right=OrExpression)*
+    ;
 
 OrExpression infers Expression:
     AndExpression ({infer BinaryExpression.left=current} operator='OR' right=AndExpression)*
@@ -105,7 +143,13 @@ EqExpression infers Expression:
     ;
 
 RelationalExpression infers Expression:
-    AdditiveExpression ({infer BinaryExpression.left=current} operator=('<='|'>='|'<'|'>') right=AdditiveExpression)*
+    NegatableExpression ({infer BinaryExpression.left=current} operator=('<='|'>='|'<'|'>') right=NegatableExpression)*
+    ;
+
+NegatableExpression infers Expression:
+    AdditiveExpression ({infer NegatableExpression.left=current} operator=('IS') negated?='NOT'? right=AdditiveExpression)*
+    | AdditiveExpression ({infer NegatableExpression.left=current} negated?='NOT'? operator=('IN'|'LIKE') right=AdditiveExpression)*
+    | AdditiveExpression ({infer BetweenExpression.subExpr=current} negated?='NOT'? 'BETWEEN' left=AdditiveExpression 'AND' right=AdditiveExpression) 
     ;
 
 AdditiveExpression infers Expression:
@@ -142,7 +186,8 @@ type ColumnNameSource = ColumnDefinition|ExpressionQuery;
 ColumnName: column=[ColumnNameSource:Identifier];
 
 Identifier returns string:
-    ID;
+    ID
+    ;
 
 NumberLiteral: value=NUMBER;
 StringLiteral: value=STRING;
@@ -153,6 +198,8 @@ Type infers Type:
     | {infer IntegerType} ('INTEGER'|'INT')
     | {infer RealType} 'REAL'
     | {infer CharType} 'CHAR' ('(' length=IntegerLiteral ')')?
+    | {infer EnumType} 'ENUM' '(' members+=STRING (',' members+=STRING)* ')'
+    | {infer DateTimeType} 'DATETIME'
     ; 
 
 IntegerLiteral: value=NUMBER;

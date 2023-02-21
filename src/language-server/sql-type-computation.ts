@@ -30,6 +30,12 @@ import {
     isType,
     isColumnDefinition,
     isColumnNameExpression,
+    isEnumType,
+    isDateTimeType,
+    isCteColumnName,
+    isFunctionDefinition,
+    isNegatableExpression,
+    isBetweenExpression,
 } from "./generated/ast";
 import { canConvert } from "./sql-type-conversion";
 import { areTypesEqual, RowTypeDescriptor, TypeDescriptor, Types } from "./sql-type-descriptors";
@@ -102,22 +108,31 @@ function computeTypeOfExpression(node: Expression): TypeDescriptor | undefined {
             return computeType(ref.expr);
         } else if(isColumnDefinition(ref)) {
             return computeType(ref.dataType);
+        } else if(isCteColumnName(ref)) {
+            throw new Error('TODO')
         } else {
             assertUnreachable(ref);
             return undefined;
         }
     }
     if (isFunctionCall(node)) {
-        const dataType = node.functionName.function.ref?.returnType;
-        return dataType ? computeTypeOfDataType(dataType) : undefined;
+        const functionLike = node.functionName.function.ref!;
+        if(isFunctionDefinition(functionLike)) {
+            return computeTypeOfDataType(functionLike.returnType);
+        } else {
+            assertUnreachable(functionLike);
+        }
     }
-    if (isBinaryExpression(node)) {
+    if (isBinaryExpression(node) || isNegatableExpression(node)) {
         const left = computeType(node.left);
         const right = computeType(node.right);
         if (left && right) {
             return computeTypeOfBinaryOperation(node.operator, left, right);
         }
         return undefined;
+    }
+    if(isBetweenExpression(node)) {
+        return Types.Boolean;
     }
     if(isSubQueryExpression(node)) {
         return computeTypeOfSelectStatement(node.subQuery);
@@ -135,7 +150,7 @@ export function computeTypeOfSelectStatement(selectStatement: SelectStatement): 
     };
 }
 
-function computeTypeOfDataType(dataType: Type): TypeDescriptor | undefined {
+export function computeTypeOfDataType(dataType: Type): TypeDescriptor | undefined {
     if (isBooleanType(dataType)) {
         return Types.Boolean;
     }
@@ -147,6 +162,12 @@ function computeTypeOfDataType(dataType: Type): TypeDescriptor | undefined {
     }
     if (isCharType(dataType)) {
         return Types.Char(dataType.length?.value);
+    }
+    if(isEnumType(dataType)) {
+        return Types.Enum(dataType.members);
+    }
+    if(isDateTimeType(dataType)) {
+        return Types.DateTime;
     }
     assertUnreachable(dataType);
 }

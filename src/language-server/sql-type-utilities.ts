@@ -4,7 +4,7 @@
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
 import { AstNode, Reference } from "langium";
-import { ColumnNameSource, isAllStar, isAllTable, isColumnDefinition, isColumnNameExpression, isExpressionQuery, isFunctionCall, isSubQueryExpression, isSubQuerySourceItem, isTableRelatedColumnExpression, isTableSourceItem, SelectStatement, TableSource } from "./generated/ast";
+import { ColumnNameSource, isAllStar, isAllTable, isColumnDefinition, isColumnNameExpression, isCommonTableExpression, isExpressionQuery, isFunctionCall, isSubQueryExpression, isSubQuerySourceItem, isTableDefinition, isTableRelatedColumnExpression, isTableSourceItem, SelectStatement, TableSource } from "./generated/ast";
 
 export function assertUnreachable(x: never): never {
     throw new Error("Didn't expect to get here");
@@ -28,13 +28,27 @@ export function getColumnsForSelectStatement(selectStatement: SelectStatement): 
             }
             const ref = e.variableName.variable.ref!;
             if(isTableSourceItem(ref)) {
-                const columns = ref.tableName.table.ref?.columns ?? [];
-                return columns.map<ColumnDescriptor>(c => ({
-                    name: c.name,
-                    typedNode: c.dataType,
-                    node: c,
-                    isScopedByVariable: true
-                }));
+                const tableLike = ref.tableName.table.ref!;
+                if(isTableDefinition(tableLike)) {
+                    const columns = tableLike.columns.filter(isColumnDefinition) ?? [];
+                    return columns.map<ColumnDescriptor>(c => ({
+                        name: c.name,
+                        typedNode: c.dataType,
+                        node: c,
+                        isScopedByVariable: true
+                    }));
+                } else if(isCommonTableExpression(tableLike)) {
+                    const columns = getColumnsForSelectStatement(tableLike.statement);
+                    if(tableLike.columnNames.length > 0) {
+                        return columns.map((c, i) => ({
+                            ...c,
+                            name: tableLike.columnNames[i].name
+                        }));
+                    }
+                    return columns;
+                } else {
+                    assertUnreachable(tableLike);
+                }
             } else if(isSubQuerySourceItem(ref)) {
                 return getColumnsForSelectStatement(ref.subQuery);
             } else {
@@ -53,11 +67,12 @@ export function getColumnsForSelectStatement(selectStatement: SelectStatement): 
                 if(isTableRelatedColumnExpression(expr)) {
                     return resolveColumnNameTypedNode(e, expr.columnName.column);
                 } else if(isFunctionCall(expr)) {
+                    const functionLike = expr.functionName.function.ref!;
                     return [{
                         name: expr.functionName.function.$refText,
                         isScopedByVariable: false,
                         node: e as AstNode,
-                        typedNode: expr.functionName.function.ref!.returnType as AstNode
+                        typedNode: functionLike.returnType
                      }];
                 } else if(isColumnNameExpression(expr)) {
                     const fromAllSources = getColumnCandidatesForSelectStatement(selectStatement);
@@ -108,13 +123,20 @@ function getColumnsForTableSource(source: TableSource): ColumnDescriptor[] {
     const items = [source.item].concat(source.joins.map(j => j.nextItem));
     return items.flatMap(item => {
         if(isTableSourceItem(item)) {
-            if(item.tableName.table.ref) {
-                return item.tableName.table.ref.columns.map(column => ({
+            const tableLike = item.tableName.table.ref;
+            if(isTableDefinition(tableLike)) {
+                return tableLike.columns.filter(isColumnDefinition).map(column => ({
                     name: column.name,
                     typedNode: column.dataType,
                     node: column,
                     isScopedByVariable: item.name != null
                 }));
+            } else if(isCommonTableExpression(tableLike)) {
+                let columns = getColumnsForSelectStatement(tableLike.statement);
+                if(tableLike.columnNames.length > 0) {
+                    columns = columns.map((c, i) => ({...c, name: tableLike.columnNames[i].name}));
+                }
+                return columns;
             }
             return [];
         } else if(isSubQuerySourceItem(item)) {
