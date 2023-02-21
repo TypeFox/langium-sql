@@ -111,7 +111,7 @@ ReversedBinaryOperators.set(IntegerIntegerReturnsInteger, ["%", "*", "+", "-", "
 ReversedBinaryOperators.set(RealRealReturnsReal, ["%", "*", "+", "-", "/"]);
 ReversedBinaryOperators.set(IntegerIntegerReturnsBoolean, ["<", "<=", "<>", "=", ">", ">="]);
 ReversedBinaryOperators.set(RealRealReturnsBoolean, ["<", "<=", "<>", "=", ">", ">="]);
-ReversedBinaryOperators.set(CharCharReturnsBoolean, ["<", "<=", "<>", "=", ">", ">="]);
+ReversedBinaryOperators.set(CharCharReturnsBoolean, ["<", "<=", "<>", "=", ">", ">=", "LIKE"]);
 ReversedBinaryOperators.set(BooleanBooleanReturnsBoolean, ["<", "<=", "<>", "=", ">", ">=", "AND", "OR"]);
 ReversedBinaryOperators.set(CharCharReturnsChar, ['||', 'LIKE']);
 

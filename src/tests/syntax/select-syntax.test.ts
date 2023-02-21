@@ -42,8 +42,11 @@ describe('Syntax coverage', () => {
         WITH xxx AS SELECT * FROM booking WHERE booking_id=100
         SELECT booking_id FROM xxx;
     `));
-
-    it('FP1', () => expectParseable(`
+    it('TP9', () => expectParseable(`
         SELECT * FROM passenger WHERE lastname LIKE '%meier%' AND firstname LIKE '%ryan%';
     `));
+
+    //TODO
+    it.fails('TP10', () => expectParseable(`SELECT firstname IS NULL FROM passenger;`));
+    it.fails('TP11', () => expectParseable(`SELECT firstname, lastname FROM passenger WHERE passenger_id IN (SELECT passenger_id FROM passenger);`));
 });

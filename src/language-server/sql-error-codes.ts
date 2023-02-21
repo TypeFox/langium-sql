@@ -126,6 +126,14 @@ export const ReportAs = {
                 `Sub queries within select statements must have exactly one column.`,
             (node) => ({ node, property: "subQuery" })
         ),
+    CannotDeriveTypeOfExpression:
+        SqlErrorFactory.create<ast.Expression, {}>(
+            "SQL00009",
+            "error",
+            () =>
+                `Unable to derive the type of the expression.`,
+            (node) => ({ node })
+        ),
 };
 
 export interface BinaryOperatorMismatch {
