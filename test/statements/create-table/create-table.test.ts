@@ -6,9 +6,9 @@
 
 import { EmptyFileSystem, LangiumDocument } from "langium";
 import { beforeAll, describe, it } from "vitest";
-import * as ast from "../../../language-server/generated/ast";
-import { ReportAs } from "../../../language-server/sql-error-codes";
-import { createSqlServices } from "../../../language-server/sql-module";
+import * as ast from "../../../src/language-server/generated/ast";
+import { ReportAs } from "../../../src/language-server/sql-error-codes";
+import { createSqlServices } from "../../../src/language-server/sql-module";
 import {
     parseHelper,
     expectNoErrors,

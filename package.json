@@ -36,14 +36,18 @@
     "onLanguage:sql"
   ],
   "files": [
-    "out",
+    "dist",
     "src"
   ],
-  "main": "./out/extension/extension.js",
+  "main": "./dist/extension/extension.js",
   "scripts": {
+    "clean": "npx shx rm -fr dist *.tsbuildinfo",
+    "compile": "npm run compile:src && npm run compile:test",
+    "compile:src": "tsc --build tsconfig.src.json",
+    "compile:test": "tsc --build tsconfig.test.json",
+    "build": "npm run clean && npm run compile",
     "prepare": "npm run langium:generate && npm run build",
     "vscode:prepublish": "npm run build && npm run lint",
-    "build": "tsc -b tsconfig.json",
     "watch": "tsc -b tsconfig.json --watch",
     "lint": "eslint src --ext ts",
     "langium:generate": "langium generate",
@@ -65,6 +69,7 @@
     "@types/vscode": "^1.56.0",
     "@typescript-eslint/eslint-plugin": "^5.44.0",
     "@typescript-eslint/parser": "^5.44.0",
+    "@vitest/coverage-c8": "^0.28.5",
     "eslint": "^8.28.0",
     "eslint-plugin-header": "^3.1.1",
     "langium-cli": "^1.0.0",

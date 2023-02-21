@@ -5,20 +5,20 @@
  ******************************************************************************/
 import { LangiumDocument } from "langium";
 import { expect } from "vitest";
-import * as ast from "../language-server/generated/ast";
-import { SqlServices } from "../language-server/sql-module";
+import * as ast from "../src/language-server/generated/ast";
+import { SqlServices } from "../src/language-server/sql-module";
 import { URI } from "vscode-uri";
 import {
     TypeDescriptor,
     TypeDescriptorDiscriminator,
-} from "../language-server/sql-type-descriptors";
+} from "../src/language-server/sql-type-descriptors";
 import {
     ComputeTypeFunction,
     computeTypeOfSelectStatement,
-} from "../language-server/sql-type-computation";
+} from "../src/language-server/sql-type-computation";
 import assert from "assert";
-import { isAllTable } from "../language-server/generated/ast";
-import { getColumnsForSelectStatement } from "../language-server/sql-type-utilities";
+import { isAllTable } from "../src/language-server/generated/ast";
+import { getColumnsForSelectStatement } from "../src/language-server/sql-type-utilities";
 
 export async function parseHelper(
     services: SqlServices,

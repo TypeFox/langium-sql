@@ -147,8 +147,7 @@ RelationalExpression infers Expression:
     ;
 
 NegatableExpression infers Expression:
-    AdditiveExpression ({infer NegatableExpression.left=current} operator=('IS') negated?='NOT'? right=AdditiveExpression)*
-    | AdditiveExpression ({infer NegatableExpression.left=current} negated?='NOT'? operator=('IN'|'LIKE') right=AdditiveExpression)*
+    AdditiveExpression ({infer NegatableExpression.left=current} (operator=('IS') negated?='NOT'?|negated?='NOT'? operator=('IN'|'LIKE')) right=AdditiveExpression)*
     | AdditiveExpression ({infer BetweenExpression.subExpr=current} negated?='NOT'? 'BETWEEN' left=AdditiveExpression 'AND' right=AdditiveExpression) 
     ;
 

@@ -18,7 +18,7 @@
       "request": "attach",
       "skipFiles": ["<node_internals>/**"],
       "sourceMaps": true,
-      "outFiles": ["${workspaceFolder}/out/**/*.js"]
+      "outFiles": ["${workspaceFolder}/dist/**/*.js"]
     },
     {
       "type": "node",

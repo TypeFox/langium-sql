@@ -1,3 +1,5 @@
 node_modules/
-/out/
+/dist/
+/coverage/
 /src/language-server/generated
+*.tsbuildinfo

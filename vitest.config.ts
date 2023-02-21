@@ -12,7 +12,7 @@ export default defineConfig({
         ],
         exclude: [
             'node_modules/**/*',
-            'out/**/*'
+            'dist/**/*'
         ],
         deps: {
             interopDefault: true,

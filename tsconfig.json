@@ -1,19 +1,42 @@
 {
   "compilerOptions": {
-    "target": "ES6",
-    "module": "commonjs",
-    "lib": ["ESNext"],
-    "sourceMap": true,
-    "outDir": "out",
+    "target": "ES2022",
+    "module": "ES2022",
+    "moduleResolution": "node16",
+    "jsx": "react",
+    "composite": true,
     "strict": true,
-    "noUnusedLocals": true,
-    "noImplicitOverride": true,
-    "noImplicitReturns": true,
-    "moduleResolution": "node",
     "esModuleInterop": true,
+    "allowJs": true,
+    "sourceMap": true,
+    "noEmit": true,
+    "declaration": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "noImplicitReturns": true,
+    "noImplicitOverride": true,
+    "noImplicitAny": true,
+    "strictPropertyInitialization": true,
+    "importHelpers": true,
+    "resolveJsonModule": true,
+    "forceConsistentCasingInFileNames": true,
+    "lib": [
+      "es2020",
+      "dom"
+    ],
+    "types": [
+      "node"
+    ],
   },
-  "include": ["src/**/*.ts", "test/**/*.ts"],
-  "exclude": ["out", "node_modules"]
+  "include": [
+    "**/src/**/*.ts",
+    "**/test/**/*.ts",
+    "**/src/**/*.tsx",
+    "**/test/**/*.tsx",
+    "packages/*/*.ts"
+  ],
+  "exclude": [
+    "**/node_modules/**/*",
+    "**/dist/**/*",
+    "**/lib/**/*"
+  ]
 }
