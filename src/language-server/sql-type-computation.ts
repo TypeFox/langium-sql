@@ -34,6 +34,8 @@ import {
     isDateTimeType,
     isCteColumnName,
     isFunctionDefinition,
+    isNegatableExpression,
+    isBetweenExpression,
 } from "./generated/ast";
 import { canConvert } from "./sql-type-conversion";
 import { areTypesEqual, RowTypeDescriptor, TypeDescriptor, Types } from "./sql-type-descriptors";
@@ -121,13 +123,16 @@ function computeTypeOfExpression(node: Expression): TypeDescriptor | undefined {
             assertUnreachable(functionLike);
         }
     }
-    if (isBinaryExpression(node)) {
+    if (isBinaryExpression(node) || isNegatableExpression(node)) {
         const left = computeType(node.left);
         const right = computeType(node.right);
         if (left && right) {
             return computeTypeOfBinaryOperation(node.operator, left, right);
         }
         return undefined;
+    }
+    if(isBetweenExpression(node)) {
+        return Types.Boolean;
     }
     if(isSubQueryExpression(node)) {
         return computeTypeOfSelectStatement(node.subQuery);

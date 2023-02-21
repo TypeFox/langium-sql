@@ -124,7 +124,11 @@ type TableLike = TableDefinition|CommonTableExpression;
 
 TableName: table=[TableLike:Identifier];
 
-Expression: OrExpression;
+Expression: ConcatExpression;
+
+ConcatExpression infers Expression:
+    OrExpression ({infer BinaryExpression.left=current} operator='||' right=OrExpression)*
+    ;
 
 OrExpression infers Expression:
     AndExpression ({infer BinaryExpression.left=current} operator='OR' right=AndExpression)*
@@ -139,7 +143,13 @@ EqExpression infers Expression:
     ;
 
 RelationalExpression infers Expression:
-    AdditiveExpression ({infer BinaryExpression.left=current} operator=('<='|'>='|'<'|'>') right=AdditiveExpression)*
+    NegatableExpression ({infer BinaryExpression.left=current} operator=('<='|'>='|'<'|'>') right=NegatableExpression)*
+    ;
+
+NegatableExpression infers Expression:
+    AdditiveExpression ({infer NegatableExpression.left=current} operator=('IS') negated?='NOT'? right=AdditiveExpression)*
+    | AdditiveExpression ({infer NegatableExpression.left=current} negated?='NOT'? operator=('IN'|'LIKE') right=AdditiveExpression)*
+    | AdditiveExpression ({infer BetweenExpression.subExpr=current} negated?='NOT'? 'BETWEEN' left=AdditiveExpression 'AND' right=AdditiveExpression) 
     ;
 
 AdditiveExpression infers Expression:

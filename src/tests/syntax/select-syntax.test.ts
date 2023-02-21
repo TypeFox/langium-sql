@@ -36,6 +36,12 @@ describe('Syntax coverage', () => {
     `));
     it('TP4', () => expectParseable(`SELECT booking_id, flight_id FROM booking JOIN flight USING (flight_id) WHERE flight_id=5;`));
     it('TP5', () => expectParseable(`SELECT COUNT(*) FROM booking WHERE flight_id=172;`));
+    it('TP6', () => expectParseable(`SELECT * FROM booking WHERE booking_id BETWEEN 1 AND 1000;`));
+    it('TP7', () => expectParseable(`SELECT 'Hello' || ', ' || 'World!';`));
+    it('TP8', () => expectParseable(`
+        WITH xxx AS SELECT * FROM booking WHERE booking_id=100
+        SELECT booking_id FROM xxx;
+    `));
 
     it('FP1', () => expectParseable(`
         SELECT * FROM passenger WHERE lastname LIKE '%meier%' AND firstname LIKE '%ryan%';
