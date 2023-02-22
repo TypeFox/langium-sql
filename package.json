@@ -3,6 +3,7 @@
   "displayName": "SQL Language Server",
   "description": "Extensible language server for SQL",
   "version": "0.0.1",
+  "publisher": "langium",
   "license": "MIT",
   "engines": {
     "vscode": "^1.56.0"
