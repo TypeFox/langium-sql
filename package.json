@@ -2,7 +2,7 @@
   "name": "langium-sql",
   "displayName": "SQL Language Server",
   "description": "Extensible language server for SQL",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "langium",
   "license": "MIT",
   "engines": {
