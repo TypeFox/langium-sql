@@ -5,12 +5,15 @@ entry SqlFile:
     ;
 
 Statement:
-    (FunctionDefinition | TableDefinition | SelectStatement) ';';
+    (SchemaDefinition | FunctionDefinition | TableDefinition | SelectStatement) ';';
 
 
 //DEFINITION/////////////////////////////////////////////////////////
+SchemaDefinition:
+    'CREATE' 'SCHEMA' name=Identifier; 
+
 TableDefinition:
-    'CREATE' 'TABLE' name=Identifier '('(
+    'CREATE' 'TABLE' (schema=[SchemaDefinition] '.')? name=Identifier '('(
         columns+=TableContentDefinition (',' columns+=TableContentDefinition)* trailingComma?=','?
     )?')';
 
@@ -94,7 +97,7 @@ SelectElements:
 SelectElement infers SelectElement:
     {infer AllStar}'*'
     | {infer AllTable}variableName=TableVariableName '.' '*'
-    | {infer ExpressionQuery} expr=Expression ('AS' name=Identifier)?
+    | {infer ExpressionQuery} expr=Expression ('AS'? name=Identifier)?
     ;
     
 FromClause: 'FROM' sources=TableSources;
@@ -186,6 +189,7 @@ ColumnName: column=[ColumnNameSource:Identifier];
 
 Identifier returns string:
     ID
+    | STRING
     ;
 
 NumberLiteral: value=NUMBER;
