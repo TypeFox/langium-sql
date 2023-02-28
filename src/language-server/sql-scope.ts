@@ -5,12 +5,14 @@
  ******************************************************************************/
 
 import {
+    AstNode,
     AstNodeDescription,
     AstNodeDescriptionProvider,
     DefaultScopeProvider,
     getContainerOfType,
     hasContainerOfType,
     LangiumServices,
+    Reference,
     ReferenceInfo,
     Scope,
     Stream,
@@ -24,6 +26,8 @@ import {
     isColumnNameExpression,
     isCommonTableExpression,
     isConstraintDefinition,
+    isKeyDefinition,
+    isPrimaryKeyDefinition,
     isSelectStatement,
     isSubQuerySourceItem,
     isTableDefinition,
@@ -31,6 +35,7 @@ import {
     isTableRelatedColumnExpression,
     isTableSourceItem,
     isTableVariableName,
+    PrimaryKeyDefinition,
     SelectStatement,
     TableDefinition,
 } from "./generated/ast";
@@ -50,7 +55,19 @@ export class SqlScopeProvider extends DefaultScopeProvider {
     }
 
     override getScope(context: ReferenceInfo): Scope {
-        if (isConstraintDefinition(context.container)) {
+        if(isPrimaryKeyDefinition(context.container)) {
+            switch(context.property) {
+                case 'primaryKeys':
+                    const tableDef = getContainerOfType(context.container, isTableDefinition)!;
+                    return this.streamColumnDefinitions(tableDef.columns.filter(isColumnDefinition));
+            }
+        } else if(isKeyDefinition(context.container)) {
+            switch(context.property) {
+                case 'keys':
+                    const tableDef = getContainerOfType(context.container, isTableDefinition)!;
+                    return this.streamColumnDefinitions(tableDef.columns.filter(isColumnDefinition));
+            }
+        } else if (isConstraintDefinition(context.container)) {
             switch (context.property) {
                 case "from": {
                     const columns = getContainerOfType(

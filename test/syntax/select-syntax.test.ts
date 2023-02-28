@@ -5,7 +5,7 @@
  ******************************************************************************/
 import { EmptyFileSystem, LangiumDocument } from 'langium';
 import { join } from 'path';
-import {beforeAll, describe, it} from 'vitest'
+import {beforeAll, describe, expect, it} from 'vitest'
 import { SqlFile } from '../../src/language-server/generated/ast';
 import { createSqlServices } from '../../src/language-server/sql-module';
 import { expectNoErrors, parseHelper } from '../test-utils';
@@ -22,11 +22,15 @@ describe('Syntax coverage', () => {
     async function expectParseable(content: string) {
         const document = await parse(content);
         expectNoErrors(document);
+        for (const reference of document.references) {
+            expect(reference.ref).not.toBe(undefined);
+        }
+        return document;
     }
 
-    it('TP1', () => expectParseable('SELECT * FROM airline;'));
-    it('TP2', () => expectParseable('SELECT a.* FROM airline a;'));
-    it('TP3', () => expectParseable(`
+    it('Simple select', () => expectParseable('SELECT * FROM airline;'));
+    it('Select with table variable', () => expectParseable('SELECT a.* FROM airline a;'));
+    it('Join with using', () => expectParseable(`
         SELECT firstname, lastname, flightno
         FROM booking
             JOIN passenger USING (passenger_id)
@@ -34,19 +38,23 @@ describe('Syntax coverage', () => {
         WHERE
             lastname = 'Maier';
     `));
-    it('TP4', () => expectParseable(`SELECT booking_id, flight_id FROM booking JOIN flight USING (flight_id) WHERE flight_id=5;`));
-    it('TP5', () => expectParseable(`SELECT COUNT(*) FROM booking WHERE flight_id=172;`));
-    it('TP6', () => expectParseable(`SELECT * FROM booking WHERE booking_id BETWEEN 1 AND 1000;`));
-    it('TP7', () => expectParseable(`SELECT 'Hello' || ', ' || 'World!';`));
-    it('TP8', () => expectParseable(`
+    it('Select with condition', () => expectParseable(`SELECT booking_id, flight_id FROM booking JOIN flight USING (flight_id) WHERE flight_id=5;`));
+    it('Aggregate using COUNT', () => expectParseable(`SELECT COUNT(*) FROM booking WHERE flight_id=172;`));
+    it('Select between', () => expectParseable(`SELECT * FROM booking WHERE booking_id BETWEEN 1 AND 1000;`));
+    it('Concat operator', () => expectParseable(`SELECT 'Hello' || ', ' || 'World!';`));
+    it('With statement', () => expectParseable(`
         WITH xxx AS SELECT * FROM booking WHERE booking_id=100
         SELECT booking_id FROM xxx;
     `));
-    it('TP9', () => expectParseable(`
+    it('Like operator', () => expectParseable(`
         SELECT * FROM passenger WHERE lastname LIKE '%meier%' AND firstname LIKE '%ryan%';
     `));
-
-    //TODO
-    it.fails('TP10', () => expectParseable(`SELECT firstname IS NULL FROM passenger;`));
-    it.fails('TP11', () => expectParseable(`SELECT firstname, lastname FROM passenger WHERE passenger_id IN (SELECT passenger_id FROM passenger);`));
+    it('IS operator', () => expectParseable(`SELECT firstname IS NULL FROM passenger;`));
+    it('IN operator with sub query', () => expectParseable(`SELECT firstname, lastname FROM passenger WHERE passenger_id IN (SELECT passenger_id FROM passenger);`));
+    it('Select from schema.table', () => expectParseable(`SELECT * FROM alpha.people;`));
+    it('Same table name, different schemas', async () => {
+        const alpha = await expectParseable(`SELECT * FROM alpha.people;`);
+        const omega = await expectParseable(`SELECT * FROM omega.people;`);
+        expect(alpha.references[1].ref).not.toStrictEqual(omega.references[1].ref);
+    });
 });

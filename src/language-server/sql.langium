@@ -13,7 +13,7 @@ SchemaDefinition:
     'CREATE' 'SCHEMA' name=Identifier; 
 
 TableDefinition:
-    'CREATE' 'TABLE' (schema=[SchemaDefinition] '.')? name=Identifier '('(
+    'CREATE' 'TABLE' (schemaName=SchemaName '.')? name=Identifier '('(
         columns+=TableContentDefinition (',' columns+=TableContentDefinition)* trailingComma?=','?
     )?')';
 
@@ -36,8 +36,8 @@ KeyDefinition:
     unique?='UNIQUE'? 'KEY' name=Identifier '(' keys+=[ColumnDefinition] (',' keys+=[ColumnDefinition])* ')'
     ;
 
-ConstraintDefinition:
-    'CONSTRAINT' name=Identifier 'FOREIGN' 'KEY' '(' from=[ColumnDefinition] ')' 'REFERENCES' table=[TableDefinition] '(' to=[ColumnDefinition] ')'
+ConstraintDefinition: //TODO fix absolute table name
+    'CONSTRAINT' name=Identifier 'FOREIGN' 'KEY' '(' from=[ColumnDefinition] ')' 'REFERENCES' table=[TableDefinition:Identifier] '(' to=[ColumnDefinition] ')'
     ('ON' 'DELETE' cascadeDeletion?='CASCADE')?
     ;
 
@@ -113,7 +113,7 @@ JoinPart:
     ;
 
 SourceItem infers SourceItem
-    : {infer TableSourceItem} tableName=TableName ('AS'? name=Identifier)?
+    : {infer TableSourceItem} (schemaName=SchemaName '.')? tableName=TableName ('AS'? name=Identifier)?
     | {infer SubQuerySourceItem} '(' subQuery=SelectStatement ')' ('AS'? name=Identifier)?
     ;
 
@@ -124,6 +124,8 @@ TableVariableName:
     ;
 
 type TableLike = TableDefinition|CommonTableExpression;
+
+SchemaName: schema=[SchemaDefinition:Identifier];
 
 TableName: table=[TableLike:Identifier];
 
