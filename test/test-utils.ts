@@ -19,6 +19,7 @@ import {
 import assert from "assert";
 import { isAllTable } from "../src/language-server/generated/ast";
 import { getColumnsForSelectStatement } from "../src/language-server/sql-type-utilities";
+import path from "path";
 
 export async function parseHelper(
     services: SqlServices,
@@ -26,10 +27,11 @@ export async function parseHelper(
 ): Promise<(input: string) => Promise<LangiumDocument<ast.SqlFile>>> {
     const metaData = services.LanguageMetaData;
     const documentBuilder = services.shared.workspace.DocumentBuilder;
+    const uri = URI.file(path.resolve(folder)).toString();
     await services.shared.workspace.WorkspaceManager.initializeWorkspace([
         {
-            name: "workspace",
-            uri: folder,
+            name: "main",
+            uri,
         },
     ]);
     return async (input) => {
@@ -212,4 +214,3 @@ export function expectSelectItemToBeCastToType(
     expect(element.$type).toBe(ast.CastExpression);
     expect(computeType(element)!.discriminator).toBe(type);
 }
-

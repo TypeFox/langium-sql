@@ -3,14 +3,15 @@
  * This program and the accompanying materials are made available under the
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
-import { EmptyFileSystem, LangiumDocument } from 'langium';
+import { LangiumDocument } from 'langium';
+import { NodeFileSystem } from 'langium/node';
 import { join } from 'path';
 import {beforeAll, describe, expect, it} from 'vitest'
 import { SqlFile } from '../../src/language-server/generated/ast';
 import { createSqlServices } from '../../src/language-server/sql-module';
 import { expectNoErrors, parseHelper } from '../test-utils';
 
-const services = createSqlServices(EmptyFileSystem);
+const services = createSqlServices(NodeFileSystem);
 
 describe('Syntax coverage', () => {
     let parse: (input: string) => Promise<LangiumDocument<SqlFile>>;

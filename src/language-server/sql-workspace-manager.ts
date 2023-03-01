@@ -17,17 +17,7 @@ import { resolve } from "path";
 import { readdir, readFile, stat } from "fs/promises";
 
 export class SqlWorkspaceManager extends DefaultWorkspaceManager {
-    private readonly langiumDocumentFactory: LangiumDocumentFactory;
-
-    constructor(services: SqlSharedServices & LangiumSharedServices) {
+    constructor(services: LangiumSharedServices) {
         super(services);
-        this.langiumDocumentFactory = services.workspace.LangiumDocumentFactory;
-    }
-
-    protected override async loadAdditionalDocuments(
-        folders: WorkspaceFolder[],
-        _collector: (document: LangiumDocument<AstNode>) => void
-    ): Promise<void> {
-        return Promise.resolve();
     }
 }
