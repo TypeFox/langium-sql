@@ -64,9 +64,10 @@ export function expectNoErrors(
     const lexer = list.includes("lexer");
     const parser = list.includes("parser");
     const validator = list.includes("validator");
-    expect(result.parseResult.lexerErrors.length > 0).toBe(lexer);
-    expect(result.parseResult.parserErrors.length > 0).toBe(parser);
-    expect((result.diagnostics?.length ?? 0) > 0).toBe(validator);
+    expect(result.parseResult.lexerErrors.length > 0, result.parseResult.lexerErrors.length > 0 ? result.parseResult.lexerErrors[0].message : '').toBe(lexer);
+    expect(result.parseResult.parserErrors.length > 0, result.parseResult.parserErrors.length > 0 ? result.parseResult.parserErrors[0].message : '').toBe(parser);
+    const validationErrors = result.diagnostics ?? [];
+    expect(validationErrors.length > 0, validationErrors.length>0?validationErrors[0].message:'').toBe(validator);
 }
 
 export function asTableDefinition(result: LangiumDocument<ast.SqlFile>) {
