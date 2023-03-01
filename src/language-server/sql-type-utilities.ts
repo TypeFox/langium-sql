@@ -26,9 +26,9 @@ export function getColumnsForSelectStatement(selectStatement: SelectStatement): 
             if(!selectStatement.from) {
                 return [];
             }
-            const ref = e.variableName.variable.ref!;
+            const ref = e.variableName.ref!;
             if(isTableSourceItem(ref)) {
-                const tableLike = ref.tableName.table.ref!;
+                const tableLike = ref.tableName.ref!;
                 if(isTableDefinition(tableLike)) {
                     const columns = tableLike.columns.filter(isColumnDefinition) ?? [];
                     return columns.map<ColumnDescriptor>(c => ({
@@ -65,23 +65,23 @@ export function getColumnsForSelectStatement(selectStatement: SelectStatement): 
             } else {
                 const expr = e.expr;
                 if(isTableRelatedColumnExpression(expr)) {
-                    return resolveColumnNameTypedNode(e, expr.columnName.column);
+                    return resolveColumnNameTypedNode(e, expr.columnName);
                 } else if(isFunctionCall(expr)) {
-                    const functionLike = expr.functionName.function.ref!;
+                    const functionLike = expr.functionName.ref!;
                     return [{
-                        name: expr.functionName.function.$refText,
+                        name: expr.functionName.$refText,
                         isScopedByVariable: false,
                         node: e as AstNode,
                         typedNode: functionLike.returnType
                      }];
                 } else if(isColumnNameExpression(expr)) {
                     const fromAllSources = getColumnCandidatesForSelectStatement(selectStatement);
-                    const name = expr.columnName.column.$refText;
+                    const name = expr.columnName.$refText;
                     const column = fromAllSources.find(s => !s.isScopedByVariable && s.name === name)
                     if(column) {
                         return [column];
                     } else {
-                        return resolveColumnNameTypedNode(expr, expr.columnName.column);
+                        return resolveColumnNameTypedNode(expr, expr.columnName);
                     }
                 } else if(isSubQueryExpression(expr)) {
                     const columns = getColumnsForSelectStatement(expr.subQuery);
@@ -123,7 +123,7 @@ function getColumnsForTableSource(source: TableSource): ColumnDescriptor[] {
     const items = [source.item].concat(source.joins.map(j => j.nextItem));
     return items.flatMap(item => {
         if(isTableSourceItem(item)) {
-            const tableLike = item.tableName.table.ref;
+            const tableLike = item.tableName.ref;
             if(isTableDefinition(tableLike)) {
                 return tableLike.columns.filter(isColumnDefinition).map(column => ({
                     name: column.name,

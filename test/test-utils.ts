@@ -93,8 +93,8 @@ export function expectTableLinked(
     const tableSource = selectStatement.from!.sources.list[0]
         .item as ast.TableSourceItem;
     expect(tableSource.tableName).not.toBeUndefined();
-    expect(tableSource.tableName!.table.ref).not.toBeUndefined();
-    expect(tableSource.tableName!.table.ref!.name).toBe(tableName);
+    expect(tableSource.tableName!.ref).not.toBeUndefined();
+    expect(tableSource.tableName!.ref!.name).toBe(tableName);
 }
 
 export function expectSelectItemToBeColumnName(
@@ -111,8 +111,8 @@ export function expectSelectItemToBeColumnName(
             selectElementIndex
         ] as ast.ExpressionQuery
     ).expr;
-    expect((element as ast.ColumnNameExpression).columnName.column.ref!.name).toBe(columnName);
-    expect(((element as ast.ColumnNameExpression).columnName.column.ref!.$container as ast.TableDefinition).name).toBe(
+    expect((element as ast.ColumnNameExpression).columnName.ref!.name).toBe(columnName);
+    expect(((element as ast.ColumnNameExpression).columnName.ref!.$container as ast.TableDefinition).name).toBe(
         tableName
     );
 }
@@ -161,12 +161,12 @@ export function expectSelectItemToBeColumnNameRelativeToVariable(
     expect(ast.isExpressionQuery(element)).toBeTruthy();
     const exprQuery = (element as ast.ExpressionQuery)
         .expr as ast.TableRelatedColumnExpression;
-    expect(exprQuery.variableName.variable.ref!.name).toBe(variableName);
-    assert(ast.isTableSourceItem(exprQuery.variableName.variable.ref));
-    expect(exprQuery.variableName.variable.ref!.tableName.table.ref!.name).toBe(
+    expect(exprQuery.variableName.ref!.name).toBe(variableName);
+    assert(ast.isTableSourceItem(exprQuery.variableName.ref));
+    expect(exprQuery.variableName.ref!.tableName.ref!.name).toBe(
         tableName
     );
-    expect(exprQuery.columnName!.column.ref!.name).toBe(columnName);
+    expect(exprQuery.columnName!.ref!.name).toBe(columnName);
 }
 
 export function expectSelectItemToBeAllStarRelativeToVariable(
@@ -180,11 +180,11 @@ export function expectSelectItemToBeAllStarRelativeToVariable(
     );
     const element = selectStatement.select.elements[selectElementIndex];
     assert(isAllTable(element));
-    expect(element.variableName.variable.ref!.name).toBe(
+    expect(element.variableName.ref!.name).toBe(
         variableName
     );
-    assert(ast.isTableSourceItem(element.variableName.variable.ref));
-    expect(element.variableName.variable.ref!.tableName.table.ref!.name).toBe(tableName);
+    assert(ast.isTableSourceItem(element.variableName.ref));
+    expect(element.variableName.ref!.tableName.ref!.name).toBe(tableName);
 }
 
 export function expectValidationIssues(

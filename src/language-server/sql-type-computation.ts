@@ -65,17 +65,17 @@ function computeTypeOfExpression(node: Expression): TypeDescriptor | undefined {
         return computeTypeOfNumericLiteral(node.$cstNode!.text);
     }
     if (isTableRelatedColumnExpression(node)) { //variable.columnName
-        const varRef = node.variableName.variable.ref;
+        const varRef = node.variableName.ref;
         if(!varRef) {
             return undefined;
         } else if(isTableSourceItem(varRef)) { //tableVariable.columnName
-            const ref = node.columnName.column.ref;
+            const ref = node.columnName.ref;
             if(!isColumnDefinition(ref)) {
                 return undefined;
             }
             return computeType(ref.dataType);
         } else if(isSubQuerySourceItem(varRef)) {//subqueryVariable.selectItemName
-            const ref = node.columnName.column.ref;
+            const ref = node.columnName.ref;
             if(!isExpressionQuery(ref)) {
                 return undefined;
             }
@@ -101,7 +101,7 @@ function computeTypeOfExpression(node: Expression): TypeDescriptor | undefined {
         return Types.Boolean;
     }
     if (isColumnNameExpression(node)) {
-        const ref = node.columnName.column.ref;
+        const ref = node.columnName.ref;
         if(!ref) {
             return undefined;
         } else if(isExpressionQuery(ref)) {
@@ -116,7 +116,7 @@ function computeTypeOfExpression(node: Expression): TypeDescriptor | undefined {
         }
     }
     if (isFunctionCall(node)) {
-        const functionLike = node.functionName.function.ref!;
+        const functionLike = node.functionName.ref!;
         if(isFunctionDefinition(functionLike)) {
             return computeTypeOfDataType(functionLike.returnType);
         } else {

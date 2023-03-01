@@ -141,4 +141,10 @@ describe("SELECT use cases", () => {
         expectNoErrors(document);
         expectSelectItemsToBeOfType(selectStatement, [Types.Integer, Types.Real, Types.Boolean, Types.Boolean, Types.Char()]);
     });
+
+    it('Should complain about missing table p (p.* searches within current select statement only!)', async () => {
+        const document = await parse('SELECT (SELECT p.*) FROM passenger p;');
+        expectNoErrors(document, {exceptFor: 'validator'});
+        expect(document.references[0].ref).toBeUndefined();
+    })
 });

@@ -57,4 +57,6 @@ describe('Syntax coverage', () => {
         const omega = await expectParseable(`SELECT * FROM omega.people;`);
         expect(alpha.references[1].ref).not.toStrictEqual(omega.references[1].ref);
     });
+    it('All table columns', () => expectParseable(`SELECT p.* FROM passenger p;`));
+    it.fails('Cannot select outer table', () => expectParseable(`SELECT (SELECT p.*) FROM passenger p;`));
 });

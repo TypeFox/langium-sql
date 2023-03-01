@@ -13,7 +13,7 @@ SchemaDefinition:
     'CREATE' 'SCHEMA' name=Identifier; 
 
 TableDefinition:
-    'CREATE' 'TABLE' (schemaName=SchemaName '.')? name=Identifier '('(
+    'CREATE' 'TABLE' (schemaName=[SchemaDefinition:Identifier] '.')? name=Identifier '('(
         columns+=TableContentDefinition (',' columns+=TableContentDefinition)* trailingComma?=','?
     )?')';
 
@@ -30,7 +30,6 @@ ColumnDefinition:
 PrimaryKeyDefinition:
     'PRIMARY' 'KEY' '(' primaryKeys+=[ColumnDefinition] (',' primaryKeys+=[ColumnDefinition])* ')'
     ;
-
 
 KeyDefinition:
     unique?='UNIQUE'? 'KEY' name=Identifier '(' keys+=[ColumnDefinition] (',' keys+=[ColumnDefinition])* ')'
@@ -96,7 +95,7 @@ SelectElements:
     
 SelectElement infers SelectElement:
     {infer AllStar}'*'
-    | {infer AllTable}variableName=TableVariableName '.' '*'
+    | {infer AllTable}variableName=[TableVariableSource:Identifier] '.' '*'
     | {infer ExpressionQuery} expr=Expression ('AS'? name=Identifier)?
     ;
     
@@ -113,21 +112,13 @@ JoinPart:
     ;
 
 SourceItem infers SourceItem
-    : {infer TableSourceItem} (schemaName=SchemaName '.')? tableName=TableName ('AS'? name=Identifier)?
+    : {infer TableSourceItem} (schemaName=[SchemaDefinition:Identifier] '.')? tableName=[TableLike:Identifier] ('AS'? name=Identifier)?
     | {infer SubQuerySourceItem} '(' subQuery=SelectStatement ')' ('AS'? name=Identifier)?
     ;
 
 type TableVariableSource = TableSourceItem|SubQuerySourceItem;
 
-TableVariableName:
-    variable=[TableVariableSource:Identifier]
-    ;
-
 type TableLike = TableDefinition|CommonTableExpression;
-
-SchemaName: schema=[SchemaDefinition:Identifier];
-
-TableName: table=[TableLike:Identifier];
 
 Expression: ConcatExpression;
 
@@ -166,28 +157,22 @@ MultiplicativeExpression infers Expression:
 
 PrimaryExpression infers Expression:
     {infer StringLiteral} StringLiteral
-    | {infer TableRelatedColumnExpression} variableName=TableVariableName '.' columnName=ColumnName
+    | {infer TableRelatedColumnExpression} variableName=[SourceItem:Identifier] '.' columnName=[ColumnNameSource:Identifier]
     | {infer NumberLiteral} NumberLiteral
     | {infer BooleanLiteral} BooleanLiteral
     | {infer CastExpression} CastExpression
     | {infer UnaryExpression} operator=('NOT'|'-'|'+') value=PrimaryExpression
     | {infer ParenthesisExpression} '(' expression=Expression ')'
     | {infer SubQueryExpression} '(' subQuery=SelectStatement ')'
-    | {infer FunctionCall} functionName=FunctionName '(' params=SelectElements? ')'
-    | {infer ColumnNameExpression} columnName=ColumnName
+    | {infer FunctionCall} functionName=[FunctionDefinition:Identifier] '(' params=SelectElements? ')'
+    | {infer ColumnNameExpression} columnName=[ColumnNameSource:Identifier]
     ;
 
 CastExpression:
     'CAST' '(' expr=Expression 'AS' type=Type ')'
     ;
 
-FunctionName:
-    function=[FunctionDefinition:Identifier]
-    ;
-
 type ColumnNameSource = ColumnDefinition|ExpressionQuery;
-
-ColumnName: column=[ColumnNameSource:Identifier];
 
 Identifier returns string:
     ID
