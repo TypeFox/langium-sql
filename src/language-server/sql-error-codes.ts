@@ -134,6 +134,22 @@ export const ReportAs = {
                 `Unable to derive the type of the expression.`,
             (node) => ({ node })
         ),
+    TableOperationUsesTablesWithDifferentColumnCounts:
+        SqlErrorFactory.create<ast.BinaryTableExpression, {}>(
+            "SQL00010",
+            "error",
+            () =>
+                `This operation uses tables with different amounts of columns, which is forbidden. Please add the missing columns.`,
+            (node) => ({ node, property: 'operator' })
+        ),
+    TableOperationUsesTablesWithDifferentColumnTypes:
+        SqlErrorFactory.create<ast.BinaryTableExpression, {columnIndex: number}>(
+            "SQL00010",
+            "error",
+            ({columnIndex}) =>
+                `This operation uses tables with different columns types! Compare the columns at index ${columnIndex}. They are not convertable to each other.`,
+            (node) => ({ node, property: 'operator' })
+        ),
 };
 
 export interface BinaryOperatorMismatch {

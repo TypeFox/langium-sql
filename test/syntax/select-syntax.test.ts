@@ -66,7 +66,7 @@ describe('Syntax coverage', () => {
     it.fails('Union fails, column type mismatch', () => expectParseable(`
         SELECT booking_id FROM booking
         UNION
-        SELECT firstname FROM passenger;
+        SELECT NULL FROM passenger;
     `));
     it('Like operator', () => expectParseable(`
         SELECT * FROM passenger WHERE lastname LIKE '%meier%' AND firstname LIKE '%ryan%';

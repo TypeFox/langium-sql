@@ -10,11 +10,13 @@ import {
     ValidationRegistry,
 } from "langium";
 import * as ast from "./generated/ast";
-import _ from "lodash";
+import _, { runInContext } from "lodash";
 import type { SqlServices } from "./sql-module";
 import { ReportAs } from "./sql-error-codes";
 import { computeType, computeTypeOfSelectStatement } from "./sql-type-computation";
 import { isTypeABoolean } from "./sql-type-descriptors";
+import { getColumnsForSelectTableExpression } from "./sql-type-utilities";
+import { canConvert } from "./sql-type-conversion";
 
 export class SqlValidationRegistry extends ValidationRegistry {
     constructor(services: SqlServices) {
@@ -26,7 +28,8 @@ export class SqlValidationRegistry extends ValidationRegistry {
                 validator.checkVariableNamesAreUnique,
                 validator.checkIfSelectStatementWithAllStarSelectItemHasAtLeastOneTableSource
             ],
-            //Expression: [validator.checkIfExpressionHasType],
+            //Expression: [validator.checkIfExpressionHasType], //TODO uncomment when type system is bullet-proof
+            BinaryTableExpression: [validator.checkBinaryTableExpressionMatches],
             IntegerLiteral: [validator.checkIntegerLiteralIsWholeNumber],
             BinaryExpression: [validator.checkBinaryExpressionType],
             UnaryExpression: [validator.checkUnaryExpressionType],
@@ -39,6 +42,24 @@ export class SqlValidationRegistry extends ValidationRegistry {
 }
 
 export class SqlValidator {
+    checkBinaryTableExpressionMatches(expr: ast.BinaryTableExpression, accept: ValidationAcceptor) {
+        const lhs = getColumnsForSelectTableExpression(expr.left);
+        const rhs = getColumnsForSelectTableExpression(expr.right);
+        if(lhs.length !== rhs.length) {
+            ReportAs.TableOperationUsesTablesWithDifferentColumnCounts(expr, {}, accept);
+        } else {
+            lhs.forEach((left, index) => {
+                const right = rhs[index];
+                const leftType = computeType(left.typedNode);
+                const rightType = computeType(right.typedNode);
+                if(leftType && rightType) {
+                    if(!canConvert(leftType, rightType) && !canConvert(rightType, leftType)) {
+                        ReportAs.TableOperationUsesTablesWithDifferentColumnTypes(expr, {columnIndex: index}, accept);
+                    }
+                } //else should be handled by different validator
+            });
+        }
+    }
     checkIfExpressionHasType(expr: ast.Expression, accept: ValidationAcceptor): void {
         const type = computeType(expr);
         if(!type) {
@@ -133,6 +154,4 @@ export class SqlValidator {
             ReportAs.SubQueriesWithinSelectStatementsMustHaveExactlyOneColumn(subQueryExpression, {}, accept);
         }
     }
-
-    //TODO check SelectStatement: if is within an expression, query should have only one column
 }
