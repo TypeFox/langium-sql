@@ -47,6 +47,27 @@ describe('Syntax coverage', () => {
         WITH xxx AS SELECT * FROM booking WHERE booking_id=100
         SELECT booking_id FROM xxx;
     `));
+    it('With statement: Second uses first', () => expectParseable(`
+        WITH
+            xxx AS SELECT * FROM booking WHERE booking_id=100,
+            yyy AS SELECT * FROM xxx
+        SELECT booking_id FROM yyy;
+    `));
+    it('Union succeeds', () => expectParseable(`
+        SELECT booking_id FROM booking
+        UNION
+        SELECT passenger_id FROM passenger;
+    `));
+    it.fails('Union fails, column count mismatch', () => expectParseable(`
+        SELECT booking_id, booking_id FROM booking
+        UNION
+        SELECT passenger_id FROM passenger;
+    `));
+    it.fails('Union fails, column type mismatch', () => expectParseable(`
+        SELECT booking_id FROM booking
+        UNION
+        SELECT firstname FROM passenger;
+    `));
     it('Like operator', () => expectParseable(`
         SELECT * FROM passenger WHERE lastname LIKE '%meier%' AND firstname LIKE '%ryan%';
     `));

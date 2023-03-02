@@ -22,8 +22,6 @@ export function getColumnsForSelectTableExpression(selectTableExpression: Select
         return getColumnsForSelectTableExpression(selectTableExpression.value);
     } else if(isSimpleSelectTableExpression(selectTableExpression)) {
         return getColumnsSimpleSelectStatement(selectTableExpression.select, onlyAliases);
-    } else if(isSelectTableExpression(selectTableExpression)) {
-        return [];
     } else {
         assertUnreachable(selectTableExpression);
     }
@@ -149,8 +147,6 @@ export function getColumnCandidatesForSelectTableExpression(selectTableExpressio
         return getColumnCandidatesForSelectTableExpression(selectTableExpression.value);
     } else if(isSimpleSelectTableExpression(selectTableExpression)) {
         return getColumnCandidatesForSimpleSelectStatement(selectTableExpression.select);
-    } else if(isSelectTableExpression(selectTableExpression)) {
-        return [];
     } else {
         assertUnreachable(selectTableExpression);
     }

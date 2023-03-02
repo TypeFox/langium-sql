@@ -58,11 +58,11 @@ RootLevelSelectStatement:
 SelectStatementRootExpression: SelectStatementUnionExpression;
 
 SelectStatementUnionExpression infers SelectTableExpression:
-    left=SelectStatementIntersectExpression ({infer BinaryTableExpression.left=current} operator=UnionSetOperator right=SelectStatementIntersectExpression)*
+    SelectStatementIntersectExpression ({infer BinaryTableExpression.left=current} operator=UnionSetOperator right=SelectStatementIntersectExpression)*
     ;
 
 SelectStatementIntersectExpression infers SelectTableExpression:
-    left=SelectStatementPrimaryExpression ({infer BinaryTableExpression.left=current} operator=IntersectSetOperator right=SelectStatementPrimaryExpression)*
+    SelectStatementPrimaryExpression ({infer BinaryTableExpression.left=current} operator=IntersectSetOperator right=SelectStatementPrimaryExpression)*
     ;
 
 SelectStatementPrimaryExpression infers SelectTableExpression:
