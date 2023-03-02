@@ -3,7 +3,7 @@
  * This program and the accompanying materials are made available under the
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
-import { AstNode } from "langium";
+import { assertUnreachable, AstNode } from "langium";
 import _ from "lodash";
 import {
     Expression,
@@ -22,7 +22,6 @@ import {
     isBooleanLiteral,
     isFunctionCall,
     isSubQueryExpression,
-    SelectStatement,
     isExpressionQuery,
     isTableSourceItem,
     isSubQuerySourceItem,
@@ -39,12 +38,13 @@ import {
     isHexStringLiteral,
     isParenthesisOrListExpression,
     NegatableExpression,
+    SelectTableExpression,
 } from "./generated/ast";
 import { canConvert } from "./sql-type-conversion";
 import { areTypesEqual, RowTypeDescriptor, TypeDescriptor, Types } from "./sql-type-descriptors";
 import { BinaryOperator, BinaryOperators, UnaryOperator, UnaryOperators } from "./sql-type-operators";
 import {
-    assertUnreachable, getColumnsForSelectStatement,
+    getColumnsForSelectTableExpression,
 } from "./sql-type-utilities";
 
 export type ComputeTypeFunction = (node: AstNode) => TypeDescriptor | undefined;
@@ -154,10 +154,10 @@ function computeTypeOfExpression(node: Expression): TypeDescriptor | undefined {
     assertUnreachable(node);
 }
 
-export function computeTypeOfSelectStatement(selectStatement: SelectStatement): RowTypeDescriptor {
+export function computeTypeOfSelectStatement(selectStatement: SelectTableExpression): RowTypeDescriptor {
     return {
         discriminator: "row",
-        columnTypes: getColumnsForSelectStatement(selectStatement).map(c => ({
+        columnTypes: getColumnsForSelectTableExpression(selectStatement).map(c => ({
             name: c.name,
             type: computeType(c.typedNode)!
         }))

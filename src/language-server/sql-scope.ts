@@ -18,7 +18,7 @@ import {
     Reference,
     ReferenceInfo,
     Scope,
-    Stream,
+    assertUnreachable,
     stream,
     StreamScope,
 } from "langium";
@@ -37,7 +37,8 @@ import {
     isFunctionCall,
     isKeyDefinition,
     isPrimaryKeyDefinition,
-    isSelectStatement,
+    isRootLevelSelectStatement,
+    isSimpleSelectStatement,
     isSubQuerySourceItem,
     isTableDefinition,
     isTableRelatedColumnExpression,
@@ -45,16 +46,14 @@ import {
     KeyDefinition,
     PrimaryKeyDefinition,
     SchemaDefinition,
-    SelectStatement,
+    SimpleSelectStatement,
     SqlAstType,
     TableDefinition,
     TableRelatedColumnExpression,
     TableSourceItem,
 } from "./generated/ast";
 import {
-    assertUnreachable,
-    ColumnDescriptor,
-    getColumnCandidatesForSelectStatement,
+    ColumnDescriptor, getColumnCandidatesForSelectTableExpression, getColumnCandidatesForSimpleSelectStatement,
 } from "./sql-type-utilities";
 
 
@@ -155,7 +154,7 @@ export class SqlScopeProvider extends DefaultScopeProvider {
             const property = context.property as CrossReferencesOf<AllTable>;
             switch(property) {
                 case "variableName": {
-                    const selectStatement = getContainerOfType(container, isSelectStatement)!;
+                    const selectStatement = getContainerOfType(container, isSimpleSelectStatement)!;
                     //ATTENTION! Do not recursively traverse upwards, t.* only looks up t in the current select statement
                     return new StreamScope(stream(this.getTableVariablesForSelectStatement(selectStatement)));
                 }
@@ -166,7 +165,7 @@ export class SqlScopeProvider extends DefaultScopeProvider {
             const property = context.property as CrossReferencesOf<TableRelatedColumnExpression>;
             switch(property) {
                 case "variableName":
-                    const selectStatement = getContainerOfType(container, isSelectStatement)!;
+                    const selectStatement = getContainerOfType(container, isSimpleSelectStatement)!;
                     return this.getTableVariablesForSelectStatementRecursively(context, selectStatement);
                 case "columnName":
                     const sourceItem = container.variableName.ref;
@@ -177,7 +176,7 @@ export class SqlScopeProvider extends DefaultScopeProvider {
                                 if(isTableDefinition(tableLike)) {
                                     return this.streamColumnDefinitions(tableLike.columns.filter(isColumnDefinition));
                                 } else if(isCommonTableExpression(tableLike)) {
-                                    const candidates = getColumnCandidatesForSelectStatement(tableLike.statement);
+                                    const candidates = getColumnCandidatesForSelectTableExpression(tableLike.statement);
                                     return this.streamColumnDescriptors(candidates);
                                 } else {
                                     assertUnreachable(tableLike);
@@ -185,7 +184,7 @@ export class SqlScopeProvider extends DefaultScopeProvider {
                             }
                         } else if(isSubQuerySourceItem(sourceItem)) {
                             const selectStatement = sourceItem.subQuery;
-                            const candidates = getColumnCandidatesForSelectStatement(selectStatement);
+                            const candidates = getColumnCandidatesForSelectTableExpression(selectStatement);
                             return this.streamColumnDescriptors(candidates);
                         } else {
                             assertUnreachable(sourceItem);
@@ -199,8 +198,8 @@ export class SqlScopeProvider extends DefaultScopeProvider {
             const property = context.property as CrossReferencesOf<ColumnNameExpression>;
             switch(property) {
                 case 'columnName':
-                    const selectStatement = getContainerOfType(container, isSelectStatement)!;
-                    const candidates = getColumnCandidatesForSelectStatement(selectStatement);
+                    const selectStatement = getContainerOfType(container, isSimpleSelectStatement)!;
+                    const candidates = getColumnCandidatesForSimpleSelectStatement(selectStatement);
                     return this.streamColumnDescriptors(candidates);
                 default:
                     assertUnreachable(property);
@@ -229,7 +228,7 @@ export class SqlScopeProvider extends DefaultScopeProvider {
                         .filter(td => td.schemaName?.ref === schema);
                     let candidates: NamedAstNode[] = globalCandidates;
                     if(!schema) {
-                        const selectStatement = getContainerOfType(container, isSelectStatement)!;
+                        const selectStatement = getContainerOfType(container, isRootLevelSelectStatement)!;
                         const withClause = selectStatement.with;
                         if(withClause) {
                             candidates = candidates.concat(withClause.ctes);
@@ -247,12 +246,12 @@ export class SqlScopeProvider extends DefaultScopeProvider {
 
     private getTableVariablesForSelectStatementRecursively(
         context: ReferenceInfo,
-        selectStatement: SelectStatement
+        selectStatement: SimpleSelectStatement
     ): Scope {
         let outerScope: Scope|undefined = undefined;
 
-        if(hasContainerOfType(selectStatement.$container, isSelectStatement)) {
-            const outerSelectStatement = getContainerOfType(selectStatement.$container, isSelectStatement)!;
+        if(hasContainerOfType(selectStatement.$container, isSimpleSelectStatement)) {
+            const outerSelectStatement = getContainerOfType(selectStatement.$container, isSimpleSelectStatement)!;
             outerScope = this.getTableVariablesForSelectStatementRecursively(context, outerSelectStatement);
         }
 
@@ -262,7 +261,7 @@ export class SqlScopeProvider extends DefaultScopeProvider {
     }
 
     private getTableVariablesForSelectStatement(
-        selectStatement: SelectStatement
+        selectStatement: SimpleSelectStatement
     ): AstNodeDescription[] {
         if (selectStatement.from) {
             const astDescriptions: AstNodeDescription[] = [];

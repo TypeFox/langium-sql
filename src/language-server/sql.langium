@@ -5,7 +5,7 @@ entry SqlFile:
     ;
 
 Statement:
-    (SchemaDefinition | FunctionDefinition | TableDefinition | SelectStatement) ';';
+    (SchemaDefinition | FunctionDefinition | TableDefinition | RootLevelSelectStatement) ';';
 
 
 //DEFINITION/////////////////////////////////////////////////////////
@@ -50,15 +50,44 @@ FormalParameterDefinition:
     ;
 //END DEFINITION/////////////////////////////////////////////////////////
 
-SelectStatement:
+RootLevelSelectStatement:
     with=WithClause?
+    select=SelectStatementRootExpression
+    ;
+
+SelectStatementRootExpression: SelectStatementUnionExpression;
+
+SelectStatementUnionExpression infers SelectTableExpression:
+    left=SelectStatementIntersectExpression ({infer BinaryTableExpression.left=current} operator=UnionSetOperator right=SelectStatementIntersectExpression)*
+    ;
+
+SelectStatementIntersectExpression infers SelectTableExpression:
+    left=SelectStatementPrimaryExpression ({infer BinaryTableExpression.left=current} operator=IntersectSetOperator right=SelectStatementPrimaryExpression)*
+    ;
+
+SelectStatementPrimaryExpression infers SelectTableExpression:
+    {infer SimpleSelectTableExpression} select=SimpleSelectStatement
+    | {infer ParenthesesSelectTableExpression} '(' value=SelectStatementRootExpression ')'
+    ;
+
+UnionSetOperator infers SetOperator:
+    operator=('UNION' | 'EXCEPT' | 'MINUS') ('ALL' | distinct?='DISTINCT')?
+    ;
+
+IntersectSetOperator infers SetOperator:
+    operator='INTERSECT' ('ALL' | distinct?='DISTINCT')?
+    ;
+
+SimpleSelectStatement:
     'SELECT' ('ALL'|distinct?='DISTINCT')?
     select=SelectElements
     from=FromClause?
     where=WhereClause?
     groupBy=GroupByClause?
     having=HavingClause?
-    orderBy=OrderByClause?;
+    orderBy=OrderByClause?
+    ;
+//;
 
 WithClause: 'WITH' 'RECURSIVE'? ctes+=CommonTableExpression (',' ctes+=CommonTableExpression)*;
 
@@ -67,7 +96,7 @@ CteColumnName: name=Identifier;
 CommonTableExpression:
     name=Identifier
     ('(' columnNames+=CteColumnName (',' columnNames+=CteColumnName)* ')')?
-    'AS' statement=SelectStatement
+    'AS' (statement=SelectStatementRootExpression | '(' statement=SelectStatementRootExpression ')')
     ;
 
 WhereClause:
@@ -113,7 +142,7 @@ JoinPart:
 
 SourceItem infers SourceItem
     : {infer TableSourceItem} (schemaName=[SchemaDefinition:Identifier] '.')? tableName=[TableLike:Identifier] ('AS'? name=Identifier)?
-    | {infer SubQuerySourceItem} '(' subQuery=SelectStatement ')' ('AS'? name=Identifier)?
+    | {infer SubQuerySourceItem} '(' subQuery=SelectStatementRootExpression ')' ('AS'? name=Identifier)?
     ;
 
 type TableVariableSource = TableSourceItem|SubQuerySourceItem;
@@ -163,7 +192,7 @@ PrimaryExpression infers Expression:
     | {infer CastExpression} CastExpression
     | {infer UnaryExpression} operator=('NOT'|'-'|'+') value=PrimaryExpression
     | {infer ParenthesisOrListExpression} '(' items+=Expression (',' items+=Expression)* ')'
-    | {infer SubQueryExpression} '(' subQuery=SelectStatement ')'
+    | {infer SubQueryExpression} '(' subQuery=SelectStatementRootExpression ')'
     | {infer FunctionCall} functionName=[FunctionDefinition:Identifier] '(' params=SelectElements? ')'
     | {infer ColumnNameExpression} columnName=[ColumnNameSource:Identifier]
     | {infer NullLiteral} 'NULL'

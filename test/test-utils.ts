@@ -17,8 +17,8 @@ import {
     computeTypeOfSelectStatement,
 } from "../src/language-server/sql-type-computation";
 import assert from "assert";
-import { isAllTable } from "../src/language-server/generated/ast";
-import { getColumnsForSelectStatement } from "../src/language-server/sql-type-utilities";
+import { isAllTable, SimpleSelectTableExpression } from "../src/language-server/generated/ast";
+import { getColumnsForSelectTableExpression } from "../src/language-server/sql-type-utilities";
 import path from "path";
 
 export async function parseHelper(
@@ -79,15 +79,25 @@ export function asTableDefinition(result: LangiumDocument<ast.SqlFile>) {
     return file.statements[0] as ast.TableDefinition;
 }
 
-export function asSelectStatement(result: LangiumDocument<ast.SqlFile>) {
+export function asSelectTableExpression(result: LangiumDocument<ast.SqlFile>) {
     const file = result.parseResult.value;
     expect(file.statements).toHaveLength(1);
-    expect(file.statements[0].$type).toBe(ast.SelectStatement);
-    return file.statements[0] as ast.SelectStatement;
+    expect(file.statements[0].$type).toBe(ast.RootLevelSelectStatement);
+    const root = file.statements[0] as ast.RootLevelSelectStatement;
+    return root.select;
+}
+
+export function asSimpleSelectStatement(result: LangiumDocument<ast.SqlFile>) {
+    const file = result.parseResult.value;
+    expect(file.statements).toHaveLength(1);
+    expect(file.statements[0].$type).toBe(ast.RootLevelSelectStatement);
+    const root = file.statements[0] as ast.RootLevelSelectStatement;
+    expect(root.select.$type).toBe(SimpleSelectTableExpression);
+    return (root.select as SimpleSelectTableExpression).select;
 }
 
 export function expectTableLinked(
-    selectStatement: ast.SelectStatement,
+    selectStatement: ast.SimpleSelectStatement,
     tableName: string
 ) {
     expect(selectStatement.from).not.toBeUndefined();
@@ -101,11 +111,15 @@ export function expectTableLinked(
 }
 
 export function expectSelectItemToBeColumnName(
-    selectStatement: ast.SelectStatement,
+    root: ast.RootLevelSelectStatement,
     selectElementIndex: number,
     tableName: string,
     columnName: string
 ) {
+    const selectStatementExpression = root.select;
+    assert(ast.isSimpleSelectTableExpression(selectStatementExpression));
+    const selectStatement = selectStatementExpression.select;
+    expect(selectStatement.$type).toBe(SimpleSelectTableExpression);
     expect(selectStatement.select.elements.length).toBeGreaterThan(
         selectElementIndex
     );
@@ -121,7 +135,7 @@ export function expectSelectItemToBeColumnName(
 }
 
 export function expectSelectItemsToBeOfType(
-    selectStatement: ast.SelectStatement,
+    selectStatement: ast.SelectTableExpression,
     types: TypeDescriptor[]
 ): void {
     const row = computeTypeOfSelectStatement(selectStatement);
@@ -129,14 +143,14 @@ export function expectSelectItemsToBeOfType(
     expect(row.columnTypes.map((m) => m.type)).toStrictEqual(types);
 }
 
-export function expectSelectItemsToHaveNames(selectStatement: ast.SelectStatement, expectedNames: (string|undefined)[]) {
-    const columnDescriptors = getColumnsForSelectStatement(selectStatement);
+export function expectSelectItemsToHaveNames(selectStatement: ast.SelectTableExpression, expectedNames: (string|undefined)[]) {
+    const columnDescriptors = getColumnsForSelectTableExpression(selectStatement);
     const actualNames = columnDescriptors.map(ad => ad ? ad.name : undefined);
     expect(actualNames).toStrictEqual(expectedNames);
 }
 
 export function expectSelectItemToBeNumeric(
-    selectStatement: ast.SelectStatement,
+    selectStatement: ast.SimpleSelectStatement,
     selectElementIndex: number,
     value: number
 ) {
@@ -151,7 +165,7 @@ export function expectSelectItemToBeNumeric(
 }
 
 export function expectSelectItemToBeColumnNameRelativeToVariable(
-    selectStatement: ast.SelectStatement,
+    selectStatement: ast.SimpleSelectStatement,
     selectElementIndex: number,
     variableName: string,
     tableName: string,
@@ -173,7 +187,7 @@ export function expectSelectItemToBeColumnNameRelativeToVariable(
 }
 
 export function expectSelectItemToBeAllStarRelativeToVariable(
-    selectStatement: ast.SelectStatement,
+    selectStatement: ast.SimpleSelectStatement,
     selectElementIndex: number,
     variableName: string,
     tableName: string
@@ -203,7 +217,7 @@ export function expectValidationIssues(
 
 export function expectSelectItemToBeCastToType(
     computeType: ComputeTypeFunction,
-    selectStatement: ast.SelectStatement,
+    selectStatement: ast.SimpleSelectStatement,
     selectElementIndex: number,
     type: TypeDescriptorDiscriminator
 ) {

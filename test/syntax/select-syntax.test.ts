@@ -65,4 +65,14 @@ describe('Syntax coverage', () => {
         const document = await parse('SELECT p.passenger_id AS the_id FROM passenger p ORDER BY the_id;');
         expectNoErrors(document);
     });
+    it.fails('Disallow nested WITH clause', async () => {
+        const document = await parse(`
+            WITH outer AS (
+                WITH b AS (SELECT 911)
+                SELECT * FROM b
+            )
+            SELECT * FROM outer;
+        `);
+        expectNoErrors(document);
+    });
 });

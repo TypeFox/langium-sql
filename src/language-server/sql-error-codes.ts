@@ -101,7 +101,7 @@ export const ReportAs = {
         (node) => ({ node })
     ),
     AllStarSelectionRequiresTableSources: SqlErrorFactory.create<
-        ast.SelectStatement,
+        ast.SimpleSelectStatement,
         {}
     >(
         "SQL00006",

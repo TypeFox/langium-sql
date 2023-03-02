@@ -22,11 +22,11 @@ export class SqlValidationRegistry extends ValidationRegistry {
         const validator = services.validation.SqlValidator;
         const checks: ValidationChecks<ast.SqlAstType> = {
             TableDefinition: [validator.checkIfTableDefinitionHasAtLeastOneColumn],
-            SelectStatement: [
+            SimpleSelectStatement: [
                 validator.checkVariableNamesAreUnique,
                 validator.checkIfSelectStatementWithAllStarSelectItemHasAtLeastOneTableSource
             ],
-            Expression: [validator.checkIfExpressionHasType],
+            //Expression: [validator.checkIfExpressionHasType],
             IntegerLiteral: [validator.checkIntegerLiteralIsWholeNumber],
             BinaryExpression: [validator.checkBinaryExpressionType],
             UnaryExpression: [validator.checkUnaryExpressionType],
@@ -82,7 +82,7 @@ export class SqlValidator {
     }
 
     checkVariableNamesAreUnique(
-        query: ast.SelectStatement,
+        query: ast.SimpleSelectStatement,
         accept: ValidationAcceptor
     ): void {
         const groups = _.groupBy(query.from?.sources.list, (s) => s.item.name);
@@ -112,7 +112,7 @@ export class SqlValidator {
         }
     }
 
-    checkIfSelectStatementWithAllStarSelectItemHasAtLeastOneTableSource(selectStatement: ast.SelectStatement, accept: ValidationAcceptor): void {
+    checkIfSelectStatementWithAllStarSelectItemHasAtLeastOneTableSource(selectStatement: ast.SimpleSelectStatement, accept: ValidationAcceptor): void {
         if(selectStatement.select.elements.filter(ast.isAllStar).length > 0) {
             if(!selectStatement.from) {
                 ReportAs.AllStarSelectionRequiresTableSources(selectStatement, {}, accept);

@@ -9,7 +9,7 @@ import { SqlFile } from "../../src/language-server/generated/ast";
 import { createSqlServices } from "../../src/language-server/sql-module";
 import { Types } from "../../src/language-server/sql-type-descriptors";
 import { computeTypeOfNumericLiteral } from "../../src/language-server/sql-type-computation";
-import { parseHelper, expectNoErrors, expectSelectItemsToBeOfType, asSelectStatement, expectSelectItemsToHaveNames } from "../test-utils";
+import { parseHelper, expectNoErrors, expectSelectItemsToBeOfType, asSimpleSelectStatement, expectSelectItemsToHaveNames, asSelectTableExpression } from "../test-utils";
 import { NodeFileSystem } from "langium/node";
 
 describe("Type system utilities", () => {
@@ -44,7 +44,7 @@ describe("Type system", () => {
 
     it("addition of integer and real results in real", async () => {
         const document = await parse("SELECT 1+1.5;");
-        const selectStatement = asSelectStatement(document);
+        const selectStatement = asSelectTableExpression(document);
         expectNoErrors(document);
         expectSelectItemsToBeOfType(selectStatement, [Types.Real])
         expectSelectItemsToHaveNames(selectStatement, [undefined])

@@ -3,12 +3,8 @@
  * This program and the accompanying materials are made available under the
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
-import { AstNode, Reference } from "langium";
-import { ColumnNameSource, isAllStar, isAllTable, isColumnDefinition, isColumnNameExpression, isCommonTableExpression, isExpressionQuery, isFunctionCall, isSubQueryExpression, isSubQuerySourceItem, isTableDefinition, isTableRelatedColumnExpression, isTableSourceItem, SelectStatement, TableSource } from "./generated/ast";
-
-export function assertUnreachable(x: never): never {
-    throw new Error("Didn't expect to get here");
-}
+import { AstNode, Reference, assertUnreachable } from "langium";
+import { ColumnNameSource, isAllStar, isAllTable, isBinaryTableExpression, isColumnDefinition, isColumnNameExpression, isCommonTableExpression, isExpressionQuery, isFunctionCall, isParenthesesSelectTableExpression, isSelectTableExpression, isSimpleSelectTableExpression, isSubQueryExpression, isSubQuerySourceItem, isTableDefinition, isTableRelatedColumnExpression, isTableSourceItem, SelectTableExpression, SimpleSelectStatement, TableSource } from "./generated/ast";
 
 export interface ColumnDescriptor {
     name?: string;
@@ -17,19 +13,36 @@ export interface ColumnDescriptor {
     isScopedByVariable: boolean;
 }
 
-export function getColumnsForSelectStatement(selectStatement: SelectStatement, onlyAliases: boolean = false): ColumnDescriptor[] {
-    return selectStatement.select.elements.flatMap(e => {
+export function getColumnsForSelectTableExpression(selectTableExpression: SelectTableExpression, onlyAliases: boolean = false): ColumnDescriptor[] {
+    if(isBinaryTableExpression(selectTableExpression)) {
+        const lhs = getColumnsForSelectTableExpression(selectTableExpression.left, onlyAliases);
+        //const rhs = getColumnsForSelectTableExpression(selectTableExpression.right, onlyAliases);
+        return lhs;
+    } else if(isParenthesesSelectTableExpression(selectTableExpression)) {
+        return getColumnsForSelectTableExpression(selectTableExpression.value);
+    } else if(isSimpleSelectTableExpression(selectTableExpression)) {
+        return getColumnsSimpleSelectStatement(selectTableExpression.select, onlyAliases);
+    } else if(isSelectTableExpression(selectTableExpression)) {
+        return [];
+    } else {
+        assertUnreachable(selectTableExpression);
+    }
+    return [];
+}
+
+function getColumnsSimpleSelectStatement(simpleSelectStatement: SimpleSelectStatement, onlyAliases: boolean): ColumnDescriptor[] {
+    return simpleSelectStatement.select.elements.flatMap(e => {
         if(isAllStar(e)) {
             if(onlyAliases) {
                 return [];
             }
-            const fromAllSources = getColumnCandidatesForSelectStatement(selectStatement);
+            const fromAllSources = getColumnCandidatesForSimpleSelectStatement(simpleSelectStatement);
             return fromAllSources.flatMap(t => t);
         } else if(isAllTable(e)) {
             if(onlyAliases) {
                 return [];
             }
-            if(!selectStatement.from) {
+            if(!simpleSelectStatement.from) {
                 return [];
             }
             const ref = e.variableName.ref!;
@@ -44,7 +57,7 @@ export function getColumnsForSelectStatement(selectStatement: SelectStatement, o
                         isScopedByVariable: true
                     }));
                 } else if(isCommonTableExpression(tableLike)) {
-                    const columns = getColumnsForSelectStatement(tableLike.statement);
+                    const columns = getColumnsForSelectTableExpression(tableLike.statement);
                     if(tableLike.columnNames.length > 0) {
                         return columns.map((c, i) => ({
                             ...c,
@@ -56,7 +69,7 @@ export function getColumnsForSelectStatement(selectStatement: SelectStatement, o
                     assertUnreachable(tableLike);
                 }
             } else if(isSubQuerySourceItem(ref)) {
-                return getColumnsForSelectStatement(ref.subQuery);
+                return getColumnsForSelectTableExpression(ref.subQuery);
             } else {
                 assertUnreachable(ref);
             }
@@ -84,7 +97,7 @@ export function getColumnsForSelectStatement(selectStatement: SelectStatement, o
                         typedNode: functionLike.returnType
                      }];
                 } else if(isColumnNameExpression(expr)) {
-                    const fromAllSources = getColumnCandidatesForSelectStatement(selectStatement);
+                    const fromAllSources = getColumnCandidatesForSimpleSelectStatement(simpleSelectStatement);
                     const name = expr.columnName.$refText;
                     const column = fromAllSources.find(s => !s.isScopedByVariable && s.name === name)
                     if(column) {
@@ -93,7 +106,7 @@ export function getColumnsForSelectStatement(selectStatement: SelectStatement, o
                         return resolveColumnNameTypedNode(expr, expr.columnName);
                     }
                 } else if(isSubQueryExpression(expr)) {
-                    const columns = getColumnsForSelectStatement(expr.subQuery);
+                    const columns = getColumnsForSelectTableExpression(expr.subQuery);
                     return [columns[0]]
                 } else {
                     return [{
@@ -126,8 +139,26 @@ function resolveColumnNameTypedNode(expression: AstNode, columnName: Reference<C
     }];
 }
 
-export function getColumnCandidatesForSelectStatement(selectStatement: SelectStatement) {
-    const selectElementColumns = getColumnsForSelectStatement(selectStatement, true);
+
+export function getColumnCandidatesForSelectTableExpression(selectTableExpression: SelectTableExpression): ColumnDescriptor[] {
+    if(isBinaryTableExpression(selectTableExpression)) {
+        const lhs = getColumnCandidatesForSelectTableExpression(selectTableExpression.left);
+        //const rhs = getColumnCandidatesForSelectTableExpression(selectTableExpression.right);
+        return lhs;
+    } else if(isParenthesesSelectTableExpression(selectTableExpression)) {
+        return getColumnCandidatesForSelectTableExpression(selectTableExpression.value);
+    } else if(isSimpleSelectTableExpression(selectTableExpression)) {
+        return getColumnCandidatesForSimpleSelectStatement(selectTableExpression.select);
+    } else if(isSelectTableExpression(selectTableExpression)) {
+        return [];
+    } else {
+        assertUnreachable(selectTableExpression);
+    }
+    return [];
+}
+
+export function getColumnCandidatesForSimpleSelectStatement(selectStatement: SimpleSelectStatement) {
+    const selectElementColumns = getColumnsSimpleSelectStatement(selectStatement, true);
     const fromComputedColumns = selectStatement.from?.sources.list.flatMap(getColumnsForTableSource) ?? [];
     return selectElementColumns.concat(fromComputedColumns);
 }
@@ -145,7 +176,7 @@ function getColumnsForTableSource(source: TableSource): ColumnDescriptor[] {
                     isScopedByVariable: item.name != null
                 }));
             } else if(isCommonTableExpression(tableLike)) {
-                let columns = getColumnsForSelectStatement(tableLike.statement);
+                let columns = getColumnsForSelectTableExpression(tableLike.statement);
                 if(tableLike.columnNames.length > 0) {
                     columns = columns.map((c, i) => ({...c, name: tableLike.columnNames[i].name}));
                 }
@@ -153,7 +184,7 @@ function getColumnsForTableSource(source: TableSource): ColumnDescriptor[] {
             }
             return [];
         } else if(isSubQuerySourceItem(item)) {
-            return getColumnsForSelectStatement(item.subQuery);
+            return getColumnsForSelectTableExpression(item.subQuery);
         } else {
             assertUnreachable(item);
             return [];
