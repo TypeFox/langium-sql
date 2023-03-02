@@ -4,7 +4,8 @@
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
 
-import { EmptyFileSystem, LangiumDocument } from "langium";
+import { LangiumDocument } from "langium";
+import { NodeFileSystem } from "langium/node";
 import { beforeAll, describe, expect, it } from "vitest";
 import * as ast from "../../../src/language-server/generated/ast";
 import { ReportAs } from "../../../src/language-server/sql-error-codes";
@@ -21,7 +22,7 @@ import {
     expectSelectItemsToHaveNames,
 } from "../../test-utils";
 
-const services = createSqlServices(EmptyFileSystem);
+const services = createSqlServices(NodeFileSystem);
 
 describe("SELECT use cases", () => {
     let parse: (input: string) => Promise<LangiumDocument<ast.SqlFile>>;

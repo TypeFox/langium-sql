@@ -219,7 +219,6 @@ export class SqlScopeProvider extends DefaultScopeProvider {
                 case 'schemaName':
                     return this.getSchemasFromGlobalScope();
                 case 'tableName':
-                    //TODO add CTEs recursivly
                     const schema = container.schemaName?.ref;
                     const allTables = this.getTablesFromGlobalScope();
                     const globalCandidates = allTables.getAllElements().toArray()
