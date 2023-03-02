@@ -52,6 +52,7 @@ describe('Syntax coverage', () => {
     `));
     it('IS operator', () => expectParseable(`SELECT firstname IS NULL FROM passenger;`));
     it('IN operator with sub query', () => expectParseable(`SELECT firstname, lastname FROM passenger WHERE passenger_id IN (SELECT passenger_id FROM passenger);`));
+    it('IN operator with list of values', () => expectParseable(`SELECT firstname, lastname FROM passenger WHERE passenger_id IN (1, 2, 3, 4, 5);`));
     it('Select from schema.table', () => expectParseable(`SELECT * FROM alpha.people;`));
     it('Same table name, different schemas', async () => {
         const alpha = await expectParseable(`SELECT * FROM alpha.people;`);

@@ -162,7 +162,7 @@ PrimaryExpression infers Expression:
     | {infer BooleanLiteral} BooleanLiteral
     | {infer CastExpression} CastExpression
     | {infer UnaryExpression} operator=('NOT'|'-'|'+') value=PrimaryExpression
-    | {infer ParenthesisExpression} '(' expression=Expression ')'
+    | {infer ParenthesisOrListExpression} '(' items+=Expression (',' items+=Expression)* ')'
     | {infer SubQueryExpression} '(' subQuery=SelectStatement ')'
     | {infer FunctionCall} functionName=[FunctionDefinition:Identifier] '(' params=SelectElements? ')'
     | {infer ColumnNameExpression} columnName=[ColumnNameSource:Identifier]

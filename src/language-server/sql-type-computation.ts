@@ -16,7 +16,6 @@ import {
     isTableRelatedColumnExpression,
     isBinaryExpression,
     isUnaryExpression,
-    isParenthesisExpression,
     isCharType,
     isNumberLiteral,
     isStringLiteral,
@@ -38,6 +37,8 @@ import {
     isBetweenExpression,
     isNullLiteral,
     isHexStringLiteral,
+    isParenthesisOrListExpression,
+    NegatableExpression,
 } from "./generated/ast";
 import { canConvert } from "./sql-type-conversion";
 import { areTypesEqual, RowTypeDescriptor, TypeDescriptor, Types } from "./sql-type-descriptors";
@@ -93,8 +94,13 @@ function computeTypeOfExpression(node: Expression): TypeDescriptor | undefined {
             return undefined;
         }
     }
-    if (isParenthesisExpression(node)) {
-        return computeType(node.expression);
+    if (isParenthesisOrListExpression(node)) {
+        const firstType = computeType(node.items[0]);
+        //ONLY the IN operator is allowed to look up a list!
+        if(firstType && node.$container.$type === NegatableExpression && node.$container.operator === 'IN') {
+            return Types.ArrayOf(firstType);
+        }
+        return firstType;
     }
     if (isUnaryExpression(node)) {
         const operandType = computeType(node.value);

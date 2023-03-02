@@ -134,3 +134,4 @@ export const BinaryOperators = Object.entries(_.groupBy(flatMap, ([op]) => op))
         lhs[key] = lhs[key].concat(rhs[1].map(descr => descr[1]));
         return lhs;
     }, emptyBinaryTable());
+

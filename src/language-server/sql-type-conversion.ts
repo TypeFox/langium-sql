@@ -163,7 +163,25 @@ const ConversionTable: Record<TypeConversionPair, TypeConverter|undefined> = {
     "null->integer": Forbidden,
     "datetime->null": Forbidden,
     "real->null": Forbidden,
-    "integer->null": Forbidden
+    "integer->null": Forbidden,
+
+    "boolean->array": Forbidden,
+    "datetime->array": Forbidden,
+    "array->boolean": Forbidden,
+    "array->datetime": Forbidden,
+    "array->array": Identity,
+    "array->null": Forbidden,
+    "array->text": Forbidden,
+    "array->row": Forbidden,
+    "array->enum": Forbidden,
+    "array->integer": Forbidden,
+    "array->real": Forbidden,
+    "null->array": Forbidden,
+    "text->array": Forbidden,
+    "row->array": Forbidden,
+    "enum->array": Forbidden,
+    "integer->array": Forbidden,
+    "real->array": Forbidden
 };
 
 export function getConvertFunction(source: TypeDescriptor, target: TypeDescriptor, kind: TypeConversionKind): TypeConvertFunction|null {
