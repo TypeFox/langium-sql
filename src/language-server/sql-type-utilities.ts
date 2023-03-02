@@ -17,12 +17,18 @@ export interface ColumnDescriptor {
     isScopedByVariable: boolean;
 }
 
-export function getColumnsForSelectStatement(selectStatement: SelectStatement): ColumnDescriptor[] {
+export function getColumnsForSelectStatement(selectStatement: SelectStatement, onlyAliases: boolean = false): ColumnDescriptor[] {
     return selectStatement.select.elements.flatMap(e => {
         if(isAllStar(e)) {
+            if(onlyAliases) {
+                return [];
+            }
             const fromAllSources = getColumnCandidatesForSelectStatement(selectStatement);
             return fromAllSources.flatMap(t => t);
         } else if(isAllTable(e)) {
+            if(onlyAliases) {
+                return [];
+            }
             if(!selectStatement.from) {
                 return [];
             }
@@ -63,6 +69,9 @@ export function getColumnsForSelectStatement(selectStatement: SelectStatement): 
                     isScopedByVariable: false
                 }];
             } else {
+                if(onlyAliases) {
+                    return [];
+                }
                 const expr = e.expr;
                 if(isTableRelatedColumnExpression(expr)) {
                     return resolveColumnNameTypedNode(e, expr.columnName);
@@ -94,6 +103,8 @@ export function getColumnsForSelectStatement(selectStatement: SelectStatement): 
                     }]
                 }
             }
+        } else {
+            assertUnreachable(e);
         }
         return [];
     });
@@ -116,7 +127,7 @@ function resolveColumnNameTypedNode(expression: AstNode, columnName: Reference<C
 }
 
 export function getColumnCandidatesForSelectStatement(selectStatement: SelectStatement) {
-    const selectElementColumns = getColumnsForSelectStatement(selectStatement).filter(c => c.name);
+    const selectElementColumns = getColumnsForSelectStatement(selectStatement, true);
     const fromComputedColumns = selectStatement.from?.sources.list.flatMap(getColumnsForTableSource) ?? [];
     return selectElementColumns.concat(fromComputedColumns);
 }
