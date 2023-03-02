@@ -166,6 +166,8 @@ PrimaryExpression infers Expression:
     | {infer SubQueryExpression} '(' subQuery=SelectStatement ')'
     | {infer FunctionCall} functionName=[FunctionDefinition:Identifier] '(' params=SelectElements? ')'
     | {infer ColumnNameExpression} columnName=[ColumnNameSource:Identifier]
+    | {infer NullLiteral} 'NULL'
+    | {infer HexStringLiteral} HexStringLiteral
     ;
 
 CastExpression:
@@ -182,6 +184,7 @@ Identifier returns string:
 NumberLiteral: value=NUMBER;
 StringLiteral: value=STRING;
 BooleanLiteral: value=('TRUE'|'FALSE');
+HexStringLiteral: value=HEX_STRING;
 
 Type infers Type: 
     {infer BooleanType} 'BOOLEAN'
@@ -195,6 +198,7 @@ Type infers Type:
 IntegerLiteral: value=NUMBER;
 
 hidden terminal WS: /\s+/;
+terminal HEX_STRING returns string: /x\'[A-Fa-f0-9]+\'/;
 terminal STRING returns string: /\'(\\.|\\\\|[^'\\])*\'/;
 terminal ID: /[_a-zA-Z][\w_]*/;
 terminal NUMBER returns number: /\d+((\.\d+)?([eE][\-+]?\d+)?)?/;

@@ -116,7 +116,9 @@ function resolveColumnNameTypedNode(expression: AstNode, columnName: Reference<C
 }
 
 export function getColumnCandidatesForSelectStatement(selectStatement: SelectStatement) {
-    return selectStatement.from?.sources.list.flatMap(getColumnsForTableSource) ?? [];
+    const selectElementColumns = getColumnsForSelectStatement(selectStatement).filter(c => c.name);
+    const fromComputedColumns = selectStatement.from?.sources.list.flatMap(getColumnsForTableSource) ?? [];
+    return selectElementColumns.concat(fromComputedColumns);
 }
 
 function getColumnsForTableSource(source: TableSource): ColumnDescriptor[] {

@@ -36,6 +36,8 @@ import {
     isFunctionDefinition,
     isNegatableExpression,
     isBetweenExpression,
+    isNullLiteral,
+    isHexStringLiteral,
 } from "./generated/ast";
 import { canConvert } from "./sql-type-conversion";
 import { areTypesEqual, RowTypeDescriptor, TypeDescriptor, Types } from "./sql-type-descriptors";
@@ -63,6 +65,12 @@ function computeTypeOfExpression(node: Expression): TypeDescriptor | undefined {
     }
     if (isNumberLiteral(node)) {
         return computeTypeOfNumericLiteral(node.$cstNode!.text);
+    }
+    if(isNullLiteral(node)) {
+        return Types.Null;
+    }
+    if(isHexStringLiteral(node)) {
+        return Types.Integer;
     }
     if (isTableRelatedColumnExpression(node)) { //variable.columnName
         const varRef = node.variableName.ref;

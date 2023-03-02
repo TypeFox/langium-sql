@@ -60,4 +60,8 @@ describe('Syntax coverage', () => {
     });
     it('All table columns', () => expectParseable(`SELECT p.* FROM passenger p;`));
     it.fails('Cannot select outer table', () => expectParseable(`SELECT (SELECT p.*) FROM passenger p;`));
+    it('Should use also renamed columns inside of expressions', async () => {
+        const document = await parse('SELECT p.passenger_id AS the_id FROM passenger p ORDER BY the_id;');
+        expectNoErrors(document);
+    });
 });
