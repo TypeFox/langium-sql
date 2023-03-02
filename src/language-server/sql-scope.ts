@@ -14,6 +14,7 @@ import {
     hasContainerOfType,
     LangiumDocuments,
     LangiumServices,
+    NamedAstNode,
     Reference,
     ReferenceInfo,
     Scope,
@@ -218,16 +219,24 @@ export class SqlScopeProvider extends DefaultScopeProvider {
                 case 'schemaName':
                     return this.getSchemasFromGlobalScope();
                 case 'tableName':
+                    //TODO add CTEs recursivly
                     const schema = container.schemaName?.ref;
                     const allTables = this.getTablesFromGlobalScope();
-                    const candidates = allTables.getAllElements()
+                    const globalCandidates = allTables.getAllElements().toArray()
                         .map(d => {
                             const document = this.langiumDocuments.getOrCreateDocument(d.documentUri)!;
                             return this.astNodeLocator.getAstNode(document.parseResult.value, d.path) as TableDefinition;
                         })
-                        .filter(td => td.schemaName?.ref === schema)
-                        .map(td => this.astNodeDescriptionProvider.createDescription(td, td.name));
-                    return new StreamScope(candidates);
+                        .filter(td => td.schemaName?.ref === schema);
+                    let candidates: NamedAstNode[] = globalCandidates;
+                    if(!schema) {
+                        const selectStatement = getContainerOfType(container, isSelectStatement)!;
+                        const withClause = selectStatement.with;
+                        if(withClause) {
+                            candidates = candidates.concat(withClause.ctes);
+                        }
+                    }
+                    return new StreamScope(stream(candidates.map(td => this.astNodeDescriptionProvider.createDescription(td, td.name))));
                 default:
                     assertUnreachable(property);
             }
