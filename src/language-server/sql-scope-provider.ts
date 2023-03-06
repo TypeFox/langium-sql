@@ -22,6 +22,7 @@ import {
     stream,
     StreamScope,
     Stream,
+    streamAllContents,
 } from "langium";
 import {
     AllTable,
@@ -38,6 +39,7 @@ import {
     isFunctionCall,
     isFunctionDefinition,
     isKeyDefinition,
+    isOverClause,
     isPrimaryKeyDefinition,
     isRootLevelSelectStatement,
     isSimpleSelectStatement,
@@ -45,7 +47,9 @@ import {
     isTableDefinition,
     isTableRelatedColumnExpression,
     isTableSourceItem,
+    isWindowSpec,
     KeyDefinition,
+    OverClause,
     PrimaryKeyDefinition,
     SchemaDefinition,
     SimpleSelectStatement,
@@ -247,6 +251,14 @@ export class SqlScopeProvider extends DefaultScopeProvider {
                     return this.packToDescriptions(candidates);
                 default:
                     assertUnreachable(property);
+            }
+        } else if(isOverClause(container)) {
+            const property = context.property as CrossReferencesOf<OverClause>;
+            switch(property) {
+                case 'windowName':
+                    const selectStatement = getContainerOfType(container, isSimpleSelectStatement)!;
+                    const nodes = streamAllContents(selectStatement).filter(isWindowSpec).toArray() as NamedAstNode[];
+                    return this.packToDescriptions(nodes);
             }
         } else {
             assertUnreachable(container);

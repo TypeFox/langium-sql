@@ -106,10 +106,11 @@ describe('Syntax coverage', () => {
         SELECT wrong FROM one;
     `));
     it('Select COUNT(DISTINCT ...)', () => expectParseable(`
-        SELECT COUNT(DiSTINCT p.passenger_id) FROM passenger p; 
+        SELECT COUNT(DISTINCT p.passenger_id) FROM passenger p; 
     `));
     it('Identifiers with different casing', () => expectParseable(`SELECT CounT(*) FROM booking WHERE flight_id=172;`));
     it('Count by distinct rows', () => expectParseable(`SELECT COUNT(DISTINCT flight_id) FROM booking;`));
     it('Escape an identifier, but still find it', () => expectParseable(`SELECT \`passenger_id\` FROM passenger;`));
     it('Namespaced functions', () => expectParseable(`SELECT alpha.blubb(123);`));
+    it('OVER clause', () => expectParseable(`SELECT SUM(price) OVER (PARTITION BY seat) FROM booking;`));
 });

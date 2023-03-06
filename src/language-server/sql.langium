@@ -193,10 +193,48 @@ PrimaryExpression infers Expression:
     | {infer UnaryExpression} operator=('NOT'|'-'|'+') value=PrimaryExpression
     | {infer ParenthesisOrListExpression} '(' items+=Expression (',' items+=Expression)* ')'
     | {infer SubQueryExpression} '(' subQuery=SelectStatementRootExpression ')'
-    | {infer FunctionCall} (schemaName=[SchemaDefinition:Identifier] '.')? functionName=[FunctionDefinition:Identifier] '(' params=SelectElements? ')'
+    | {infer FunctionCall} (schemaName=[SchemaDefinition:Identifier] '.')? functionName=[FunctionDefinition:Identifier] '(' params=SelectElements? ')' 
+      overClause=OverClause?
     | {infer ColumnNameExpression} columnName=[ColumnNameSource:Identifier]
     | {infer NullLiteral} 'NULL'
     | {infer HexStringLiteral} HexStringLiteral
+    ;
+
+OverClause:
+    'OVER' ('(' spec=WindowSpec ')' | windowName=[WindowSpec:Identifier])
+    ;
+
+
+WindowSpec
+    : name=Identifier? PartitionClause? OrderByClause? FrameClause?
+    ;
+
+FrameClause
+    : units=FrameUnits extent=FrameExtent
+    ;
+
+FrameUnits returns string
+    : 'ROWS'
+    | 'RANGE'
+    ;
+
+FrameExtent
+    : FrameRange
+    | FrameBetween
+    ;
+
+FrameBetween
+    : 'BETWEEN' FrameRange 'AND' FrameRange
+    ;
+
+FrameRange
+    : 'CURRENT' 'ROW'
+    | 'UNBOUNDED' ('PRECEDING' | 'FOLLOWING')
+    | Expression ('PRECEDING' | 'FOLLOWING')
+    ;
+
+PartitionClause
+    : 'PARTITION' 'BY' exprs+=Expression (',' exprs+=Expression)*
     ;
 
 CastExpression:
