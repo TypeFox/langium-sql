@@ -277,6 +277,20 @@ export class SqlScopeProvider extends DefaultScopeProvider {
                                 item.name
                             )
                         );
+                    } else {
+                        if(isTableSourceItem(item)) {
+                            const tableLike = item.tableName.ref;
+                            if(isTableDefinition(tableLike)) {
+                                astDescriptions.push(
+                                    this.astNodeDescriptionProvider.createDescription(
+                                        item,
+                                        tableLike.name
+                                    )
+                                );
+                            }
+                        } else if(!isSubQuerySourceItem(item)) {
+                            assertUnreachable(item);
+                        }
                     }
                 }
             }

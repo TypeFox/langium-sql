@@ -96,4 +96,13 @@ describe('Syntax coverage', () => {
         `);
         expectNoErrors(document);
     });
+    it('Select from table relative column without using explicit table variable', () => expectParseable(`SELECT passenger.passenger_id FROM passenger;`));
+    it('Select from WITH statement that uses column renamings', () => expectParseable(`
+        WITH one(num) AS SELECT 1 AS wrong
+        SELECT num FROM one;
+    `));
+    it.fails('Select from WITH statement that uses column renamings but references wrong one', () => expectParseable(`
+        WITH one(num) AS SELECT 1 AS wrong
+        SELECT wrong FROM one;
+    `));
 });

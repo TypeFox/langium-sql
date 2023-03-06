@@ -19,7 +19,8 @@ import {
     SqlGeneratedModule,
     SqlGeneratedSharedModule,
 } from "./generated/module";
-import { SqlScopeProvider } from "./sql-scope";
+import { SqlNameProvider } from "./sql-name-provider";
+import { SqlScopeProvider } from "./sql-scope-provider";
 import { SqlValidationRegistry, SqlValidator } from "./sql-validator";
 import { SqlWorkspaceManager } from "./sql-workspace-manager";
 
@@ -63,6 +64,7 @@ export const SqlModule: Module<
     PartialLangiumServices & SqlAddedServices
 > = {
     references: {
+        NameProvider: () => new SqlNameProvider(),
         ScopeProvider: (services) => new SqlScopeProvider(services),
     },
     validation: {

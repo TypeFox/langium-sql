@@ -21,4 +21,4 @@ SELECT id, name FROM employees WHERE id NOT IN (SELECT employeeId FROM managers 
 --implicit type conversion
 SELECT 1 + 1.12345;
 WITH xxx AS SELECT * FROM employees WHERE id=100
-SELECT booking_id FROM xxx;
+SELECT birthday FROM xxx;

@@ -79,7 +79,7 @@ IntersectSetOperator infers SetOperator:
     ;
 
 SimpleSelectStatement:
-    'SELECT' ('ALL'|distinct?='DISTINCT')?
+    'SELECT'
     select=SelectElements
     from=FromClause?
     where=WhereClause?
@@ -119,7 +119,7 @@ OrderBySpec:
     ;
 
 SelectElements:
-    elements+=SelectElement (',' elements+=SelectElement)*
+    ('ALL'|distinct?='DISTINCT')? elements+=SelectElement (',' elements+=SelectElement)*
     ;
     
 SelectElement infers SelectElement:
@@ -207,7 +207,7 @@ type ColumnNameSource = ColumnDefinition|ExpressionQuery;
 
 Identifier returns string:
     ID
-    | STRING
+    | TICK_STRING
     ;
 
 NumberLiteral: value=NUMBER;
@@ -229,6 +229,7 @@ IntegerLiteral: value=NUMBER;
 hidden terminal WS: /\s+/;
 terminal HEX_STRING returns string: /x\'[A-Fa-f0-9]+\'/;
 terminal STRING returns string: /\'(\\.|\\\\|[^'\\])*\'/;
+terminal TICK_STRING returns string: /\`(\\.|\\\\|[^`\\])*\`/;
 terminal ID: /[_a-zA-Z][\w_]*/;
 terminal NUMBER returns number: /\d+((\.\d+)?([eE][\-+]?\d+)?)?/;
 
