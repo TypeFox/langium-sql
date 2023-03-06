@@ -111,4 +111,5 @@ describe('Syntax coverage', () => {
     it('Identifiers with different casing', () => expectParseable(`SELECT CounT(*) FROM booking WHERE flight_id=172;`));
     it('Count by distinct rows', () => expectParseable(`SELECT COUNT(DISTINCT flight_id) FROM booking;`));
     it('Escape an identifier, but still find it', () => expectParseable(`SELECT \`passenger_id\` FROM passenger;`));
+    it('Namespaced functions', () => expectParseable(`SELECT alpha.blubb(123);`));
 });

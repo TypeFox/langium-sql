@@ -8,3 +8,5 @@ CREATE TABLE alpha.people (
 CREATE TABLE omega.people (
     id CHAR
 );
+
+CREATE FUNCTION alpha.blubb(x REAL) AS INT;

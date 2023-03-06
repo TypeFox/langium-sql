@@ -36,6 +36,7 @@ import {
     isCommonTableExpression,
     isConstraintDefinition,
     isFunctionCall,
+    isFunctionDefinition,
     isKeyDefinition,
     isPrimaryKeyDefinition,
     isRootLevelSelectStatement,
@@ -106,6 +107,15 @@ export class SqlScopeProvider extends DefaultScopeProvider {
         const container = context.container as SqlAstTypesWithCrossReferences;
         if(isTableDefinition(container)) {
             const property = context.property as CrossReferencesOf<TableDefinition>;
+            switch(property) {
+                case 'schemaName': {
+                    return this.getGlobalScope(SchemaDefinition, context);
+                }
+                default:
+                    assertUnreachable(property);
+            }
+        } if(isFunctionDefinition(container)) {
+            const property = context.property as CrossReferencesOf<FunctionDefinition>;
             switch(property) {
                 case 'schemaName': {
                     return this.getGlobalScope(SchemaDefinition, context);
@@ -208,8 +218,13 @@ export class SqlScopeProvider extends DefaultScopeProvider {
         } else if(isFunctionCall(container)) {
             const property = context.property as CrossReferencesOf<FunctionCall>;
             switch(property) {
+                case 'schemaName':
+                    return this.getGlobalScope(SchemaDefinition, context);
                 case 'functionName':
-                    return this.getGlobalScope(FunctionDefinition, context);
+                    const schema = container.schemaName?.ref;
+                    const allTables = this.unpackFromDescriptions<FunctionDefinition>(this.getGlobalScope(FunctionDefinition, context));
+                    const candidates = allTables.filter(td => td.schemaName?.ref === schema);
+                    return this.packToDescriptions(candidates);
                 default:
                     assertUnreachable(property);
             }
@@ -220,14 +235,8 @@ export class SqlScopeProvider extends DefaultScopeProvider {
                     return this.getGlobalScope(SchemaDefinition, context);
                 case 'tableName':
                     const schema = container.schemaName?.ref;
-                    const allTables = this.getGlobalScope(TableDefinition, context);
-                    const globalCandidates = allTables.getAllElements().toArray()
-                        .map(d => {
-                            const document = this.langiumDocuments.getOrCreateDocument(d.documentUri)!;
-                            return this.astNodeLocator.getAstNode(document.parseResult.value, d.path) as TableDefinition;
-                        })
-                        .filter(td => td.schemaName?.ref === schema);
-                    let candidates: NamedAstNode[] = globalCandidates;
+                    const allTables = this.unpackFromDescriptions<TableDefinition>(this.getGlobalScope(TableDefinition, context));
+                    let candidates: NamedAstNode[] = allTables.filter(td => td.schemaName?.ref === schema);
                     if(!schema) {
                         const selectStatement = getContainerOfType(container, isRootLevelSelectStatement)!;
                         const withClause = selectStatement.with;
@@ -235,7 +244,7 @@ export class SqlScopeProvider extends DefaultScopeProvider {
                             candidates = candidates.concat(withClause.ctes);
                         }
                     }
-                    return this.newCaseInsensitiveScope(stream(candidates.map(td => this.astNodeDescriptionProvider.createDescription(td, td.name))));
+                    return this.packToDescriptions(candidates);
                 default:
                     assertUnreachable(property);
             }
@@ -315,18 +324,30 @@ export class SqlScopeProvider extends DefaultScopeProvider {
         return this.newCaseInsensitiveScope(this.indexManager.allElements(nodeType));
     }
 
+    protected unpackFromDescriptions<N extends NamedAstNode>(scope: Scope) {
+        return scope.getAllElements().toArray()
+            .map(d => {
+                const document = this.langiumDocuments.getOrCreateDocument(d.documentUri)!;
+                return this.astNodeLocator.getAstNode(document.parseResult.value, d.path) as N;
+            });
+    }
+
+    protected packToDescriptions<N extends NamedAstNode>(nodes: N[]): Scope {
+        return this.newCaseInsensitiveScope(
+            stream(
+                nodes.map((c) =>
+                    this.astNodeDescriptionProvider.createDescription(c, c.name)
+                )
+            )
+        );
+    }
+
     private streamColumnDescriptors(columns: ColumnDescriptor[]): Scope {
         return this.newCaseInsensitiveScope(stream(columns.filter(c => c.name).map(c => this.astNodeDescriptionProvider.createDescription(c.node, c.name!))));
     }
 
     private streamColumnDefinitions(columns: ColumnDefinition[]) {
-        return this.newCaseInsensitiveScope(
-            stream(
-                columns.map((c) =>
-                    this.astNodeDescriptionProvider.createDescription(c, c.name)
-                )
-            )
-        );
+        return this.packToDescriptions(columns);
     }
 
     private newCaseInsensitiveScope(stream: Stream<AstNodeDescription>, outerScope: Scope|undefined = undefined) {

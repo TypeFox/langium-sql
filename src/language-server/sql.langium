@@ -41,7 +41,7 @@ ConstraintDefinition: //TODO fix absolute table name
     ;
 
 FunctionDefinition:
-    'CREATE' 'FUNCTION' name=Identifier '('
+    'CREATE' 'FUNCTION' (schemaName=[SchemaDefinition:Identifier] '.')? name=Identifier '('
         (params+=FormalParameterDefinition (',' params+=FormalParameterDefinition)*)?
     ')' 'AS' returnType=Type;
 
@@ -193,7 +193,7 @@ PrimaryExpression infers Expression:
     | {infer UnaryExpression} operator=('NOT'|'-'|'+') value=PrimaryExpression
     | {infer ParenthesisOrListExpression} '(' items+=Expression (',' items+=Expression)* ')'
     | {infer SubQueryExpression} '(' subQuery=SelectStatementRootExpression ')'
-    | {infer FunctionCall} functionName=[FunctionDefinition:Identifier] '(' params=SelectElements? ')'
+    | {infer FunctionCall} (schemaName=[SchemaDefinition:Identifier] '.')? functionName=[FunctionDefinition:Identifier] '(' params=SelectElements? ')'
     | {infer ColumnNameExpression} columnName=[ColumnNameSource:Identifier]
     | {infer NullLiteral} 'NULL'
     | {infer HexStringLiteral} HexStringLiteral
