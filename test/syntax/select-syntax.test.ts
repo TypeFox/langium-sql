@@ -105,4 +105,13 @@ describe('Syntax coverage', () => {
         WITH one(num) AS SELECT 1 AS wrong
         SELECT wrong FROM one;
     `));
+    it('Select COUNT(DISTINCT ...)', () => expectParseable(`
+        SELECT COUNT(DiSTINCT p.passenger_id) FROM passenger p; 
+    `));
+    it('Identifiers with different casing', () => expectParseable(`SELECT CounT(*) FROM booking WHERE flight_id=172;`));
+    it('Escape an identifier, but still find it', () => expectParseable(`SELECT \`passenger_id\` FROM passenger;`));
+    it('', () => expectParseable(`
+    `));
+    it('', () => expectParseable(`
+    `));
 });

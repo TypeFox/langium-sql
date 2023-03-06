@@ -19,9 +19,9 @@ import {
     SqlGeneratedModule,
     SqlGeneratedSharedModule,
 } from "./generated/module";
-import { SqlNameProvider } from "./sql-name-provider";
 import { SqlScopeProvider } from "./sql-scope-provider";
 import { SqlValidationRegistry, SqlValidator } from "./sql-validator";
+import { SqlValueConverter } from "./sql-value-converter";
 import { SqlWorkspaceManager } from "./sql-workspace-manager";
 
 /**
@@ -63,8 +63,10 @@ export const SqlModule: Module<
     SqlServices,
     PartialLangiumServices & SqlAddedServices
 > = {
+    parser: {
+        ValueConverter: () => new SqlValueConverter(),
+    },
     references: {
-        NameProvider: () => new SqlNameProvider(),
         ScopeProvider: (services) => new SqlScopeProvider(services),
     },
     validation: {

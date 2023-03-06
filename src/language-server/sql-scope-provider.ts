@@ -21,6 +21,7 @@ import {
     assertUnreachable,
     stream,
     StreamScope,
+    Stream,
 } from "langium";
 import {
     AllTable,
@@ -107,7 +108,7 @@ export class SqlScopeProvider extends DefaultScopeProvider {
             const property = context.property as CrossReferencesOf<TableDefinition>;
             switch(property) {
                 case 'schemaName': {
-                    return this.getSchemasFromGlobalScope();
+                    return this.getGlobalScope(SchemaDefinition, context);
                 }
                 default:
                     assertUnreachable(property);
@@ -128,7 +129,7 @@ export class SqlScopeProvider extends DefaultScopeProvider {
                     const tableDef = getContainerOfType(container, isTableDefinition)!;
                     return this.streamColumnDefinitions(tableDef.columns.filter(isColumnDefinition));
                 default:
-                        assertUnreachable(property);
+                    assertUnreachable(property);
             }
         } else if (isConstraintDefinition(container)) {
             const property = context.property as CrossReferencesOf<ConstraintDefinition>;
@@ -141,7 +142,7 @@ export class SqlScopeProvider extends DefaultScopeProvider {
                     return this.streamColumnDefinitions(columns);
                 }
                 case 'table': {
-                    return this.getTablesFromGlobalScope();
+                    return this.getGlobalScope(TableDefinition, context);
                 }
                 case 'to': {
                     const columns = container.table.ref!.columns.filter(isColumnDefinition);
@@ -156,7 +157,7 @@ export class SqlScopeProvider extends DefaultScopeProvider {
                 case "variableName": {
                     const selectStatement = getContainerOfType(container, isSimpleSelectStatement)!;
                     //ATTENTION! Do not recursively traverse upwards, t.* only looks up t in the current select statement
-                    return new StreamScope(stream(this.getTableVariablesForSelectStatement(selectStatement)));
+                    return this.newCaseInsensitiveScope(stream(this.getTableVariablesForSelectStatement(selectStatement)));
                 }
                 default:
                     assertUnreachable(property);
@@ -208,7 +209,7 @@ export class SqlScopeProvider extends DefaultScopeProvider {
             const property = context.property as CrossReferencesOf<FunctionCall>;
             switch(property) {
                 case 'functionName':
-                    return this.getFunctionsFromGlobalScope();
+                    return this.getGlobalScope(FunctionDefinition, context);
                 default:
                     assertUnreachable(property);
             }
@@ -216,10 +217,10 @@ export class SqlScopeProvider extends DefaultScopeProvider {
             const property = context.property as CrossReferencesOf<TableSourceItem>;
             switch(property) {
                 case 'schemaName':
-                    return this.getSchemasFromGlobalScope();
+                    return this.getGlobalScope(SchemaDefinition, context);
                 case 'tableName':
                     const schema = container.schemaName?.ref;
-                    const allTables = this.getTablesFromGlobalScope();
+                    const allTables = this.getGlobalScope(TableDefinition, context);
                     const globalCandidates = allTables.getAllElements().toArray()
                         .map(d => {
                             const document = this.langiumDocuments.getOrCreateDocument(d.documentUri)!;
@@ -234,7 +235,7 @@ export class SqlScopeProvider extends DefaultScopeProvider {
                             candidates = candidates.concat(withClause.ctes);
                         }
                     }
-                    return new StreamScope(stream(candidates.map(td => this.astNodeDescriptionProvider.createDescription(td, td.name))));
+                    return this.newCaseInsensitiveScope(stream(candidates.map(td => this.astNodeDescriptionProvider.createDescription(td, td.name))));
                 default:
                     assertUnreachable(property);
             }
@@ -257,7 +258,7 @@ export class SqlScopeProvider extends DefaultScopeProvider {
 
         const descriptions = this.getTableVariablesForSelectStatement(selectStatement);
 
-        return new StreamScope(stream(descriptions), outerScope);
+        return this.newCaseInsensitiveScope(stream(descriptions), outerScope);
     }
 
     private getTableVariablesForSelectStatement(
@@ -299,29 +300,25 @@ export class SqlScopeProvider extends DefaultScopeProvider {
         return [];
     }
 
-    private getTablesFromGlobalScope(): Scope {
-        return new StreamScope(this.indexManager.allElements(TableDefinition));
-    }
-
-    private getSchemasFromGlobalScope(): Scope {
-        return new StreamScope(this.indexManager.allElements(SchemaDefinition));
-    }
-
-    private getFunctionsFromGlobalScope(): Scope {
-        return new StreamScope(this.indexManager.allElements(FunctionDefinition));
+    override getGlobalScope(nodeType: string, _context: ReferenceInfo): Scope {
+        return this.newCaseInsensitiveScope(this.indexManager.allElements(nodeType));
     }
 
     private streamColumnDescriptors(columns: ColumnDescriptor[]): Scope {
-        return new StreamScope(stream(columns.filter(c => c.name).map(c => this.astNodeDescriptionProvider.createDescription(c.node, c.name!))));
+        return this.newCaseInsensitiveScope(stream(columns.filter(c => c.name).map(c => this.astNodeDescriptionProvider.createDescription(c.node, c.name!))));
     }
 
     private streamColumnDefinitions(columns: ColumnDefinition[]) {
-        return new StreamScope(
+        return this.newCaseInsensitiveScope(
             stream(
                 columns.map((c) =>
                     this.astNodeDescriptionProvider.createDescription(c, c.name)
                 )
             )
         );
-    }    
+    }
+
+    private newCaseInsensitiveScope(stream: Stream<AstNodeDescription>, outerScope: Scope|undefined = undefined) {
+        return new StreamScope(stream, outerScope, { caseInsensitive: true });
+    }
 }
