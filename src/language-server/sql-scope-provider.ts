@@ -281,13 +281,24 @@ export class SqlScopeProvider extends DefaultScopeProvider {
                     } else {
                         if(isTableSourceItem(item)) {
                             const tableLike = item.tableName.ref;
-                            if(isTableDefinition(tableLike)) {
-                                astDescriptions.push(
-                                    this.astNodeDescriptionProvider.createDescription(
-                                        item,
-                                        tableLike.name
-                                    )
-                                );
+                            if(tableLike) {
+                                if(isTableDefinition(tableLike)) {
+                                    astDescriptions.push(
+                                        this.astNodeDescriptionProvider.createDescription(
+                                            item,
+                                            tableLike.name
+                                        )
+                                    );
+                                } else if(isCommonTableExpression(tableLike)) {
+                                    astDescriptions.push(
+                                        this.astNodeDescriptionProvider.createDescription(
+                                            item,
+                                            tableLike.name
+                                        )
+                                    );
+                                } else {
+                                    assertUnreachable(tableLike);
+                                }
                             }
                         } else if(!isSubQuerySourceItem(item)) {
                             assertUnreachable(item);

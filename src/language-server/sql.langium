@@ -137,7 +137,7 @@ TableSource:
     ;
 
 JoinPart:
-    'JOIN' nextItem=SourceItem ('ON' joinOn=Expression | 'USING' '(' usingOn=Expression ')')?
+    (leftJoin?='LEFT'|rightJoin?='RIGHT')? 'JOIN' nextItem=SourceItem ('ON' joinOn=Expression | 'USING' '(' usingOn=Expression ')')?
     ;
 
 SourceItem infers SourceItem
