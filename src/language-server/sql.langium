@@ -246,6 +246,7 @@ type ColumnNameSource = ColumnDefinition|ExpressionQuery;
 Identifier returns string:
     ID
     | TICK_STRING
+    | Keyword
     ;
 
 NumberLiteral: value=NUMBER;
@@ -260,9 +261,13 @@ Type infers Type:
     | {infer CharType} 'CHAR' ('(' length=IntegerLiteral ')')?
     | {infer EnumType} 'ENUM' '(' members+=STRING (',' members+=STRING)* ')'
     | {infer DateTimeType} 'DATETIME'
+    | {infer BlobType} 'BLOB'
     ; 
 
 IntegerLiteral: value=NUMBER;
+
+//These keywords were seen as ID for column names, without backticks
+Keyword returns string: 'TABLE' | 'KEY' | 'SCHEMA' | 'FROM' | 'TO'; 
 
 hidden terminal WS: /\s+/;
 terminal HEX_STRING returns string: /x\'[A-Fa-f0-9]+\'/;
