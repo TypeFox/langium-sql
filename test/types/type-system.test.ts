@@ -3,13 +3,14 @@
  * This program and the accompanying materials are made available under the
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
-import { EmptyFileSystem, LangiumDocument } from "langium";
+import { LangiumDocument } from "langium";
 import { beforeAll, describe, expect, it } from "vitest";
 import { SqlFile } from "../../src/language-server/generated/ast";
 import { createSqlServices } from "../../src/language-server/sql-module";
 import { Types } from "../../src/language-server/sql-type-descriptors";
 import { computeTypeOfNumericLiteral } from "../../src/language-server/sql-type-computation";
-import { parseHelper, expectNoErrors, expectSelectItemsToBeOfType, asSelectStatement, expectSelectItemsToHaveNames } from "../test-utils";
+import { parseHelper, expectNoErrors, expectSelectItemsToBeOfType, asSimpleSelectStatement, expectSelectItemsToHaveNames, asSelectTableExpression } from "../test-utils";
+import { NodeFileSystem } from "langium/node";
 
 describe("Type system utilities", () => {
     it.each([
@@ -29,10 +30,10 @@ describe("Type system utilities", () => {
             });
         }
     );
+    const services = createSqlServices(NodeFileSystem);
 });
 
-
-const services = createSqlServices(EmptyFileSystem);
+const services = createSqlServices(NodeFileSystem);
 
 describe("Type system", () => {
     let parse: (input: string) => Promise<LangiumDocument<SqlFile>>;
@@ -43,7 +44,7 @@ describe("Type system", () => {
 
     it("addition of integer and real results in real", async () => {
         const document = await parse("SELECT 1+1.5;");
-        const selectStatement = asSelectStatement(document);
+        const selectStatement = asSelectTableExpression(document);
         expectNoErrors(document);
         expectSelectItemsToBeOfType(selectStatement, [Types.Real])
         expectSelectItemsToHaveNames(selectStatement, [undefined])

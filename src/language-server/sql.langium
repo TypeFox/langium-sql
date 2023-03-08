@@ -5,12 +5,15 @@ entry SqlFile:
     ;
 
 Statement:
-    (FunctionDefinition | TableDefinition | SelectStatement) ';';
+    (SchemaDefinition | FunctionDefinition | TableDefinition | RootLevelSelectStatement) ';';
 
 
 //DEFINITION/////////////////////////////////////////////////////////
+SchemaDefinition:
+    'CREATE' 'SCHEMA' name=Identifier; 
+
 TableDefinition:
-    'CREATE' 'TABLE' name=Identifier '('(
+    'CREATE' 'TABLE' (schemaName=[SchemaDefinition:Identifier] '.')? name=Identifier '('(
         columns+=TableContentDefinition (',' columns+=TableContentDefinition)* trailingComma?=','?
     )?')';
 
@@ -28,18 +31,17 @@ PrimaryKeyDefinition:
     'PRIMARY' 'KEY' '(' primaryKeys+=[ColumnDefinition] (',' primaryKeys+=[ColumnDefinition])* ')'
     ;
 
-
 KeyDefinition:
     unique?='UNIQUE'? 'KEY' name=Identifier '(' keys+=[ColumnDefinition] (',' keys+=[ColumnDefinition])* ')'
     ;
 
-ConstraintDefinition:
-    'CONSTRAINT' name=Identifier 'FOREIGN' 'KEY' '(' from=[ColumnDefinition] ')' 'REFERENCES' table=[TableDefinition] '(' to=[ColumnDefinition] ')'
+ConstraintDefinition: //TODO fix absolute table name
+    'CONSTRAINT' name=Identifier 'FOREIGN' 'KEY' '(' from=[ColumnDefinition] ')' 'REFERENCES' table=[TableDefinition:Identifier] '(' to=[ColumnDefinition] ')'
     ('ON' 'DELETE' cascadeDeletion?='CASCADE')?
     ;
 
 FunctionDefinition:
-    'CREATE' 'FUNCTION' name=Identifier '('
+    'CREATE' 'FUNCTION' (schemaName=[SchemaDefinition:Identifier] '.')? name=Identifier '('
         (params+=FormalParameterDefinition (',' params+=FormalParameterDefinition)*)?
     ')' 'AS' returnType=Type;
 
@@ -48,15 +50,44 @@ FormalParameterDefinition:
     ;
 //END DEFINITION/////////////////////////////////////////////////////////
 
-SelectStatement:
+RootLevelSelectStatement:
     with=WithClause?
-    'SELECT' ('ALL'|distinct?='DISTINCT')?
+    select=SelectStatementRootExpression
+    ;
+
+SelectStatementRootExpression: SelectStatementUnionExpression;
+
+SelectStatementUnionExpression infers SelectTableExpression:
+    SelectStatementIntersectExpression ({infer BinaryTableExpression.left=current} operator=UnionSetOperator right=SelectStatementIntersectExpression)*
+    ;
+
+SelectStatementIntersectExpression infers SelectTableExpression:
+    SelectStatementPrimaryExpression ({infer BinaryTableExpression.left=current} operator=IntersectSetOperator right=SelectStatementPrimaryExpression)*
+    ;
+
+SelectStatementPrimaryExpression infers SelectTableExpression:
+    {infer SimpleSelectTableExpression} select=SimpleSelectStatement
+    | {infer ParenthesesSelectTableExpression} '(' value=SelectStatementRootExpression ')'
+    ;
+
+UnionSetOperator infers SetOperator:
+    operator=('UNION' | 'EXCEPT' | 'MINUS') ('ALL' | distinct?='DISTINCT')?
+    ;
+
+IntersectSetOperator infers SetOperator:
+    operator='INTERSECT' ('ALL' | distinct?='DISTINCT')?
+    ;
+
+SimpleSelectStatement:
+    'SELECT'
     select=SelectElements
     from=FromClause?
     where=WhereClause?
     groupBy=GroupByClause?
     having=HavingClause?
-    orderBy=OrderByClause?;
+    orderBy=OrderByClause?
+    ;
+//;
 
 WithClause: 'WITH' 'RECURSIVE'? ctes+=CommonTableExpression (',' ctes+=CommonTableExpression)*;
 
@@ -65,7 +96,7 @@ CteColumnName: name=Identifier;
 CommonTableExpression:
     name=Identifier
     ('(' columnNames+=CteColumnName (',' columnNames+=CteColumnName)* ')')?
-    'AS' statement=SelectStatement
+    'AS' (statement=SelectStatementRootExpression | '(' statement=SelectStatementRootExpression ')')
     ;
 
 WhereClause:
@@ -88,13 +119,13 @@ OrderBySpec:
     ;
 
 SelectElements:
-    elements+=SelectElement (',' elements+=SelectElement)*
+    ('ALL'|distinct?='DISTINCT')? elements+=SelectElement (',' elements+=SelectElement)*
     ;
     
 SelectElement infers SelectElement:
     {infer AllStar}'*'
-    | {infer AllTable}variableName=TableVariableName '.' '*'
-    | {infer ExpressionQuery} expr=Expression ('AS' name=Identifier)?
+    | {infer AllTable}variableName=[TableVariableSource:Identifier] '.' '*'
+    | {infer ExpressionQuery} expr=Expression ('AS'? name=Identifier)?
     ;
     
 FromClause: 'FROM' sources=TableSources;
@@ -106,23 +137,17 @@ TableSource:
     ;
 
 JoinPart:
-    'JOIN' nextItem=SourceItem ('ON' joinOn=Expression | 'USING' '(' usingOn=Expression ')')?
+    (leftJoin?='LEFT'|rightJoin?='RIGHT')? 'JOIN' nextItem=SourceItem ('ON' joinOn=Expression | 'USING' '(' usingOn=Expression ')')?
     ;
 
 SourceItem infers SourceItem
-    : {infer TableSourceItem} tableName=TableName ('AS'? name=Identifier)?
-    | {infer SubQuerySourceItem} '(' subQuery=SelectStatement ')' ('AS'? name=Identifier)?
+    : {infer TableSourceItem} (schemaName=[SchemaDefinition:Identifier] '.')? tableName=[TableLike:Identifier] ('AS'? name=Identifier)?
+    | {infer SubQuerySourceItem} '(' subQuery=SelectStatementRootExpression ')' ('AS'? name=Identifier)?
     ;
 
 type TableVariableSource = TableSourceItem|SubQuerySourceItem;
 
-TableVariableName:
-    variable=[TableVariableSource:Identifier]
-    ;
-
 type TableLike = TableDefinition|CommonTableExpression;
-
-TableName: table=[TableLike:Identifier];
 
 Expression: ConcatExpression;
 
@@ -161,36 +186,72 @@ MultiplicativeExpression infers Expression:
 
 PrimaryExpression infers Expression:
     {infer StringLiteral} StringLiteral
-    | {infer TableRelatedColumnExpression} variableName=TableVariableName '.' columnName=ColumnName
+    | {infer TableRelatedColumnExpression} variableName=[SourceItem:Identifier] '.' columnName=[ColumnNameSource:Identifier]
     | {infer NumberLiteral} NumberLiteral
     | {infer BooleanLiteral} BooleanLiteral
     | {infer CastExpression} CastExpression
     | {infer UnaryExpression} operator=('NOT'|'-'|'+') value=PrimaryExpression
-    | {infer ParenthesisExpression} '(' expression=Expression ')'
-    | {infer SubQueryExpression} '(' subQuery=SelectStatement ')'
-    | {infer FunctionCall} functionName=FunctionName '(' params=SelectElements? ')'
-    | {infer ColumnNameExpression} columnName=ColumnName
+    | {infer ParenthesisOrListExpression} '(' items+=Expression (',' items+=Expression)* ')'
+    | {infer SubQueryExpression} '(' subQuery=SelectStatementRootExpression ')'
+    | {infer FunctionCall} (schemaName=[SchemaDefinition:Identifier] '.')? functionName=[FunctionDefinition:Identifier] '(' params=SelectElements? ')' 
+      overClause=OverClause?
+    | {infer ColumnNameExpression} columnName=[ColumnNameSource:Identifier]
+    | {infer NullLiteral} 'NULL'
+    | {infer HexStringLiteral} HexStringLiteral
+    ;
+
+OverClause:
+    'OVER' ('(' spec=WindowSpec ')' | windowName=[WindowSpec:Identifier])
+    ;
+
+
+WindowSpec
+    : name=Identifier? PartitionClause? OrderByClause? FrameClause?
+    ;
+
+FrameClause
+    : units=FrameUnits extent=FrameExtent
+    ;
+
+FrameUnits returns string
+    : 'ROWS'
+    | 'RANGE'
+    ;
+
+FrameExtent
+    : FrameRange
+    | FrameBetween
+    ;
+
+FrameBetween
+    : 'BETWEEN' FrameRange 'AND' FrameRange
+    ;
+
+FrameRange
+    : 'CURRENT' 'ROW'
+    | 'UNBOUNDED' ('PRECEDING' | 'FOLLOWING')
+    | Expression ('PRECEDING' | 'FOLLOWING')
+    ;
+
+PartitionClause
+    : 'PARTITION' 'BY' exprs+=Expression (',' exprs+=Expression)*
     ;
 
 CastExpression:
     'CAST' '(' expr=Expression 'AS' type=Type ')'
     ;
 
-FunctionName:
-    function=[FunctionDefinition:Identifier]
-    ;
-
 type ColumnNameSource = ColumnDefinition|ExpressionQuery;
-
-ColumnName: column=[ColumnNameSource:Identifier];
 
 Identifier returns string:
     ID
+    | TICK_STRING
     ;
 
 NumberLiteral: value=NUMBER;
 StringLiteral: value=STRING;
 BooleanLiteral: value=('TRUE'|'FALSE');
+HexStringLiteral: value=HEX_STRING;
 
 Type infers Type: 
     {infer BooleanType} 'BOOLEAN'
@@ -204,7 +265,9 @@ Type infers Type:
 IntegerLiteral: value=NUMBER;
 
 hidden terminal WS: /\s+/;
+terminal HEX_STRING returns string: /x\'[A-Fa-f0-9]+\'/;
 terminal STRING returns string: /\'(\\.|\\\\|[^'\\])*\'/;
+terminal TICK_STRING returns string: /\`(\\.|\\\\|[^`\\])*\`/;
 terminal ID: /[_a-zA-Z][\w_]*/;
 terminal NUMBER returns number: /\d+((\.\d+)?([eE][\-+]?\d+)?)?/;
 

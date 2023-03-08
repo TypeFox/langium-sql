@@ -20,3 +20,5 @@ SELECT id FROM (SELECT * FROM employees);
 SELECT id, name FROM employees WHERE id NOT IN (SELECT employeeId FROM managers WHERE managerId=123);
 --implicit type conversion
 SELECT 1 + 1.12345;
+WITH xxx AS SELECT * FROM employees WHERE id=100
+SELECT birthday FROM xxx;

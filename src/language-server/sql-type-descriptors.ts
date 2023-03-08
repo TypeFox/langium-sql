@@ -18,7 +18,15 @@ export type TypeDescriptorDiscriminator =
     | "row"
     | 'enum'
     | 'datetime'
+    | 'null'
+    | 'array'
     ;
+
+export function isTypeANull(
+    type: TypeDescriptor
+): type is NullTypeDescriptor {
+    return type.discriminator === "null";
+}
 
 export function isTypeABoolean(
     type: TypeDescriptor
@@ -109,15 +117,33 @@ export interface CharTypeDescriptor extends TypeDescriptorBase {
     length: number;
 }
 
+export interface NullTypeDescriptor extends TypeDescriptorBase {
+    discriminator: "null";
+}
+
+export interface ArrayTypeDescriptor extends TypeDescriptorBase {
+    discriminator: "array";
+    elementType: TypeDescriptor;
+}
+
 export interface DateTimeTypeDescriptor extends TypeDescriptorBase {
     discriminator: "datetime";
 }
 
 export type TextualTypeDescriptor = CharTypeDescriptor;
 export type NumberTypeDescriptor = IntegerTypeDescriptor|RealTypeDescriptor;
-export type TypeDescriptor = BooleanTypeDesciptor | NumberTypeDescriptor | TextualTypeDescriptor | RowTypeDescriptor | EnumTypeDescriptor | DateTimeTypeDescriptor;
+export type TypeDescriptor = ArrayTypeDescriptor | NullTypeDescriptor | BooleanTypeDesciptor | NumberTypeDescriptor | TextualTypeDescriptor | RowTypeDescriptor | EnumTypeDescriptor | DateTimeTypeDescriptor;
 
 export const Types = {
+    Null: {
+        discriminator: 'null',
+    } as NullTypeDescriptor,
+    ArrayOf(elementType: TypeDescriptor) {
+        return {
+            discriminator: 'array',
+            elementType
+        } as TypeDescriptor;
+    },
     Boolean: {
         discriminator: 'boolean'
     } as TypeDescriptor,

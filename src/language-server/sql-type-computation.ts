@@ -3,7 +3,7 @@
  * This program and the accompanying materials are made available under the
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
-import { AstNode } from "langium";
+import { assertUnreachable, AstNode } from "langium";
 import _ from "lodash";
 import {
     Expression,
@@ -16,14 +16,12 @@ import {
     isTableRelatedColumnExpression,
     isBinaryExpression,
     isUnaryExpression,
-    isParenthesisExpression,
     isCharType,
     isNumberLiteral,
     isStringLiteral,
     isBooleanLiteral,
     isFunctionCall,
     isSubQueryExpression,
-    SelectStatement,
     isExpressionQuery,
     isTableSourceItem,
     isSubQuerySourceItem,
@@ -36,12 +34,17 @@ import {
     isFunctionDefinition,
     isNegatableExpression,
     isBetweenExpression,
+    isNullLiteral,
+    isHexStringLiteral,
+    isParenthesisOrListExpression,
+    NegatableExpression,
+    SelectTableExpression,
 } from "./generated/ast";
 import { canConvert } from "./sql-type-conversion";
 import { areTypesEqual, RowTypeDescriptor, TypeDescriptor, Types } from "./sql-type-descriptors";
 import { BinaryOperator, BinaryOperators, UnaryOperator, UnaryOperators } from "./sql-type-operators";
 import {
-    assertUnreachable, getColumnsForSelectStatement,
+    getColumnsForSelectTableExpression,
 } from "./sql-type-utilities";
 
 export type ComputeTypeFunction = (node: AstNode) => TypeDescriptor | undefined;
@@ -64,18 +67,24 @@ function computeTypeOfExpression(node: Expression): TypeDescriptor | undefined {
     if (isNumberLiteral(node)) {
         return computeTypeOfNumericLiteral(node.$cstNode!.text);
     }
+    if(isNullLiteral(node)) {
+        return Types.Null;
+    }
+    if(isHexStringLiteral(node)) {
+        return Types.Integer;
+    }
     if (isTableRelatedColumnExpression(node)) { //variable.columnName
-        const varRef = node.variableName.variable.ref;
+        const varRef = node.variableName.ref;
         if(!varRef) {
             return undefined;
         } else if(isTableSourceItem(varRef)) { //tableVariable.columnName
-            const ref = node.columnName.column.ref;
+            const ref = node.columnName.ref;
             if(!isColumnDefinition(ref)) {
                 return undefined;
             }
             return computeType(ref.dataType);
         } else if(isSubQuerySourceItem(varRef)) {//subqueryVariable.selectItemName
-            const ref = node.columnName.column.ref;
+            const ref = node.columnName.ref;
             if(!isExpressionQuery(ref)) {
                 return undefined;
             }
@@ -85,8 +94,13 @@ function computeTypeOfExpression(node: Expression): TypeDescriptor | undefined {
             return undefined;
         }
     }
-    if (isParenthesisExpression(node)) {
-        return computeType(node.expression);
+    if (isParenthesisOrListExpression(node)) {
+        const firstType = computeType(node.items[0]);
+        //ONLY the IN operator is allowed to look up a list!
+        if(firstType && node.$container.$type === NegatableExpression && node.$container.operator === 'IN') {
+            return Types.ArrayOf(firstType);
+        }
+        return firstType;
     }
     if (isUnaryExpression(node)) {
         const operandType = computeType(node.value);
@@ -101,7 +115,7 @@ function computeTypeOfExpression(node: Expression): TypeDescriptor | undefined {
         return Types.Boolean;
     }
     if (isColumnNameExpression(node)) {
-        const ref = node.columnName.column.ref;
+        const ref = node.columnName.ref;
         if(!ref) {
             return undefined;
         } else if(isExpressionQuery(ref)) {
@@ -116,7 +130,7 @@ function computeTypeOfExpression(node: Expression): TypeDescriptor | undefined {
         }
     }
     if (isFunctionCall(node)) {
-        const functionLike = node.functionName.function.ref!;
+        const functionLike = node.functionName.ref!;
         if(isFunctionDefinition(functionLike)) {
             return computeTypeOfDataType(functionLike.returnType);
         } else {
@@ -140,10 +154,10 @@ function computeTypeOfExpression(node: Expression): TypeDescriptor | undefined {
     assertUnreachable(node);
 }
 
-export function computeTypeOfSelectStatement(selectStatement: SelectStatement): RowTypeDescriptor {
+export function computeTypeOfSelectStatement(selectStatement: SelectTableExpression): RowTypeDescriptor {
     return {
         discriminator: "row",
-        columnTypes: getColumnsForSelectStatement(selectStatement).map(c => ({
+        columnTypes: getColumnsForSelectTableExpression(selectStatement).map(c => ({
             name: c.name,
             type: computeType(c.typedNode)!
         }))

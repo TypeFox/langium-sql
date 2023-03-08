@@ -3,8 +3,8 @@
  * This program and the accompanying materials are made available under the
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
-
-import { EmptyFileSystem, LangiumDocument } from "langium";
+import { LangiumDocument } from "langium";
+import { NodeFileSystem } from "langium/node";
 import { beforeAll, describe, expect, it } from "vitest";
 import * as ast from "../../../src/language-server/generated/ast";
 import { ReportAs } from "../../../src/language-server/sql-error-codes";
@@ -13,15 +13,16 @@ import { Types } from "../../../src/language-server/sql-type-descriptors";
 import {
     parseHelper,
     expectNoErrors,
-    asSelectStatement,
+    asSimpleSelectStatement,
     expectTableLinked,
     expectValidationIssues,
     expectSelectItemToBeNumeric,
     expectSelectItemsToBeOfType,
     expectSelectItemsToHaveNames,
+    asSelectTableExpression,
 } from "../../test-utils";
 
-const services = createSqlServices(EmptyFileSystem);
+const services = createSqlServices(NodeFileSystem);
 
 describe("SELECT use cases", () => {
     let parse: (input: string) => Promise<LangiumDocument<ast.SqlFile>>;
@@ -37,14 +38,16 @@ describe("SELECT use cases", () => {
 
     it('SELECT * FROM tab;', async () => {
         const document = await parse("SELECT * FROM tab;");
-        const selectStatement = asSelectStatement(document);
+        
+        const tableExpression = asSelectTableExpression(document);
+        const simpleSelectStatement = asSimpleSelectStatement(document);
 
         expectNoErrors(document);
-        expectTableLinked(selectStatement, "tab");
-        expect(selectStatement.select.elements).toHaveLength(1);
-        expect(selectStatement.select.elements[0].$type).toBe(ast.AllStar);
-        expectSelectItemsToBeOfType(selectStatement, [Types.Integer, Types.Char()]);
-        expectSelectItemsToHaveNames(selectStatement, ['id', 'name']);
+        expectTableLinked(simpleSelectStatement, "tab");
+        expect(simpleSelectStatement.select.elements).toHaveLength(1);
+        expect(simpleSelectStatement.select.elements[0].$type).toBe(ast.AllStar);
+        expectSelectItemsToBeOfType(tableExpression, [Types.Integer, Types.Char()]);
+        expectSelectItemsToHaveNames(tableExpression, ['id', 'name']);
     });
 
     it("SELECT * FROM tab_non_existing;", async () => {
@@ -58,12 +61,14 @@ describe("SELECT use cases", () => {
 
     it("SELECT id, name FROM tab", async () => {
         const document = await parse("SELECT id, name FROM tab;");
-        const selectStatement = asSelectStatement(document);
+        
+        const tableExpression = asSelectTableExpression(document);
+        const simpleSelectStatement = asSimpleSelectStatement(document);
 
         expectNoErrors(document);
-        expectTableLinked(selectStatement, "tab");
-        expectSelectItemsToHaveNames(selectStatement, ['id', 'name']);
-        expectSelectItemsToBeOfType(selectStatement, [Types.Integer, Types.Char()]);
+        expectTableLinked(simpleSelectStatement, "tab");
+        expectSelectItemsToHaveNames(tableExpression, ['id', 'name']);
+        expectSelectItemsToBeOfType(tableExpression, [Types.Integer, Types.Char()]);
     });
 
     it("Disallow getting everything from nothing", async () => {
@@ -75,18 +80,21 @@ describe("SELECT use cases", () => {
 
     it("Select element is sub query of sub query of ...", async () => {
         const document = await parse("SELECT (SELECT (SELECT (SELECT (SELECT id FROM tab))));");
-        const selectStatement = asSelectStatement(document);
+        
+        const tableExpression = asSelectTableExpression(document);
 
         expectNoErrors(document);
-        expectSelectItemsToHaveNames(selectStatement, ['id']);
-        expectSelectItemsToBeOfType(selectStatement, [Types.Integer]);
+        expectSelectItemsToHaveNames(tableExpression, ['id']);
+        expectSelectItemsToBeOfType(tableExpression, [Types.Integer]);
     });
 
     it("Reselect from sub query", async () => {
         const document = await parse("SELECT * FROM (SELECT * FROM tab);");
-        const selectStatement = asSelectStatement(document);
-        expectSelectItemsToHaveNames(selectStatement, ["id", "name"]);
-        expectSelectItemsToBeOfType(selectStatement, [Types.Integer, Types.Char()]);
+        
+        const tableExpression = asSelectTableExpression(document);
+
+        expectSelectItemsToHaveNames(tableExpression, ["id", "name"]);
+        expectSelectItemsToBeOfType(tableExpression, [Types.Integer, Types.Char()]);
     });
     
 
@@ -94,10 +102,12 @@ describe("SELECT use cases", () => {
         const document = await parse(
             "SELECT t.id, s.name, s.* FROM tab t, tab s;"
         );
-        const selectStatement = asSelectStatement(document);
+
+        const tableExpression = asSelectTableExpression(document);
+
         expectNoErrors(document);
-        expectSelectItemsToHaveNames(selectStatement, ['id', 'name', 'id', 'name']);
-        expectSelectItemsToBeOfType(selectStatement, [Types.Integer, Types.Char(), Types.Integer, Types.Char()]);
+        expectSelectItemsToHaveNames(tableExpression, ['id', 'name', 'id', 'name']);
+        expectSelectItemsToBeOfType(tableExpression, [Types.Integer, Types.Char(), Types.Integer, Types.Char()]);
     });
 
     it("Column reference to nowhere", async () => {
@@ -120,7 +130,7 @@ describe("SELECT use cases", () => {
 
     it("Scientific numbers", async () => {
         const document = await parse("SELECT 12345.54321E-10;");
-        const selectStatement = asSelectStatement(document);
+        const selectStatement = asSimpleSelectStatement(document);
         expectNoErrors(document);
         expectSelectItemToBeNumeric(selectStatement, 0, 12345.54321e-10);
         expect(selectStatement.from).toBeUndefined();
@@ -128,17 +138,28 @@ describe("SELECT use cases", () => {
 
     it("Explicit cast", async () => {
         const document = await parse("SELECT CAST (12345 AS REAL);");
-        const selectStatement = asSelectStatement(document);
+        
+        const tableExpression = asSelectTableExpression(document);
+        const selectStatement = asSimpleSelectStatement(document);
+
         expectNoErrors(document);
-        expectSelectItemsToBeOfType(selectStatement, [Types.Real]);
-        expectSelectItemsToHaveNames(selectStatement, [undefined]);
+        expectSelectItemsToBeOfType(tableExpression, [Types.Real]);
+        expectSelectItemsToHaveNames(tableExpression, [undefined]);
         expect(selectStatement.from).toBeUndefined();
     });
 
     it("Data type literals", async () => {
         const document = await parse("SELECT 123, 0.456, true, false, 'help';");
-        const selectStatement = asSelectStatement(document);
+
+        const tableExpression = asSelectTableExpression(document);
+
         expectNoErrors(document);
-        expectSelectItemsToBeOfType(selectStatement, [Types.Integer, Types.Real, Types.Boolean, Types.Boolean, Types.Char()]);
+        expectSelectItemsToBeOfType(tableExpression, [Types.Integer, Types.Real, Types.Boolean, Types.Boolean, Types.Char()]);
     });
+
+    it('Should complain about missing table p (p.* searches within current select statement only!)', async () => {
+        const document = await parse('SELECT (SELECT p.*) FROM passenger p;');
+        expectNoErrors(document, {exceptFor: 'validator'});
+        expect(document.references[0].ref).toBeUndefined();
+    })
 });
