@@ -27,7 +27,7 @@ jobs:
         node-version: '16'
     - name: Build
       shell: bash
-      run: npm install && npm run build
+      run: npm ci && npm run build
     - name: Test
       shell: bash
-      run: npm ci && npm test      
+      run: npm test      

@@ -1,80 +1,26 @@
 {
-  "name": "langium-sql",
+  "name": "langium-sql-workspace",
+  "private": true,
   "displayName": "SQL Language Server",
   "description": "Extensible language server for SQL",
   "version": "0.0.4",
   "publisher": "langium",
   "license": "MIT",
-  "engines": {
-    "vscode": "^1.56.0"
-  },
-  "categories": [
-    "Programming Languages"
-  ],
-  "contributes": {
-    "languages": [
-      {
-        "id": "sql",
-        "aliases": [
-          "SQL",
-          "sql"
-        ],
-        "extensions": [
-          ".sql"
-        ],
-        "configuration": "./language-configuration.json"
-      }
-    ],
-    "grammars": [
-      {
-        "language": "sql",
-        "scopeName": "source.sql",
-        "path": "./syntaxes/sql.tmLanguage.json"
-      }
-    ]
-  },
-  "activationEvents": [
-    "onLanguage:sql"
-  ],
-  "files": [
-    "dist",
-    "src"
-  ],
-  "main": "./dist/extension/extension.js",
   "scripts": {
-    "clean": "npx shx rm -fr dist *.tsbuildinfo",
-    "compile": "npm run compile:src && npm run compile:test",
-    "compile:src": "tsc --build tsconfig.src.json",
-    "compile:test": "tsc --build tsconfig.test.json",
-    "build": "npm run clean && npm run compile",
-    "prepare": "npm run langium:generate && npm run build",
-    "vscode:prepublish": "npm run build && npm run lint",
-    "watch": "tsc -b tsconfig.json --watch",
-    "lint": "eslint src --ext ts",
-    "langium:generate": "langium generate",
-    "langium:watch": "langium generate --watch",
+    "clean": "shx rm -rf packages/**/lib packages/**/dist packages/**/*.tsbuildinfo",
+    "build": "npm run build --workspace=langium-sql --workspace=langium-sql-vscode",
+    "watch": "concurrently -c blue,yellow -n tsc,vscode \"npm run watch --workspace=langium-sql\" \"npm run watch --workspace=langium-sql-vscode\"",
     "test": "vitest",
     "coverage": "vitest run --coverage"
   },
-  "dependencies": {
-    "@types/lodash": "^4.14.191",
-    "chevrotain": "10.4.2",
-    "langium": "^1.1.0",
-    "lodash": "^4.17.21",
-    "vscode-languageclient": "^8.0.2",
-    "vscode-languageserver": "^8.0.2",
-    "vscode-uri": "^3.0.6"
-  },
   "devDependencies": {
     "@types/node": "^14.17.3",
-    "@types/vscode": "^1.56.0",
     "@typescript-eslint/eslint-plugin": "^5.44.0",
     "@typescript-eslint/parser": "^5.44.0",
-    "@vitest/coverage-c8": "^0.28.5",
+    "concurrently": "^7.6.0",
     "eslint": "^8.28.0",
     "eslint-plugin-header": "^3.1.1",
-    "langium-cli": "^1.1.0",
-    "mysql2": "^3.1.2",
+    "shx": "^0.3.4",
     "typescript": "~4.9.4",
     "vitest": "~0.28.2"
   },
@@ -91,7 +37,7 @@
     "name": "TypeFox",
     "url": "https://www.typefox.io"
   },
-  "resolutions": {
-    "chevrotain": "10.4.2"
-  }
+  "workspaces": [
+    "packages/*"
+  ]
 }

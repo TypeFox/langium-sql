@@ -4,7 +4,7 @@
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
 const path = require("path");
-const headerDef = path.resolve(__dirname, "src", "header.js");
+const headerDef = path.resolve(__dirname, "header.js");
 
 module.exports = {
   root: true,
