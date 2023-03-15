@@ -96,7 +96,7 @@ CteColumnName: name=Identifier;
 CommonTableExpression:
     name=Identifier
     ('(' columnNames+=CteColumnName (',' columnNames+=CteColumnName)* ')')?
-    'AS' (statement=SelectStatementRootExpression | '(' statement=SelectStatementRootExpression ')')
+    'AS' statement=SelectStatementRootExpression
     ;
 
 WhereClause:
