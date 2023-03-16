@@ -31,6 +31,7 @@ import {
     ConstraintDefinition,
     FunctionCall,
     FunctionDefinition,
+    IndexDefinition,
     isAllTable,
     isColumnDefinition,
     isColumnNameExpression,
@@ -38,6 +39,7 @@ import {
     isConstraintDefinition,
     isFunctionCall,
     isFunctionDefinition,
+    isIndexDefinition,
     isKeyDefinition,
     isOverClause,
     isPrimaryKeyDefinition,
@@ -131,6 +133,15 @@ export class SqlScopeProvider extends DefaultScopeProvider {
             const property = context.property as CrossReferencesOf<PrimaryKeyDefinition>;
             switch(property) {
                 case 'primaryKeys':
+                    const tableDef = getContainerOfType(container, isTableDefinition)!;
+                    return this.streamColumnDefinitions(tableDef.columns.filter(isColumnDefinition));
+                default:
+                    assertUnreachable(property);
+            }
+        } else if (isIndexDefinition(container)) {
+            const property = context.property as CrossReferencesOf<IndexDefinition>;
+            switch(property) {
+                case 'indexes':
                     const tableDef = getContainerOfType(container, isTableDefinition)!;
                     return this.streamColumnDefinitions(tableDef.columns.filter(isColumnDefinition));
                 default:

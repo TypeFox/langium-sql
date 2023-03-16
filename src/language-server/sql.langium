@@ -20,6 +20,7 @@ TableDefinition:
 TableContentDefinition:
     ColumnDefinition
     | PrimaryKeyDefinition
+    | IndexDefinition
     | KeyDefinition
     | ConstraintDefinition
     ;
@@ -29,6 +30,10 @@ ColumnDefinition:
 
 PrimaryKeyDefinition:
     'PRIMARY' 'KEY' '(' primaryKeys+=[ColumnDefinition] (',' primaryKeys+=[ColumnDefinition])* ')'
+    ;
+
+IndexDefinition:
+    'INDEX' '(' indexes+=[ColumnDefinition] (',' indexes+=[ColumnDefinition])* ')'
     ;
 
 KeyDefinition:
