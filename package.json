@@ -2,7 +2,7 @@
   "name": "langium-sql",
   "displayName": "SQL Language Server",
   "description": "Extensible language server for SQL",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "publisher": "langium",
   "license": "MIT",
   "engines": {
@@ -58,7 +58,7 @@
   },
   "dependencies": {
     "@types/lodash": "^4.14.191",
-    "chevrotain": "^10.4.2",
+    "chevrotain": "10.4.2",
     "langium": "^1.1.0",
     "lodash": "^4.17.21",
     "vscode-languageclient": "^8.0.2",
@@ -90,5 +90,8 @@
   "author": {
     "name": "TypeFox",
     "url": "https://www.typefox.io"
+  },
+  "resolutions": {
+    "chevrotain": "10.4.2"
   }
 }
