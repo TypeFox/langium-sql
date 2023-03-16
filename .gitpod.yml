@@ -1,5 +1,5 @@
 tasks:
-  - init: npm install
+  - init: npm install && npm run build
     command: npm run watch
 
 ports:
