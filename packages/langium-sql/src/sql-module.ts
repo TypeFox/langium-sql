@@ -7,6 +7,7 @@
 import {
     createDefaultModule,
     createDefaultSharedModule,
+    DeepPartial,
     DefaultSharedModuleContext,
     inject,
     LangiumServices,
@@ -45,7 +46,7 @@ export const SqlSharedModule: Module<
 > = {
     workspace: {
         WorkspaceManager: (services) => new SqlWorkspaceManager(services)
-    },
+    }
 };
 
 /**
@@ -75,6 +76,11 @@ export const SqlModule: Module<
     },
 };
 
+export interface SqlSharedModuleContext extends DefaultSharedModuleContext {
+    module?: Module<SqlServices, DeepPartial<SqlServices>>
+    sharedModule?: Module<SqlSharedServices, DeepPartial<SqlSharedServices>>
+}
+
 /**
  * Create the full set of services required by Langium.
  *
@@ -90,19 +96,21 @@ export const SqlModule: Module<
  * @param context Optional module context with the LSP connection
  * @returns An object wrapping the shared services and the language-specific services
  */
-export function createSqlServices(context: DefaultSharedModuleContext): {
+export function createSqlServices(context: SqlSharedModuleContext): {
     shared: LangiumSharedServices;
     Sql: SqlServices;
 } {
     const shared = inject(
         createDefaultSharedModule(context),
         SqlGeneratedSharedModule,
-        SqlSharedModule as any
+        SqlSharedModule,
+        context.sharedModule
     );
     const Sql = inject(
         createDefaultModule({ shared }),
         SqlGeneratedModule,
-        SqlModule
+        SqlModule,
+        context.module
     );
     shared.ServiceRegistry.register(Sql);
     return { shared, Sql };

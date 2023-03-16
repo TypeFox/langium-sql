@@ -37,7 +37,8 @@
     "dist",
     "src"
   ],
-  "main": "./dist/extension.js",
+  "main": "./dist/node/extension.js",
+  "browser": "./dist/browser/extension.js",
   "scripts": {
     "vscode:prepublish": "npm run build && npm run lint",
     "build": "node esbuild.js",
