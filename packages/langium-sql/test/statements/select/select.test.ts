@@ -6,10 +6,10 @@
 import { LangiumDocument } from "langium";
 import { NodeFileSystem } from "langium/node";
 import { beforeAll, describe, expect, it } from "vitest";
-import * as ast from "../../../src/language-server/generated/ast";
-import { ReportAs } from "../../../src/language-server/sql-error-codes";
-import { createSqlServices } from "../../../src/language-server/sql-module";
-import { Types } from "../../../src/language-server/sql-type-descriptors";
+import * as ast from "../../../src/generated/ast";
+import { ReportAs } from "../../../src/sql-error-codes";
+import { createSqlServices } from "../../../src/sql-module";
+import { Types } from "../../../src/sql-type-descriptors";
 import {
     parseHelper,
     expectNoErrors,

@@ -3,13 +3,13 @@
   "languages": [
     {
       "id": "sql",
-      "grammar": "src/language-server/sql.langium",
+      "grammar": "src/sql.langium",
       "caseInsensitive": true,
       "fileExtensions": [".sql"],
       "textMate": {
-        "out": "syntaxes/sql.tmLanguage.json"
+        "out": "../langium-sql-vscode/syntaxes/sql.tmLanguage.json"
       }
     }
   ],
-  "out": "src/language-server/generated"
+  "out": "src/generated"
 }

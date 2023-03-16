@@ -1,6 +1,7 @@
 node_modules/
-/dist/
+**/lib/
+**/dist/
 /coverage/
-/src/language-server/generated
+/packages/**/generated
 *.tsbuildinfo
 /test/customers/

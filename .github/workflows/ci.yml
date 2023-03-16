@@ -1,4 +1,4 @@
-name: Build & Test
+name: Langium SQL
 
 on:
   push:
@@ -27,7 +27,24 @@ jobs:
         node-version: '16'
     - name: Build
       shell: bash
-      run: npm install && npm run build
+      run: npm ci && npm run build
     - name: Test
       shell: bash
-      run: npm ci && npm test      
+      run: npm test
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: Use Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+    - name: Build
+      shell: bash
+      run: |
+        npm ci
+        npm run build
+        npm run lint

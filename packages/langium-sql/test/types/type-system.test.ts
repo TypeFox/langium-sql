@@ -5,10 +5,10 @@
  ******************************************************************************/
 import { LangiumDocument } from "langium";
 import { beforeAll, describe, expect, it } from "vitest";
-import { SqlFile } from "../../src/language-server/generated/ast";
-import { createSqlServices } from "../../src/language-server/sql-module";
-import { Types } from "../../src/language-server/sql-type-descriptors";
-import { computeTypeOfNumericLiteral } from "../../src/language-server/sql-type-computation";
+import { SqlFile } from "../../src/generated/ast";
+import { createSqlServices } from "../../src/sql-module";
+import { Types } from "../../src/sql-type-descriptors";
+import { computeTypeOfNumericLiteral } from "../../src/sql-type-computation";
 import { parseHelper, expectNoErrors, expectSelectItemsToBeOfType, asSimpleSelectStatement, expectSelectItemsToHaveNames, asSelectTableExpression } from "../test-utils";
 import { NodeFileSystem } from "langium/node";
 

@@ -7,7 +7,7 @@
 import { startLanguageServer } from "langium";
 import { NodeFileSystem } from "langium/node";
 import { createConnection, ProposedFeatures } from "vscode-languageserver/node";
-import { createSqlServices } from "./sql-module";
+import { createSqlServices } from "langium-sql";
 
 // Create a connection to the client
 const connection = createConnection(ProposedFeatures.all);

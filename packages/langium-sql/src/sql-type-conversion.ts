@@ -3,7 +3,7 @@
  * This program and the accompanying materials are made available under the
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
-import assert from "assert";
+
 import { TypeDescriptor, TypeDescriptorDiscriminator } from "./sql-type-descriptors";
 import { Value } from "./sql-type-values";
 
@@ -27,28 +27,24 @@ const Forbidden: TypeConverter|undefined = undefined;
 const ConversionTable: Record<TypeConversionPair, TypeConverter|undefined> = {
     "boolean->boolean": Identity,
     "boolean->integer": Implicit(v => {
-        assert(v.type === 'boolean');
         return {
             type: "integer",
             value: BigInt(v.value ? 1 : 0)
         };
     }),
     "boolean->real": Implicit(v => {
-        assert(v.type === 'boolean');
         return {
             type: "real",
             value: v.value ? 1 : 0
         };
     }),
     "boolean->text": Implicit(v => {
-        assert(v.type === 'boolean');
         return {
             type: "text",
             value: v.value ? 'TRUE' : 'FALSE'
         };
     }),
     "integer->boolean": Explicit(v => {
-        assert(v.type === 'integer');
         return {
             type: "boolean",
             value: v.value !== BigInt(0)
@@ -56,28 +52,24 @@ const ConversionTable: Record<TypeConversionPair, TypeConverter|undefined> = {
     }),
     "integer->integer": Identity,
     "integer->real": Implicit(v => {
-        assert(v.type === 'integer');
         return {
             type: "real",
             value: Number(v.value)
         };
     }),
     "integer->text": Implicit(v => {
-        assert(v.type === 'integer');
         return {
             type: "text",
             value: v.value.toString()
         };
     }),
     "real->boolean": Explicit(v => {
-        assert(v.type === 'real');
         return {
             type: "boolean",
             value: v.value !== 0
         };
     }),
     "real->integer": Explicit(v => {
-        assert(v.type === 'real');
         return {
             type: "integer",
             value: BigInt(v.value)
@@ -85,28 +77,30 @@ const ConversionTable: Record<TypeConversionPair, TypeConverter|undefined> = {
     }),
     "real->real": Identity,
     "real->text": Explicit(v => {
-        assert(v.type === 'real');
         return {
             type: "text",
             value: v.value.toString()
         };
     }),
     "text->boolean": Explicit(v => {
-        assert(v.type === 'text');
+        if (typeof v.value !== 'string') {
+            throw new Error();
+        }
         return {
             type: "boolean",
             value: v.value.length > 0
         };
     }),
     "text->integer": Explicit(v => {
-        assert(v.type === 'text');
         return {
             type: "integer",
             value: BigInt(v.value)
         };
     }),
     "text->real": Explicit(v => {
-        assert(v.type === 'text');
+        if (typeof v.value !== 'string') {
+            throw new Error();
+        }
         return {
             type: "real",
             value: parseFloat(v.value)
