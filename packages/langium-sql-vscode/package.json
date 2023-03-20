@@ -46,7 +46,7 @@
     "lint": "eslint src --ext ts"
   },
   "dependencies": {
-    "langium-sql": "0.1.0",
+    "langium-sql": "0.1.1",
     "vscode-languageclient": "^8.0.2"
   },
   "devDependencies": {
