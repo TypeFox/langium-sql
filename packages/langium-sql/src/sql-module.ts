@@ -13,8 +13,6 @@ import {
     LangiumServices,
     LangiumSharedServices,
     Module,
-    PartialLangiumServices,
-    PartialLangiumSharedServices,
 } from "langium";
 import {
     SqlGeneratedModule,
@@ -34,15 +32,15 @@ export type SqlAddedServices = {
     };
 };
 
-export type SqlSharedServices = {
+export type SqlAddedSharedServices = {
     workspace: {
         WorkspaceManager: SqlWorkspaceManager
     };
 };
 
 export const SqlSharedModule: Module<
-    LangiumSharedServices & SqlSharedServices,
-    PartialLangiumSharedServices & SqlSharedServices
+    SqlSharedServices,
+    DeepPartial<SqlSharedServices>
 > = {
     workspace: {
         WorkspaceManager: (services) => new SqlWorkspaceManager(services)
@@ -55,6 +53,8 @@ export const SqlSharedModule: Module<
  */
 export type SqlServices = LangiumServices & SqlAddedServices;
 
+export type SqlSharedServices = LangiumSharedServices & SqlAddedSharedServices;
+
 /**
  * Dependency injection module that overrides Langium default services and contributes the
  * declared custom services. The Langium defaults can be partially specified to override only
@@ -62,7 +62,7 @@ export type SqlServices = LangiumServices & SqlAddedServices;
  */
 export const SqlModule: Module<
     SqlServices,
-    PartialLangiumServices & SqlAddedServices
+    DeepPartial<SqlServices>
 > = {
     parser: {
         ValueConverter: () => new SqlValueConverter(),

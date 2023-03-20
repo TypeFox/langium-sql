@@ -10,7 +10,7 @@ import {
     LangiumDocumentFactory,
     LangiumSharedServices,
 } from "langium";
-import { SqlSharedServices } from "./sql-module";
+import { SqlAddedSharedServices } from "./sql-module";
 import { URI } from "vscode-uri";
 import { WorkspaceFolder } from "vscode-languageserver";
 import { resolve } from "path";
