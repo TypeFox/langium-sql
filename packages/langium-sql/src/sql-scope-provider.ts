@@ -13,7 +13,6 @@ import {
     getContainerOfType,
     hasContainerOfType,
     LangiumDocuments,
-    LangiumServices,
     NamedAstNode,
     Reference,
     ReferenceInfo,
@@ -23,45 +22,42 @@ import {
     StreamScope,
     Stream,
     streamAllContents,
+    EMPTY_SCOPE,
 } from "langium";
 import {
     AllTable,
     ColumnDefinition,
     ColumnNameExpression,
     ConstraintDefinition,
-    FunctionCall,
-    FunctionDefinition,
     IndexDefinition,
     isAllTable,
     isColumnDefinition,
     isColumnNameExpression,
     isCommonTableExpression,
     isConstraintDefinition,
-    isFunctionCall,
-    isFunctionDefinition,
+    isGlobalReference,
     isIndexDefinition,
     isKeyDefinition,
     isOverClause,
     isPrimaryKeyDefinition,
-    isRootLevelSelectStatement,
     isSimpleSelectStatement,
     isSubQuerySourceItem,
     isTableDefinition,
+    isTableLike,
     isTableRelatedColumnExpression,
     isTableSourceItem,
     isWindowSpec,
     KeyDefinition,
     OverClause,
     PrimaryKeyDefinition,
-    SchemaDefinition,
     SimpleSelectStatement,
     SqlAstType,
-    TableDefinition,
     TableRelatedColumnExpression,
-    TableSourceItem,
 } from "./generated/ast";
+import { SqlContainerManager } from "./sql-container-manager";
+import { SqlServices } from "./sql-module";
 import {
-    ColumnDescriptor, getColumnCandidatesForSelectTableExpression, getColumnCandidatesForSimpleSelectStatement,
+    ColumnDescriptor, getColumnCandidatesForSelectTableExpression, getColumnCandidatesForSimpleSelectStatement, getFromGlobalReference,
 } from "./sql-type-utilities";
 
 
@@ -75,9 +71,9 @@ type ExtractKeysOfValueType<T, K> = { [I in keyof T]: T[I] extends K ? I : never
  * Meant to be used during cross-reference resolution in combination with `assertUnreachable(context.property)`.
  */
 export type CrossReferencesOfAstNodeType<N extends AstNode> = (
-    ExtractKeysOfValueType<N, Reference|undefined>
-    | ExtractKeysOfValueType<N, Array<Reference|undefined>|undefined>
-// eslint-disable-next-line @typescript-eslint/ban-types
+    ExtractKeysOfValueType<N, Reference | undefined>
+    | ExtractKeysOfValueType<N, Array<Reference | undefined> | undefined>
+    // eslint-disable-next-line @typescript-eslint/ban-types
 ) & {};
 
 /**
@@ -98,40 +94,38 @@ type CrossReferencesOf<N extends AstNode> = CrossReferencesOfAstNodeType<N>;
 type SqlAstTypesWithCrossReferences = AstNodeTypesWithCrossReferences<SqlAstType>;
 
 export class SqlScopeProvider extends DefaultScopeProvider {
-    private readonly astNodeDescriptionProvider: AstNodeDescriptionProvider;
-    private readonly astNodeLocator: AstNodeLocator;
-    private readonly langiumDocuments: LangiumDocuments;
 
-    constructor(services: LangiumServices) {
+    protected readonly astNodeDescriptionProvider: AstNodeDescriptionProvider;
+    protected readonly astNodeLocator: AstNodeLocator;
+    protected readonly langiumDocuments: LangiumDocuments;
+    protected readonly containerManager: SqlContainerManager;
+
+    constructor(services: SqlServices) {
         super(services);
         this.astNodeDescriptionProvider = services.workspace.AstNodeDescriptionProvider;
         this.astNodeLocator = services.workspace.AstNodeLocator;
         this.langiumDocuments = services.shared.workspace.LangiumDocuments;
+        this.containerManager = services.shared.workspace.ContainerManager;
     }
 
     override getScope(context: ReferenceInfo): Scope {
         const container = context.container as SqlAstTypesWithCrossReferences;
-        if(isTableDefinition(container)) {
-            const property = context.property as CrossReferencesOf<TableDefinition>;
-            switch(property) {
-                case 'schemaName': {
-                    return this.getGlobalScope(SchemaDefinition, context);
+        if (isGlobalReference(container)) {
+            const previous = container.previous;
+            if (previous) {
+                const element = previous.element?.ref;
+                if (element) {
+                    return this.createScopeForNodes(this.containerManager.getChildren(element));
+                } else {
+                    return EMPTY_SCOPE;
                 }
-                default:
-                    assertUnreachable(property);
+            } else {
+                // Use lexical scoping if no previous element has been assigned
+                return super.getScope(context);
             }
-        } if(isFunctionDefinition(container)) {
-            const property = context.property as CrossReferencesOf<FunctionDefinition>;
-            switch(property) {
-                case 'schemaName': {
-                    return this.getGlobalScope(SchemaDefinition, context);
-                }
-                default:
-                    assertUnreachable(property);
-            }
-        } else if(isPrimaryKeyDefinition(container)) {
+        } else if (isPrimaryKeyDefinition(container)) {
             const property = context.property as CrossReferencesOf<PrimaryKeyDefinition>;
-            switch(property) {
+            switch (property) {
                 case 'primaryKeys':
                     const tableDef = getContainerOfType(container, isTableDefinition)!;
                     return this.streamColumnDefinitions(tableDef.columns.filter(isColumnDefinition));
@@ -140,16 +134,16 @@ export class SqlScopeProvider extends DefaultScopeProvider {
             }
         } else if (isIndexDefinition(container)) {
             const property = context.property as CrossReferencesOf<IndexDefinition>;
-            switch(property) {
+            switch (property) {
                 case 'indexes':
                     const tableDef = getContainerOfType(container, isTableDefinition)!;
                     return this.streamColumnDefinitions(tableDef.columns.filter(isColumnDefinition));
                 default:
                     assertUnreachable(property);
             }
-        } else if(isKeyDefinition(container)) {
+        } else if (isKeyDefinition(container)) {
             const property = context.property as CrossReferencesOf<KeyDefinition>;
-            switch(property) {
+            switch (property) {
                 case 'keys':
                     const tableDef = getContainerOfType(container, isTableDefinition)!;
                     return this.streamColumnDefinitions(tableDef.columns.filter(isColumnDefinition));
@@ -166,19 +160,16 @@ export class SqlScopeProvider extends DefaultScopeProvider {
                     )!.columns.filter(isColumnDefinition);
                     return this.streamColumnDefinitions(columns);
                 }
-                case 'table': {
-                    return this.getGlobalScope(TableDefinition, context);
-                }
                 case 'to': {
-                    const columns = container.table.ref!.columns.filter(isColumnDefinition);
-                    return this.streamColumnDefinitions(columns);
+                    const columns = getFromGlobalReference(container.table, isTableDefinition)?.columns.filter(isColumnDefinition);
+                    return this.streamColumnDefinitions(columns ?? []);
                 }
                 default:
                     assertUnreachable(property);
             }
-        } else if(isAllTable(container)) {
+        } else if (isAllTable(container)) {
             const property = context.property as CrossReferencesOf<AllTable>;
-            switch(property) {
+            switch (property) {
                 case "variableName": {
                     const selectStatement = getContainerOfType(container, isSimpleSelectStatement)!;
                     //ATTENTION! Do not recursively traverse upwards, t.* only looks up t in the current select statement
@@ -187,28 +178,28 @@ export class SqlScopeProvider extends DefaultScopeProvider {
                 default:
                     assertUnreachable(property);
             }
-        } else if(isTableRelatedColumnExpression(container)) {
+        } else if (isTableRelatedColumnExpression(container)) {
             const property = context.property as CrossReferencesOf<TableRelatedColumnExpression>;
-            switch(property) {
+            switch (property) {
                 case "variableName":
                     const selectStatement = getContainerOfType(container, isSimpleSelectStatement)!;
                     return this.getTableVariablesForSelectStatementRecursively(context, selectStatement);
                 case "columnName":
                     const sourceItem = container.variableName.ref;
-                    if(sourceItem) {
-                        if(isTableSourceItem(sourceItem)) {
-                            const tableLike = sourceItem.tableName.ref;
-                            if(tableLike) {
-                                if(isTableDefinition(tableLike)) {
+                    if (sourceItem) {
+                        if (isTableSourceItem(sourceItem)) {
+                            const tableLike = getFromGlobalReference(sourceItem.table, isTableLike);
+                            if (tableLike) {
+                                if (isTableDefinition(tableLike)) {
                                     return this.streamColumnDefinitions(tableLike.columns.filter(isColumnDefinition));
-                                } else if(isCommonTableExpression(tableLike)) {
+                                } else if (isCommonTableExpression(tableLike)) {
                                     const candidates = getColumnCandidatesForSelectTableExpression(tableLike.statement);
                                     return this.streamColumnDescriptors(candidates);
                                 } else {
                                     assertUnreachable(tableLike);
                                 }
                             }
-                        } else if(isSubQuerySourceItem(sourceItem)) {
+                        } else if (isSubQuerySourceItem(sourceItem)) {
                             const selectStatement = sourceItem.subQuery;
                             const candidates = getColumnCandidatesForSelectTableExpression(selectStatement);
                             return this.streamColumnDescriptors(candidates);
@@ -220,9 +211,9 @@ export class SqlScopeProvider extends DefaultScopeProvider {
                 default:
                     assertUnreachable(property);
             }
-        } else if(isColumnNameExpression(container)) {
+        } else if (isColumnNameExpression(container)) {
             const property = context.property as CrossReferencesOf<ColumnNameExpression>;
-            switch(property) {
+            switch (property) {
                 case 'columnName':
                     const selectStatement = getContainerOfType(container, isSimpleSelectStatement)!;
                     const candidates = getColumnCandidatesForSimpleSelectStatement(selectStatement);
@@ -230,42 +221,9 @@ export class SqlScopeProvider extends DefaultScopeProvider {
                 default:
                     assertUnreachable(property);
             }
-        } else if(isFunctionCall(container)) {
-            const property = context.property as CrossReferencesOf<FunctionCall>;
-            switch(property) {
-                case 'schemaName':
-                    return this.getGlobalScope(SchemaDefinition, context);
-                case 'functionName':
-                    const schema = container.schemaName?.ref;
-                    const allTables = this.unpackFromDescriptions<FunctionDefinition>(this.getGlobalScope(FunctionDefinition, context));
-                    const candidates = allTables.filter(td => td.schemaName?.ref === schema);
-                    return this.packToDescriptions(candidates);
-                default:
-                    assertUnreachable(property);
-            }
-        } else if(isTableSourceItem(container)) {
-            const property = context.property as CrossReferencesOf<TableSourceItem>;
-            switch(property) {
-                case 'schemaName':
-                    return this.getGlobalScope(SchemaDefinition, context);
-                case 'tableName':
-                    const schema = container.schemaName?.ref;
-                    const allTables = this.unpackFromDescriptions<TableDefinition>(this.getGlobalScope(TableDefinition, context));
-                    let candidates: NamedAstNode[] = allTables.filter(td => td.schemaName?.ref === schema);
-                    if(!schema) {
-                        const selectStatement = getContainerOfType(container, isRootLevelSelectStatement)!;
-                        const withClause = selectStatement.with;
-                        if(withClause) {
-                            candidates = candidates.concat(withClause.ctes);
-                        }
-                    }
-                    return this.packToDescriptions(candidates);
-                default:
-                    assertUnreachable(property);
-            }
-        } else if(isOverClause(container)) {
+        } else if (isOverClause(container)) {
             const property = context.property as CrossReferencesOf<OverClause>;
-            switch(property) {
+            switch (property) {
                 case 'windowName':
                     const selectStatement = getContainerOfType(container, isSimpleSelectStatement)!;
                     const nodes = streamAllContents(selectStatement).filter(isWindowSpec).toArray() as NamedAstNode[];
@@ -281,9 +239,9 @@ export class SqlScopeProvider extends DefaultScopeProvider {
         context: ReferenceInfo,
         selectStatement: SimpleSelectStatement
     ): Scope {
-        let outerScope: Scope|undefined = undefined;
+        let outerScope: Scope | undefined = undefined;
 
-        if(hasContainerOfType(selectStatement.$container, isSimpleSelectStatement)) {
+        if (hasContainerOfType(selectStatement.$container, isSimpleSelectStatement)) {
             const outerSelectStatement = getContainerOfType(selectStatement.$container, isSimpleSelectStatement)!;
             outerScope = this.getTableVariablesForSelectStatementRecursively(context, outerSelectStatement);
         }
@@ -311,28 +269,20 @@ export class SqlScopeProvider extends DefaultScopeProvider {
                             )
                         );
                     } else {
-                        if(isTableSourceItem(item)) {
-                            const tableLike = item.tableName.ref;
-                            if(tableLike) {
-                                if(isTableDefinition(tableLike)) {
+                        if (isTableSourceItem(item)) {
+                            const tableLike = getFromGlobalReference(item.table, isTableLike);
+                            if (tableLike) {
+                                const name = this.nameProvider.getName(tableLike);
+                                if (name) {
                                     astDescriptions.push(
                                         this.astNodeDescriptionProvider.createDescription(
                                             item,
-                                            tableLike.name
+                                            name
                                         )
                                     );
-                                } else if(isCommonTableExpression(tableLike)) {
-                                    astDescriptions.push(
-                                        this.astNodeDescriptionProvider.createDescription(
-                                            item,
-                                            tableLike.name
-                                        )
-                                    );
-                                } else {
-                                    assertUnreachable(tableLike);
                                 }
                             }
-                        } else if(!isSubQuerySourceItem(item)) {
+                        } else if (!isSubQuerySourceItem(item)) {
                             assertUnreachable(item);
                         }
                     }
@@ -373,7 +323,7 @@ export class SqlScopeProvider extends DefaultScopeProvider {
         return this.packToDescriptions(columns);
     }
 
-    private newCaseInsensitiveScope(stream: Stream<AstNodeDescription>, outerScope: Scope|undefined = undefined) {
+    private newCaseInsensitiveScope(stream: Stream<AstNodeDescription>, outerScope: Scope | undefined = undefined) {
         return new StreamScope(stream, outerScope, { caseInsensitive: true });
     }
 }

@@ -62,7 +62,7 @@ export const ReportAs = {
         (node) => ({ node, property: "name" })
     ),
     NumericValueIsNotInteger: SqlErrorFactory.create<
-        ast.IntegerLiteral,
+        ast.NumberLiteral,
         NumericValue
     >(
         "SQL00002",
@@ -110,13 +110,13 @@ export const ReportAs = {
         (node) => ({ node })
     ),
     TableDefinitionRequiresAtLeastOneColumn: SqlErrorFactory.create<
-        ast.TableDefinition,
+        ast.GlobalReference,
         {}
     >(
         "SQL00007",
         "error",
         () => `Table definition requires at least one column.`,
-        (node) => ({ node, property: "name" })
+        (node) => ({ node, property: "element" })
     ),
     SubQueriesWithinSelectStatementsMustHaveExactlyOneColumn:
         SqlErrorFactory.create<ast.SubQueryExpression, {}>(

@@ -10,12 +10,12 @@ import {
     ValidationRegistry,
 } from "langium";
 import * as ast from "./generated/ast";
-import _, { runInContext } from "lodash";
+import _ from "lodash";
 import type { SqlServices } from "./sql-module";
 import { ReportAs } from "./sql-error-codes";
 import { computeType, computeTypeOfSelectStatement } from "./sql-type-computation";
 import { isTypeABoolean } from "./sql-type-descriptors";
-import { getColumnsForSelectTableExpression } from "./sql-type-utilities";
+import { getColumnsForSelectTableExpression, getDefinitionType, getDefinitionTypeName } from "./sql-type-utilities";
 import { canConvert } from "./sql-type-conversion";
 
 export class SqlValidationRegistry extends ValidationRegistry {
@@ -30,25 +30,27 @@ export class SqlValidationRegistry extends ValidationRegistry {
             ],
             //Expression: [validator.checkIfExpressionHasType], //TODO uncomment when type system is bullet-proof
             BinaryTableExpression: [validator.checkBinaryTableExpressionMatches],
-            IntegerLiteral: [validator.checkIntegerLiteralIsWholeNumber],
+            NumberLiteral: [validator.checkIntegerLiteralIsWholeNumber],
             BinaryExpression: [validator.checkBinaryExpressionType],
             UnaryExpression: [validator.checkUnaryExpressionType],
             WhereClause: [validator.checkWhereIsBoolean],
             HavingClause: [validator.checkHavingIsBoolean],
-            SubQueryExpression: [validator.checkIfSubQuerySelectsExactlyOneValue]
+            SubQueryExpression: [validator.checkIfSubQuerySelectsExactlyOneValue],
+            ReferenceDefinition: [validator.checkIfReferencePointsToCorrectParent]
         };
         this.register(checks, validator);
     }
 }
 
 export class SqlValidator {
+
     checkBinaryTableExpressionMatches(expr: ast.BinaryTableExpression, accept: ValidationAcceptor) {
         const lhs = getColumnsForSelectTableExpression(expr.left);
         const rhs = getColumnsForSelectTableExpression(expr.right);
         if(lhs.length !== rhs.length) {
             ReportAs.TableOperationUsesTablesWithDifferentColumnCounts(expr, {}, accept);
         } else {
-            lhs.forEach((left, index) => {
+            lhs.forEach((left, index) => {
                 const right = rhs[index];
                 const leftType = computeType(left.typedNode);
                 const rightType = computeType(right.typedNode);
@@ -60,24 +62,28 @@ export class SqlValidator {
             });
         }
     }
+
     checkIfExpressionHasType(expr: ast.Expression, accept: ValidationAcceptor): void {
         const type = computeType(expr);
         if(!type) {
            ReportAs.CannotDeriveTypeOfExpression(expr, {}, accept);
        }
     }
+
     checkWhereIsBoolean(clause: ast.WhereClause, accept: ValidationAcceptor): void {
         const type = computeType(clause.rowCondition);
          if(type && !isTypeABoolean(type)) {
             ReportAs.ExpressionMustReturnABoolean(clause.rowCondition, type!, accept);
         }
     }
+
     checkHavingIsBoolean(clause: ast.HavingClause, accept: ValidationAcceptor): void {
         const type = computeType(clause.groupCondition);
         if(type && !isTypeABoolean(type)) {
             ReportAs.ExpressionMustReturnABoolean(clause.groupCondition, type!, accept);
         }
     }
+
     checkBinaryExpressionType(expr: ast.BinaryExpression, accept: ValidationAcceptor): void {
         const left = computeType(expr.left);
         const right = computeType(expr.right);
@@ -121,16 +127,16 @@ export class SqlValidator {
     }
 
     checkIntegerLiteralIsWholeNumber(
-        literal: ast.IntegerLiteral,
+        literal: ast.NumberLiteral,
         accept: ValidationAcceptor
     ): void {
-        if (Math.floor(literal.value) !== literal.value) {
-            ReportAs.NumericValueIsNotInteger(
-                literal,
-                { value: literal.value },
-                accept
-            );
-        }
+        // if (Math.floor(literal.value) !== literal.value) {
+        //     ReportAs.NumericValueIsNotInteger(
+        //         literal,
+        //         { value: literal.value },
+        //         accept
+        //     );
+        // }
     }
 
     checkIfSelectStatementWithAllStarSelectItemHasAtLeastOneTableSource(selectStatement: ast.SimpleSelectStatement, accept: ValidationAcceptor): void {
@@ -143,7 +149,30 @@ export class SqlValidator {
 
     checkIfTableDefinitionHasAtLeastOneColumn(tableDefinition: ast.TableDefinition, accept: ValidationAcceptor): void {
         if(tableDefinition.columns.length === 0) {
-            ReportAs.TableDefinitionRequiresAtLeastOneColumn(tableDefinition, {}, accept);
+            ReportAs.TableDefinitionRequiresAtLeastOneColumn(tableDefinition.reference, {}, accept);
+        }
+    }
+
+    checkIfReferencePointsToCorrectParent(referenceDefinition: ast.ReferenceDefinition, accept: ValidationAcceptor): void {
+        this.checkReferenceParent(referenceDefinition.reference, accept);
+    }
+
+    protected checkReferenceParent(globalReference: ast.GlobalReference, accept: ValidationAcceptor): void {
+        const element = globalReference?.element?.ref;
+        if (element) {
+            const parent = globalReference.previous?.element?.ref;
+            if (parent) {
+                const ownType = getDefinitionType(element);
+                const parentType = getDefinitionType(parent);
+                if (parentType >= ownType) {
+                    accept('error', `Cannot nest element of type '${getDefinitionTypeName(element)}' inside of '${getDefinitionTypeName(parent)}'`, {
+                        node: globalReference,
+                        property: 'previous'
+                    });
+                } else if (globalReference.previous) {
+                    this.checkReferenceParent(globalReference.previous, accept);
+                }
+            }
         }
     }
 
