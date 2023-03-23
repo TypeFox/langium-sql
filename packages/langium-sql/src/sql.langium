@@ -126,19 +126,19 @@ SimpleSelectStatement:
 ;
 
 /**
- * SQL Server `LIMIT` syntax
+ * SQL Server `FETCH FIRST` syntax
  */
 TopClause: 'TOP' value=NUMBER percent?='PERCENT';
 
 /**
- * MySQL/PostreSQL `LIMIT` syntax
+ * MySQL/PostreSQL `FETCH FIRST` syntax
  */
-LimitClause: 'LIMIT' limit=NUMBER ('OFFSET' offset=NUMBER)?;
+LimitClause: 'LIMIT' (offset=NUMBER ',' limit=NUMBER | limit=NUMBER ('OFFSET' offset=NUMBER)?);
 
 /**
- * Oracle `LIMIT` syntax
+ * Oracle/Standard `FETCH FIRST` syntax
  */
-FetchFirstClause: ('OFFSET' offset=NUMBER 'ROWS')? 'FETCH' (first?='FIRST' | 'NEXT') limit=NUMBER 'ROWS' (only?='ONLY' | 'WITH' 'TIES');
+FetchFirstClause: ('OFFSET' offset=NUMBER offsetRows?='ROWS'?)? 'FETCH' (first?='FIRST' | 'NEXT') limit=NUMBER 'ROWS' (only?='ONLY' | 'WITH' 'TIES');
 
 WithClause:
     'WITH' 'RECURSIVE'? ctes+=CommonTableExpression (',' ctes+=CommonTableExpression)*;
@@ -322,10 +322,10 @@ Type infers Type:
 
 hidden terminal WS: /\s+/;
 terminal HEX_STRING returns string: /x\'[A-Fa-f0-9]+\'/;
-terminal STRING returns string: /\'(\\.|\\\\|[^'\\])*\'/;
+terminal STRING returns string: /"(\\.|[^"\\])*"|'(\\.|[^'\\])*'/;
 terminal TICK_STRING returns string: /\`(\\.|\\\\|[^`\\])*\`/;
 terminal ID: /[_a-zA-Z][\w_]*/;
 terminal NUMBER returns number: /\d+((\.\d+)?([eE][\-+]?\d+)?)?/;
 
 hidden terminal ML_COMMENT: /\/\*[\s\S]*?\*\//;
-hidden terminal SL_COMMENT: /(\/\/|\-\-)[^\n\r]*/;
+hidden terminal SL_COMMENT: /(\-\-|\/\/)[^\n\r]*/;

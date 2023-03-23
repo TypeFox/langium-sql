@@ -150,6 +150,13 @@ export const ReportAs = {
                 `This operation uses tables with different columns types! Compare the columns at index ${columnIndex}. They are not convertable to each other.`,
             (node) => ({ node, property: 'operator' })
         ),
+    IncorrectGlobalReferenceTarget:
+        SqlErrorFactory.create<ast.GlobalReference, { expected: string, received: string }>(
+            "SQL00011",
+            "error",
+            ({ expected, received }) => `Expected definition of type '${expected}' but received '${received}'.`,
+            (node) => ({ node, property: 'element' })
+        )
 };
 
 export interface BinaryOperatorMismatch {

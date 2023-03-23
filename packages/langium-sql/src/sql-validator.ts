@@ -36,7 +36,10 @@ export class SqlValidationRegistry extends ValidationRegistry {
             WhereClause: [validator.checkWhereIsBoolean],
             HavingClause: [validator.checkHavingIsBoolean],
             SubQueryExpression: [validator.checkIfSubQuerySelectsExactlyOneValue],
-            ReferenceDefinition: [validator.checkIfReferencePointsToCorrectParent]
+            ReferenceDefinition: [validator.checkIfReferencePointsToCorrectParent],
+            FunctionCall: [validator.checkFunctionCallTarget],
+            TableSourceItem: [validator.checkTableSourceItemTarget],
+            ConstraintDefinition: [validator.checkConstraintTarget]
         };
         this.register(checks, validator);
     }
@@ -181,6 +184,36 @@ export class SqlValidator {
         const type = computeTypeOfSelectStatement(subQueryExpression.subQuery);
         if(type.discriminator === 'row' && type.columnTypes.length > 1) {
             ReportAs.SubQueriesWithinSelectStatementsMustHaveExactlyOneColumn(subQueryExpression, {}, accept);
+        }
+    }
+
+    checkFunctionCallTarget(functionCall: ast.FunctionCall, accept: ValidationAcceptor) {
+        const reference = functionCall.function?.element?.ref;
+        if (reference && !ast.isFunctionDefinition(reference)) {
+            ReportAs.IncorrectGlobalReferenceTarget(functionCall.function, {
+                expected: 'FUNCTION',
+                received: getDefinitionTypeName(reference)
+            }, accept);
+        }
+    }
+
+    checkTableSourceItemTarget(tableSourceItem: ast.TableSourceItem, accept: ValidationAcceptor) {
+        const reference = tableSourceItem.table?.element?.ref;
+        if (reference && !ast.isTableLike(reference)) {
+            ReportAs.IncorrectGlobalReferenceTarget(tableSourceItem.table, {
+                expected: 'TABLE',
+                received: getDefinitionTypeName(reference)
+            }, accept);
+        }
+    }
+
+    checkConstraintTarget(constraintDefinition: ast.ConstraintDefinition, accept: ValidationAcceptor) {
+        const reference = constraintDefinition.table?.element?.ref;
+        if (reference && !ast.isTableDefinition(reference)) {
+            ReportAs.IncorrectGlobalReferenceTarget(constraintDefinition.table, {
+                expected: 'TABLE',
+                received: getDefinitionTypeName(reference)
+            }, accept);
         }
     }
 }
