@@ -113,4 +113,14 @@ describe('Syntax coverage', () => {
     it('Escape an identifier, but still find it', () => expectParseable(`SELECT \`passenger_id\` FROM passenger;`));
     it('Namespaced functions', () => expectParseable(`SELECT alpha.blubb(123);`));
     it('OVER clause', () => expectParseable(`SELECT SUM(price) OVER (PARTITION BY seat) FROM booking;`));
+
+    // FETCH FIRST
+    it('MySQL LIMIT', () => expectParseable('SELECT * FROM alpha.people LIMIT 100;'));
+    it('MySQL LIMIT with OFFSET alternative syntax', () => expectParseable('SELECT * FROM alpha.people LIMIT 200, 100;'));
+    it('MySQL LIMIT with OFFSET', () => expectParseable('SELECT * FROM alpha.people LIMIT 100 OFFSET 200;'));
+
+    it('SQL Standard FETCH FIRST', () => expectParseable('SELECT * FROM alpha.people FETCH FIRST 100 ROWS ONLY;'));
+    it('SQL Standard FETCH FIRST WITH TIES', () => expectParseable('SELECT * FROM alpha.people FETCH FIRST 100 ROWS WITH TIES;'));
+    it('SQL Standard FETCH FIRST WITH OFFSET', () => expectParseable('SELECT * FROM alpha.people OFFSET 200 FETCH NEXT 100 ROWS ONLY;'));
+    it('ORACLE SQL FETCH FIRST WITH OFFSET ROWS', () => expectParseable('SELECT * FROM alpha.people OFFSET 200 ROWS FETCH NEXT 100 ROWS ONLY;'));
 });

@@ -18,6 +18,9 @@ import {
     SqlGeneratedModule,
     SqlGeneratedSharedModule,
 } from "./generated/module";
+import { SqlContainerManager } from "./sql-container-manager";
+import { SqlNameProvider } from "./sql-name-provider";
+import { SqlScopeComputation } from "./sql-scope-computation";
 import { SqlScopeProvider } from "./sql-scope-provider";
 import { SqlValidationRegistry, SqlValidator } from "./sql-validator";
 import { SqlValueConverter } from "./sql-value-converter";
@@ -28,13 +31,15 @@ import { SqlWorkspaceManager } from "./sql-workspace-manager";
  */
 export type SqlAddedServices = {
     validation: {
-        SqlValidator: SqlValidator;
-    };
+        SqlValidator: SqlValidator
+    }
+    shared: SqlSharedServices
 };
 
 export type SqlAddedSharedServices = {
     workspace: {
         WorkspaceManager: SqlWorkspaceManager
+        ContainerManager: SqlContainerManager
     };
 };
 
@@ -43,7 +48,8 @@ export const SqlSharedModule: Module<
     DeepPartial<SqlSharedServices>
 > = {
     workspace: {
-        WorkspaceManager: (services) => new SqlWorkspaceManager(services)
+        WorkspaceManager: (services) => new SqlWorkspaceManager(services),
+        ContainerManager: (services) => new SqlContainerManager(services)
     }
 };
 
@@ -68,6 +74,8 @@ export const SqlModule: Module<
         ValueConverter: () => new SqlValueConverter(),
     },
     references: {
+        NameProvider: () => new SqlNameProvider(),
+        ScopeComputation: (services) => new SqlScopeComputation(services),
         ScopeProvider: (services) => new SqlScopeProvider(services),
     },
     validation: {

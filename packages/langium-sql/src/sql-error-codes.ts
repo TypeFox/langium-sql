@@ -62,7 +62,7 @@ export const ReportAs = {
         (node) => ({ node, property: "name" })
     ),
     NumericValueIsNotInteger: SqlErrorFactory.create<
-        ast.IntegerLiteral,
+        ast.NumberLiteral,
         NumericValue
     >(
         "SQL00002",
@@ -110,13 +110,13 @@ export const ReportAs = {
         (node) => ({ node })
     ),
     TableDefinitionRequiresAtLeastOneColumn: SqlErrorFactory.create<
-        ast.TableDefinition,
+        ast.GlobalReference,
         {}
     >(
         "SQL00007",
         "error",
         () => `Table definition requires at least one column.`,
-        (node) => ({ node, property: "name" })
+        (node) => ({ node, property: "element" })
     ),
     SubQueriesWithinSelectStatementsMustHaveExactlyOneColumn:
         SqlErrorFactory.create<ast.SubQueryExpression, {}>(
@@ -150,6 +150,13 @@ export const ReportAs = {
                 `This operation uses tables with different columns types! Compare the columns at index ${columnIndex}. They are not convertable to each other.`,
             (node) => ({ node, property: 'operator' })
         ),
+    IncorrectGlobalReferenceTarget:
+        SqlErrorFactory.create<ast.GlobalReference, { expected: string, received: string }>(
+            "SQL00011",
+            "error",
+            ({ expected, received }) => `Expected definition of type '${expected}' but received '${received}'.`,
+            (node) => ({ node, property: 'element' })
+        )
 };
 
 export interface BinaryOperatorMismatch {

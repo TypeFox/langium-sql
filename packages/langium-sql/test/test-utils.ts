@@ -20,6 +20,9 @@ import assert from "assert";
 import { isAllTable, SimpleSelectTableExpression } from "../src/generated/ast";
 import { getColumnsForSelectTableExpression } from "../src/sql-type-utilities";
 import path from "path";
+import { SqlNameProvider } from "../src/sql-name-provider";
+
+const nameProvider = new SqlNameProvider();
 
 export async function parseHelper(
     services: SqlServices,
@@ -105,9 +108,11 @@ export function expectTableLinked(
         .toBeTruthy;
     const tableSource = selectStatement.from!.sources.list[0]
         .item as ast.TableSourceItem;
-    expect(tableSource.tableName).not.toBeUndefined();
-    expect(tableSource.tableName!.ref).not.toBeUndefined();
-    expect(tableSource.tableName!.ref!.name).toBe(tableName);
+    expect(tableSource.table).not.toBeUndefined();
+    expect(tableSource.table.element).not.toBeUndefined();
+    expect(tableSource.table.element.ref).not.toBeUndefined();
+    const name = nameProvider.getName(tableSource.table.element.ref!);
+    expect(name).toBe(tableName);
 }
 
 export function expectSelectItemToBeColumnName(
@@ -128,10 +133,10 @@ export function expectSelectItemToBeColumnName(
             selectElementIndex
         ] as ast.ExpressionQuery
     ).expr;
-    expect((element as ast.ColumnNameExpression).columnName.ref!.name).toBe(columnName);
-    expect(((element as ast.ColumnNameExpression).columnName.ref!.$container as ast.TableDefinition).name).toBe(
-        tableName
-    );
+    const columNameExpression = element as ast.ColumnNameExpression;
+    expect(columNameExpression.columnName.ref!.name).toBe(columnName);
+    const columnTableName = nameProvider.getName(columNameExpression.columnName.ref!.$container);
+    expect(columnTableName).toBe(tableName);
 }
 
 export function expectSelectItemsToBeOfType(
@@ -180,9 +185,8 @@ export function expectSelectItemToBeColumnNameRelativeToVariable(
         .expr as ast.TableRelatedColumnExpression;
     expect(exprQuery.variableName.ref!.name).toBe(variableName);
     assert(ast.isTableSourceItem(exprQuery.variableName.ref));
-    expect(exprQuery.variableName.ref!.tableName.ref!.name).toBe(
-        tableName
-    );
+    const name = nameProvider.getName(exprQuery.variableName.ref!.table.element.ref!);
+    expect(name).toBe(tableName);
     expect(exprQuery.columnName!.ref!.name).toBe(columnName);
 }
 
@@ -201,7 +205,8 @@ export function expectSelectItemToBeAllStarRelativeToVariable(
         variableName
     );
     assert(ast.isTableSourceItem(element.variableName.ref));
-    expect(element.variableName.ref!.tableName.ref!.name).toBe(tableName);
+    const variableTableName = nameProvider.getName(element.variableName.ref!.table.element.ref!);
+    expect(variableTableName).toBe(tableName);
 }
 
 export function expectValidationIssues(

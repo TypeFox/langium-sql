@@ -44,7 +44,7 @@ import { canConvert } from "./sql-type-conversion";
 import { areTypesEqual, RowTypeDescriptor, TypeDescriptor, Types } from "./sql-type-descriptors";
 import { BinaryOperator, BinaryOperators, UnaryOperator, UnaryOperators } from "./sql-type-operators";
 import {
-    getColumnsForSelectTableExpression,
+    getColumnsForSelectTableExpression, getFromGlobalReference,
 } from "./sql-type-utilities";
 
 export type ComputeTypeFunction = (node: AstNode) => TypeDescriptor | undefined;
@@ -126,15 +126,14 @@ function computeTypeOfExpression(node: Expression): TypeDescriptor | undefined {
             throw new Error('TODO')
         } else {
             assertUnreachable(ref);
-            return undefined;
         }
     }
     if (isFunctionCall(node)) {
-        const functionLike = node.functionName.ref!;
-        if(isFunctionDefinition(functionLike)) {
+        const functionLike = getFromGlobalReference(node.function, isFunctionDefinition);
+        if(functionLike) {
             return computeTypeOfDataType(functionLike.returnType);
         } else {
-            assertUnreachable(functionLike);
+            return undefined;
         }
     }
     if (isBinaryExpression(node) || isNegatableExpression(node)) {
