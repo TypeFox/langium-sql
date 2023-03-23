@@ -10,14 +10,32 @@ import {
     LangiumDocumentFactory,
     LangiumSharedServices,
 } from "langium";
-import { SqlAddedSharedServices } from "./sql-module";
 import { URI } from "vscode-uri";
 import { WorkspaceFolder } from "vscode-languageserver";
-import { resolve } from "path";
-import { readdir, readFile, stat } from "fs/promises";
 
 export class SqlWorkspaceManager extends DefaultWorkspaceManager {
+
+    initializationFiles: string[] = [];
+
+    protected readonly factory: LangiumDocumentFactory;
+
     constructor(services: LangiumSharedServices) {
         super(services);
+        this.factory = services.workspace.LangiumDocumentFactory;
+        services.lsp.LanguageServer.onInitialize(params => {
+            const files = params.initializationOptions?.files;
+            if (Array.isArray(files)) {
+                this.initializationFiles.push(...files);
+            }
+        });
+    }
+
+    protected override async loadAdditionalDocuments(_folders: WorkspaceFolder[], collector: (document: LangiumDocument<AstNode>) => void): Promise<void> {
+        for (let i = 0; i < this.initializationFiles.length; i++) {
+            const file = this.initializationFiles[i];
+            const uri = URI.parse(`inmemory:///builtin_${i}.sql`);
+            const document = this.factory.fromString(file, uri);
+            collector(document);
+        }
     }
 }
