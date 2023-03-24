@@ -2,7 +2,7 @@
   "name": "langium-sql",
   "displayName": "SQL Language Server",
   "description": "Extensible language server for SQL",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "license": "MIT",
   "files": [
     "lib",
@@ -19,11 +19,8 @@
     "langium:watch": "langium generate --watch"
   },
   "dependencies": {
-    "chevrotain": "^10.4.2",
     "langium": "~1.1.0",
-    "lodash": "^4.17.21",
-    "vscode-languageserver": "^8.0.2",
-    "vscode-uri": "^3.0.6"
+    "lodash": "^4.17.21"
   },
   "devDependencies": {
     "@types/lodash": "^4.14.191",

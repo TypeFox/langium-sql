@@ -105,7 +105,7 @@ export interface SqlSharedModuleContext extends DefaultSharedModuleContext {
  * @returns An object wrapping the shared services and the language-specific services
  */
 export function createSqlServices(context: SqlSharedModuleContext): {
-    shared: LangiumSharedServices;
+    shared: SqlSharedServices;
     Sql: SqlServices;
 } {
     const shared = inject(
