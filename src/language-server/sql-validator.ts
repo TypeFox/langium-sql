@@ -10,7 +10,7 @@ import {
     ValidationRegistry,
 } from "langium";
 import * as ast from "./generated/ast";
-import _, { runInContext } from "lodash";
+import _ from "lodash";
 import type { SqlServices } from "./sql-module";
 import { ReportAs } from "./sql-error-codes";
 import { computeType, computeTypeOfSelectStatement } from "./sql-type-computation";
@@ -48,7 +48,7 @@ export class SqlValidator {
         if(lhs.length !== rhs.length) {
             ReportAs.TableOperationUsesTablesWithDifferentColumnCounts(expr, {}, accept);
         } else {
-            lhs.forEach((left, index) => {
+            lhs.forEach((left, index) => {
                 const right = rhs[index];
                 const leftType = computeType(left.typedNode);
                 const rightType = computeType(right.typedNode);
