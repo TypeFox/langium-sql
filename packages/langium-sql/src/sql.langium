@@ -321,9 +321,6 @@ Type infers Type:
     ;
 
 
-//These keywords were seen as ID for column names, without backticks
-Keyword returns string: 'TABLE' | 'KEY' | 'SCHEMA' | 'FROM' | 'TO'; 
-
 hidden terminal WS: /\s+/;
 terminal HEX_STRING returns string: /x\'[A-Fa-f0-9]+\'/;
 terminal STRING returns string: /"(\\.|[^"\\])*"|'(\\.|[^'\\])*'/;
