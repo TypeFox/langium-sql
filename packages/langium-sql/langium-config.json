@@ -1,0 +1,15 @@
+{
+  "projectName": "Sql",
+  "languages": [
+    {
+      "id": "sql",
+      "grammar": "src/sql.langium",
+      "caseInsensitive": true,
+      "fileExtensions": [".sql"],
+      "textMate": {
+        "out": "../langium-sql-vscode/syntaxes/sql.tmLanguage.json"
+      }
+    }
+  ],
+  "out": "src/generated"
+}

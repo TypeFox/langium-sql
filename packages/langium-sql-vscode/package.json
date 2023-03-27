@@ -1,0 +1,65 @@
+{
+  "name": "langium-sql-vscode",
+  "displayName": "SQL Extension",
+  "description": "Language server extension for SQL",
+  "version": "0.0.3",
+  "publisher": "langium",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.67.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "sql",
+        "aliases": [
+          "SQL",
+          "sql"
+        ],
+        "extensions": [
+          ".sql"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "sql",
+        "scopeName": "source.sql",
+        "path": "./syntaxes/sql.tmLanguage.json"
+      }
+    ]
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "main": "./dist/node/extension.js",
+  "browser": "./dist/browser/extension.js",
+  "scripts": {
+    "vscode:prepublish": "npm run build && npm run lint",
+    "build": "node esbuild.js",
+    "watch": "node esbuild.js --watch",
+    "lint": "eslint src --ext ts"
+  },
+  "dependencies": {
+    "langium-sql": "0.2.1",
+    "vscode-languageclient": "^8.0.2"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.67.0",
+    "esbuild": "^0.16.14"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/langium/langium-sql"
+  },
+  "bugs": "https://github.com/langium/langium-sql/issues",
+  "author": {
+    "name": "TypeFox",
+    "url": "https://www.typefox.io"
+  }
+}

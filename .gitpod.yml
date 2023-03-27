@@ -1,5 +1,10 @@
 tasks:
-  - init: npm install
+  - init: npm install && npm run build
+    command: npm run watch
+
+ports:
+  - port: 6009 # language server debug port
+    onOpen: ignore
 
 vscode:
   extensions:
