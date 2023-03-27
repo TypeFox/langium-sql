@@ -39,6 +39,7 @@ import {
     isParenthesisOrListExpression,
     NegatableExpression,
     SelectTableExpression,
+    isBlobType,
 } from "./generated/ast";
 import { canConvert } from "./sql-type-conversion";
 import { areTypesEqual, RowTypeDescriptor, TypeDescriptor, Types } from "./sql-type-descriptors";
@@ -181,6 +182,9 @@ export function computeTypeOfDataType(dataType: Type): TypeDescriptor | undefine
     }
     if(isDateTimeType(dataType)) {
         return Types.DateTime;
+    }
+    if(isBlobType(dataType)) {
+        return Types.Blob;
     }
     assertUnreachable(dataType);
 }

@@ -317,7 +317,8 @@ Type infers Type:
     | {infer CharType} 'CHAR' ('(' length=NumberLiteral ')')?
     | {infer EnumType} 'ENUM' '(' members+=STRING (',' members+=STRING)* ')'
     | {infer DateTimeType} 'DATETIME'
-;
+    | {infer BlobType} 'BLOB'
+    ;
 
 
 hidden terminal WS: /\s+/;

@@ -20,6 +20,7 @@ export type TypeDescriptorDiscriminator =
     | 'datetime'
     | 'null'
     | 'array'
+    | 'blob'
     ;
 
 export function isTypeANull(
@@ -71,6 +72,11 @@ export function isTypeAnEnum(
     type: TypeDescriptor
 ): type is EnumTypeDescriptor {
     return type.discriminator === "enum";
+}
+export function isTypeABlob(
+    type: TypeDescriptor
+): type is BlobTypeDescriptor {
+    return type.discriminator === "blob";
 }
 
 export function isTypeAText(
@@ -130,9 +136,13 @@ export interface DateTimeTypeDescriptor extends TypeDescriptorBase {
     discriminator: "datetime";
 }
 
+export interface BlobTypeDescriptor extends TypeDescriptorBase {
+    discriminator: "blob";
+}
+
 export type TextualTypeDescriptor = CharTypeDescriptor;
 export type NumberTypeDescriptor = IntegerTypeDescriptor|RealTypeDescriptor;
-export type TypeDescriptor = ArrayTypeDescriptor | NullTypeDescriptor | BooleanTypeDesciptor | NumberTypeDescriptor | TextualTypeDescriptor | RowTypeDescriptor | EnumTypeDescriptor | DateTimeTypeDescriptor;
+export type TypeDescriptor = BlobTypeDescriptor | ArrayTypeDescriptor | NullTypeDescriptor | BooleanTypeDesciptor | NumberTypeDescriptor | TextualTypeDescriptor | RowTypeDescriptor | EnumTypeDescriptor | DateTimeTypeDescriptor;
 
 export const Types = {
     Null: {
@@ -146,6 +156,9 @@ export const Types = {
     },
     Boolean: {
         discriminator: 'boolean'
+    } as TypeDescriptor,
+    Blob: {
+        discriminator: 'blob'
     } as TypeDescriptor,
     Integer: {
         discriminator: 'integer'
