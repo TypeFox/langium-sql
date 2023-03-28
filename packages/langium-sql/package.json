@@ -2,7 +2,7 @@
   "name": "langium-sql",
   "displayName": "SQL Language Server",
   "description": "Extensible language server for SQL",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "license": "MIT",
   "files": [
     "lib",
@@ -12,7 +12,8 @@
   "scripts": {
     "compile:src": "tsc --build tsconfig.src.json",
     "compile:test": "tsc --build tsconfig.test.json",
-    "build": "npm run langium:generate && npm run compile:src && npm run compile:test",
+    "clean": "npx shx rm -fr lib *.tsbuildinfo",
+    "build": "npm run clean && npm run langium:generate && npm run compile:src && npm run compile:test",
     "watch": "tsc -b tsconfig.src.json --watch",
     "lint": "eslint src --ext ts",
     "langium:generate": "langium generate",
