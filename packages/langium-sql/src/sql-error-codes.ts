@@ -144,7 +144,7 @@ export const ReportAs = {
         ),
     TableOperationUsesTablesWithDifferentColumnTypes:
         SqlErrorFactory.create<ast.BinaryTableExpression, {columnIndex: number}>(
-            "SQL00010",
+            "SQL00011",
             "error",
             ({columnIndex}) =>
                 `This operation uses tables with different columns types! Compare the columns at index ${columnIndex}. They are not convertable to each other.`,
@@ -152,7 +152,7 @@ export const ReportAs = {
         ),
     IncorrectGlobalReferenceTarget:
         SqlErrorFactory.create<ast.GlobalReference, { expected: string, received: string }>(
-            "SQL00011",
+            "SQL00012",
             "error",
             ({ expected, received }) => `Expected definition of type '${expected}' but received '${received}'.`,
             (node) => ({ node, property: 'element' })
