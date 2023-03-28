@@ -9,7 +9,7 @@ import { AbstractRule } from "langium/lib/grammar/generated/ast";
 
 export class SqlValueConverter extends DefaultValueConverter {
     protected override runConverter(rule: AbstractRule, input: string, cstNode: CstNode): ValueType {
-        if(rule.name.toUpperCase() === 'TICK_STRING') {
+        if(rule.name.toUpperCase() === 'TICK_STRING' || rule.name.toUpperCase() === 'STRING') {
             return input.substring(1, input.length-1).replace(/\\(.)/g, '$1');
         }
         return super.runConverter(rule, input, cstNode);

@@ -105,6 +105,11 @@ const CharCharReturnsChar: BinaryOperatorDescriptor = {
     returnType: Types.Char()
 }
 
+const CharCharReturnsReal: BinaryOperatorDescriptor = {
+    left: Types.Char(),
+    right: Types.Char(),
+    returnType: Types.Real
+}
 
 const ReversedBinaryOperators: Map<BinaryOperatorDescriptor, BinaryOperator[]> = new Map<BinaryOperatorDescriptor, BinaryOperator[]>();
 ReversedBinaryOperators.set(IntegerIntegerReturnsInteger, ["%", "*", "+", "-", "/"]);
@@ -113,7 +118,8 @@ ReversedBinaryOperators.set(IntegerIntegerReturnsBoolean, ["<", "<=", "<>", "=",
 ReversedBinaryOperators.set(RealRealReturnsBoolean, ["<", "<=", "<>", "=", ">", ">="]);
 ReversedBinaryOperators.set(CharCharReturnsBoolean, ["<", "<=", "<>", "=", ">", ">=", "LIKE"]);
 ReversedBinaryOperators.set(BooleanBooleanReturnsBoolean, ["<", "<=", "<>", "=", ">", ">=", "AND", "OR"]);
-ReversedBinaryOperators.set(CharCharReturnsChar, ['||', 'LIKE']);
+ReversedBinaryOperators.set(CharCharReturnsChar, ['||', 'LIKE', '::$', '::']);
+ReversedBinaryOperators.set(CharCharReturnsReal, ['::%']);
 
 const flatMap = [...ReversedBinaryOperators.entries()].flatMap(([descr, operators]) => {
     return operators.map(op => [op, descr] as const);
@@ -123,7 +129,7 @@ export type BinaryOperatorTable = Record<BinaryOperator, BinaryOperatorDescripto
 
 function emptyBinaryTable(): BinaryOperatorTable {
     const result: any = {};
-    const indices: BinaryOperator[] = ["%", "*", "+", "-", "/", "<", "<=", "<>", "=", ">", ">=", "AND", "OR", "||", "IS", "LIKE", "IN"];
+    const indices: BinaryOperator[] = ["%", "*", "+", "-", "/", "<", "<=", "<>", "=", ">", ">=", "AND", "OR", "||", "IS", "LIKE", "IN", "::", "::$", "::%"];
     indices.forEach(op => result[op] = []);
     return result as BinaryOperatorTable;
 }

@@ -237,8 +237,17 @@ AdditiveExpression infers Expression:
 ;
 
 MultiplicativeExpression infers Expression:
-    PrimaryExpression ({infer BinaryExpression.left=current} operator=('*'|'/'|'%') right=PrimaryExpression)*
+    JsonExtractExpression ({infer BinaryExpression.left=current} operator=('*'|'/'|'%') right=JsonExtractExpression)*
 ;
+
+//Syntax for SingleStore SQL (https://docs.singlestore.com/managed-service/en/reference/sql-reference/json-functions/json_extract_-type-.html)
+JsonExtractExpression infers Expression:
+    PrimaryExpression ({infer BinaryExpression.left=current} operator=('::$'|'::%'|'::') right=(StringLiteral|NumberLiteral|IdentifierAsStringLiteral))*
+    ;
+
+IdentifierAsStringLiteral infers Expression:
+    {infer IdentifierAsStringLiteral}value=Identifier
+    ;
 
 PrimaryExpression infers Expression:
     {infer StringLiteral} StringLiteral

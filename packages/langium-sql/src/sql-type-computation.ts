@@ -40,6 +40,7 @@ import {
     NegatableExpression,
     SelectTableExpression,
     isBlobType,
+    isIdentifierAsStringLiteral,
 } from "./generated/ast";
 import { canConvert } from "./sql-type-conversion";
 import { areTypesEqual, RowTypeDescriptor, TypeDescriptor, Types } from "./sql-type-descriptors";
@@ -150,6 +151,9 @@ function computeTypeOfExpression(node: Expression): TypeDescriptor | undefined {
     }
     if(isSubQueryExpression(node)) {
         return computeTypeOfSelectStatement(node.subQuery);
+    }
+    if(isIdentifierAsStringLiteral(node)) {
+        return Types.Char();
     }
     assertUnreachable(node);
 }
