@@ -16,7 +16,7 @@ export class SqlContainerManager {
 
     constructor(services: SqlSharedServices) {
         this.langiumDocuments = services.workspace.LangiumDocuments;
-        services.workspace.DocumentBuilder.onBuildPhase(DocumentState.IndexedContent, (_, cancelToken) => this.rebuild(cancelToken));
+        services.workspace.DocumentBuilder.onBuildPhase(DocumentState.ComputedScopes, (_, cancelToken) => this.rebuild(cancelToken));
     }
 
     getChildren(definition: Definition): readonly Definition[] {
