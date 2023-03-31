@@ -5,7 +5,7 @@ entry SqlFile:
 ;
 
 Statement:
-    (DefinitionRule | RootLevelSelectStatement) ';';
+    (DefinitionRule | RootLevelSelectStatement) ';'?;
 
 DefinitionRule:
     CatalogDefinition | SchemaDefinition | TableDefinition | FunctionDefinition;
@@ -51,7 +51,7 @@ TableContentDefinition:
 ;
 
 ColumnDefinition:
-    name=Identifier dataType=Type (negated?='NOT' null?='NULL')?;
+    name=Identifier dataType=Type (negated?='NOT'? null?='NULL')?;
 
 PrimaryKeyDefinition:
     'PRIMARY' 'KEY' '(' primaryKeys+=[ColumnDefinition] (',' primaryKeys+=[ColumnDefinition])* ')'

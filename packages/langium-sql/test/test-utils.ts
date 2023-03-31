@@ -21,22 +21,24 @@ import { isAllTable, SimpleSelectTableExpression } from "../src/generated/ast";
 import { getColumnsForSelectTableExpression } from "../src/sql-type-utilities";
 import path from "path";
 import { SqlNameProvider } from "../src/sql-name-provider";
+import { WorkspaceFolder } from 'vscode-languageserver';
 
 const nameProvider = new SqlNameProvider();
 
 export async function parseHelper(
     services: SqlServices,
-    folder: string
+    folder?: string
 ): Promise<(input: string) => Promise<LangiumDocument<ast.SqlFile>>> {
     const metaData = services.LanguageMetaData;
     const documentBuilder = services.shared.workspace.DocumentBuilder;
-    const uri = URI.file(path.resolve(folder)).toString();
-    await services.shared.workspace.WorkspaceManager.initializeWorkspace([
-        {
-            name: "main",
-            uri,
-        },
-    ]);
+    const workspaces: WorkspaceFolder[] = [];
+    if (folder) {
+        workspaces.push({
+            name: 'main',
+            uri: URI.file(path.resolve(folder)).toString()
+        })
+    }
+    await services.shared.workspace.WorkspaceManager.initializeWorkspace(workspaces);
     return async (input) => {
         const randomNumber = Math.floor(Math.random() * 10000000) + 1000000;
         const uri = URI.parse(
