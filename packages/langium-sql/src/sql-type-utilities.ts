@@ -53,7 +53,7 @@ export enum DefinitionType {
     Table = 2
 }
 
-export function getColumnsForSelectTableExpression(selectTableExpression: AST.SelectTableExpression, onlyAliases: boolean = false): ColumnDescriptor[] {
+export function getColumnsForSelectTableExpression(selectTableExpression: AST.SelectTableExpression | undefined, onlyAliases: boolean = false): ColumnDescriptor[] {
     if (AST.isBinaryTableExpression(selectTableExpression)) {
         const lhs = getColumnsForSelectTableExpression(selectTableExpression.left, onlyAliases);
         //const rhs = getColumnsForSelectTableExpression(selectTableExpression.right, onlyAliases);
@@ -62,12 +62,17 @@ export function getColumnsForSelectTableExpression(selectTableExpression: AST.Se
         return getColumnsForSelectTableExpression(selectTableExpression.value);
     } else if (AST.isSimpleSelectTableExpression(selectTableExpression)) {
         return getColumnsSimpleSelectStatement(selectTableExpression.select, onlyAliases);
+    } else if (!selectTableExpression) {
+        return [];
     } else {
         assertUnreachable(selectTableExpression);
     }
 }
 
-function getColumnsSimpleSelectStatement(simpleSelectStatement: AST.SimpleSelectStatement, onlyAliases: boolean): ColumnDescriptor[] {
+function getColumnsSimpleSelectStatement(simpleSelectStatement: AST.SimpleSelectStatement | undefined, onlyAliases: boolean): ColumnDescriptor[] {
+    if (!simpleSelectStatement || !simpleSelectStatement.select) {
+        return [];
+    }
     return simpleSelectStatement.select.elements.flatMap(e => {
         if (AST.isAllStar(e)) {
             if (onlyAliases) {
@@ -182,7 +187,7 @@ function resolveColumnNameTypedNode(expression: AstNode, columnName: Reference<A
 }
 
 
-export function getColumnCandidatesForSelectTableExpression(selectTableExpression: AST.SelectTableExpression): ColumnDescriptor[] {
+export function getColumnCandidatesForSelectTableExpression(selectTableExpression?: AST.SelectTableExpression): ColumnDescriptor[] {
     if (AST.isBinaryTableExpression(selectTableExpression)) {
         const lhs = getColumnCandidatesForSelectTableExpression(selectTableExpression.left);
         //const rhs = getColumnCandidatesForSelectTableExpression(selectTableExpression.right);
@@ -191,14 +196,16 @@ export function getColumnCandidatesForSelectTableExpression(selectTableExpressio
         return getColumnCandidatesForSelectTableExpression(selectTableExpression.value);
     } else if (AST.isSimpleSelectTableExpression(selectTableExpression)) {
         return getColumnCandidatesForSimpleSelectStatement(selectTableExpression.select);
-    } else {
+    } else if (!selectTableExpression) {
+        return [];
+    } {
         assertUnreachable(selectTableExpression);
     }
 }
 
-export function getColumnCandidatesForSimpleSelectStatement(selectStatement: AST.SimpleSelectStatement) {
+export function getColumnCandidatesForSimpleSelectStatement(selectStatement?: AST.SimpleSelectStatement): ColumnDescriptor[] {
     const selectElementColumns = getColumnsSimpleSelectStatement(selectStatement, true);
-    const fromComputedColumns = selectStatement.from?.sources.list.flatMap(getColumnsForTableSource) ?? [];
+    const fromComputedColumns = selectStatement?.from?.sources.list.flatMap(getColumnsForTableSource) ?? [];
     return selectElementColumns.concat(fromComputedColumns);
 }
 
@@ -216,8 +223,8 @@ function getColumnsForTableSource(source: AST.TableSource): ColumnDescriptor[] {
                 }));
             } else if (AST.isCommonTableExpression(tableLike)) {
                 let columns = getColumnsForSelectTableExpression(tableLike.statement);
-                if (tableLike.columnNames.length > 0) {
-                    columns = columns.map((c, i) => ({ ...c, name: tableLike.columnNames[i].name }));
+                if (tableLike?.columnNames.length > 0) {
+                    columns = columns.map((c, i) => ({ ...c, name: tableLike.columnNames[i]?.name }));
                 }
                 return columns;
             }

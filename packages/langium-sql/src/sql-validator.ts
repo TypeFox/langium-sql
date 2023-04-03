@@ -115,11 +115,11 @@ export class SqlValidator {
         query: ast.SimpleSelectStatement,
         accept: ValidationAcceptor
     ): void {
-        const groups = _.groupBy(query.from?.sources.list, (s) => s.item.name);
+        const groups = _.groupBy(query.from?.sources?.list, (s) => s.item?.name);
         for (const [key, group] of Object.entries(groups).filter(
             (g) => g[0] && g[1].length > 1
         )) {
-            for (const member of group) {
+            for (const member of group.filter(e => e.item)) {
                 ReportAs.DuplicatedVariableName(
                     member.item,
                     { name: key },
@@ -143,7 +143,7 @@ export class SqlValidator {
     }
 
     checkIfSelectStatementWithAllStarSelectItemHasAtLeastOneTableSource(selectStatement: ast.SimpleSelectStatement, accept: ValidationAcceptor): void {
-        if(selectStatement.select.elements.filter(ast.isAllStar).length > 0) {
+        if(selectStatement.select?.elements.filter(ast.isAllStar).length > 0) {
             if(!selectStatement.from) {
                 ReportAs.AllStarSelectionRequiresTableSources(selectStatement, {}, accept);
             }

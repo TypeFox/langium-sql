@@ -158,7 +158,7 @@ function computeTypeOfExpression(node: Expression): TypeDescriptor | undefined {
     assertUnreachable(node);
 }
 
-export function computeTypeOfSelectStatement(selectStatement: SelectTableExpression): RowTypeDescriptor {
+export function computeTypeOfSelectStatement(selectStatement?: SelectTableExpression): RowTypeDescriptor {
     return {
         discriminator: "row",
         columnTypes: getColumnsForSelectTableExpression(selectStatement).map(c => ({
