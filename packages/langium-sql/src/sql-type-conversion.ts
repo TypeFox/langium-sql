@@ -4,7 +4,7 @@
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
 
-import { TypeDescriptor, TypeDescriptorDiscriminator } from "./sql-type-descriptors";
+import { TypeDescriptor, TypeDescriptorDiscriminator, Types } from "./sql-type-descriptors";
 import { Value } from "./sql-type-values";
 
 export type TypeConversionKind = 'implicit'|'explicit';
@@ -23,8 +23,9 @@ function Implicit(convert: (value: Value) => Value): TypeConverter {
 function Explicit(convert: (value: Value) => Value): TypeConverter {
     return {kind: 'explicit', convert};
 }
-const Forbidden: TypeConverter|undefined = undefined;
-const ConversionTable: Record<TypeConversionPair, TypeConverter|undefined> = {
+const Forbidden: TypeConverter | undefined = undefined;
+const ConversionTable: Record<TypeConversionPair, TypeConverter | undefined> = {
+    "boolean->unknown": Identity,
     "boolean->boolean": Identity,
     "boolean->integer": Implicit(v => {
         return {
@@ -44,6 +45,7 @@ const ConversionTable: Record<TypeConversionPair, TypeConverter|undefined> = {
             value: v.value ? 'TRUE' : 'FALSE'
         };
     }),
+    "integer->unknown": Identity,
     "integer->boolean": Explicit(v => {
         return {
             type: "boolean",
@@ -63,6 +65,7 @@ const ConversionTable: Record<TypeConversionPair, TypeConverter|undefined> = {
             value: v.value.toString()
         };
     }),
+    "real->unknown": Identity,
     "real->boolean": Explicit(v => {
         return {
             type: "boolean",
@@ -82,6 +85,7 @@ const ConversionTable: Record<TypeConversionPair, TypeConverter|undefined> = {
             value: v.value.toString()
         };
     }),
+    "text->unknown": Identity,
     "text->boolean": Explicit(v => {
         if (typeof v.value !== 'string') {
             throw new Error();
@@ -114,6 +118,7 @@ const ConversionTable: Record<TypeConversionPair, TypeConverter|undefined> = {
     "row->row": Identity,
     "row->integer": Forbidden,
     "row->real": Forbidden,
+    "row->unknown": Identity,
     "integer->row": Forbidden,
     "real->row": Forbidden,
 
@@ -126,6 +131,7 @@ const ConversionTable: Record<TypeConversionPair, TypeConverter|undefined> = {
     "enum->enum": Identity,
     "enum->integer": Forbidden,
     "enum->real": Forbidden,
+    "enum->unknown": Identity,
     "integer->enum": Forbidden,
     "real->enum": Forbidden,
 
@@ -140,6 +146,7 @@ const ConversionTable: Record<TypeConversionPair, TypeConverter|undefined> = {
     "datetime->datetime": Identity,
     "datetime->integer": Forbidden,
     "datetime->real": Forbidden,
+    "datetime->unknown": Identity,
     "integer->datetime": Forbidden,
     "real->datetime": Forbidden,
 
@@ -155,6 +162,7 @@ const ConversionTable: Record<TypeConversionPair, TypeConverter|undefined> = {
     "null->datetime": Forbidden,
     "null->real": Forbidden,
     "null->integer": Forbidden,
+    "null->unknown": Identity,
     "datetime->null": Forbidden,
     "real->null": Forbidden,
     "integer->null": Forbidden,
@@ -170,6 +178,7 @@ const ConversionTable: Record<TypeConversionPair, TypeConverter|undefined> = {
     "array->enum": Forbidden,
     "array->integer": Forbidden,
     "array->real": Forbidden,
+    "array->unknown": Identity,
     "null->array": Forbidden,
     "text->array": Forbidden,
     "row->array": Forbidden,
@@ -195,7 +204,20 @@ const ConversionTable: Record<TypeConversionPair, TypeConverter|undefined> = {
     "blob->datetime": Forbidden,
     "blob->null": Forbidden,
     "blob->array": Forbidden,
-    "blob->blob": Identity
+    "blob->blob": Identity,
+    "blob->unknown": Identity,
+
+    "unknown->array": Identity,
+    "unknown->blob": Identity,
+    "unknown->boolean": Identity,
+    "unknown->datetime": Identity,
+    "unknown->enum": Identity,
+    "unknown->integer": Identity,
+    "unknown->null": Identity,
+    "unknown->real": Identity,
+    "unknown->row": Identity,
+    "unknown->text": Identity,
+    "unknown->unknown": Identity
 };
 
 export function getConvertFunction(source: TypeDescriptor, target: TypeDescriptor, kind: TypeConversionKind): TypeConvertFunction|null {

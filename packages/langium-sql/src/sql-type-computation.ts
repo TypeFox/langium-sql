@@ -7,16 +7,12 @@ import { assertUnreachable, AstNode } from "langium";
 import _ from "lodash";
 import {
     Expression,
-    isBooleanType,
     isCastExpression,
     isExpression,
-    isIntegerType,
-    isRealType,
     Type,
     isTableRelatedColumnExpression,
     isBinaryExpression,
     isUnaryExpression,
-    isCharType,
     isNumberLiteral,
     isStringLiteral,
     isBooleanLiteral,
@@ -28,8 +24,6 @@ import {
     isType,
     isColumnDefinition,
     isColumnNameExpression,
-    isEnumType,
-    isDateTimeType,
     isCteColumnName,
     isFunctionDefinition,
     isNegatableExpression,
@@ -39,13 +33,13 @@ import {
     isParenthesisOrListExpression,
     NegatableExpression,
     SelectTableExpression,
-    isBlobType,
     isIdentifierAsStringLiteral,
 } from "./generated/ast";
 import { canConvert } from "./sql-type-conversion";
 import { areTypesEqual, RowTypeDescriptor, TypeDescriptor, Types } from "./sql-type-descriptors";
 import { BinaryOperator, BinaryOperators, UnaryOperator, UnaryOperators } from "./sql-type-operators";
 import {
+    DataTypes,
     getColumnsForSelectTableExpression, getFromGlobalReference,
 } from "./sql-type-utilities";
 
@@ -169,28 +163,28 @@ export function computeTypeOfSelectStatement(selectStatement: SelectTableExpress
 }
 
 export function computeTypeOfDataType(dataType: Type): TypeDescriptor | undefined {
-    if (isBooleanType(dataType)) {
+    if (DataTypes.isBooleanDataType(dataType)) {
         return Types.Boolean;
     }
-    if (isIntegerType(dataType)) {
+    if (DataTypes.isIntegerDataType(dataType)) {
         return Types.Integer;
     }
-    if (isRealType(dataType)) {
+    if (DataTypes.isRealDataType(dataType)) {
         return Types.Real;
     }
-    if (isCharType(dataType)) {
-        return Types.Char(dataType.length?.value);
+    if (DataTypes.isStringDataType(dataType)) {
+        return Types.Char();
     }
-    if(isEnumType(dataType)) {
-        return Types.Enum(dataType.members);
+    if (DataTypes.isEnumDataType(dataType)) {
+        return Types.Enum(dataType.arguments.map(e => e.value));
     }
-    if(isDateTimeType(dataType)) {
+    if (DataTypes.isDateTimeDataType(dataType)) {
         return Types.DateTime;
     }
-    if(isBlobType(dataType)) {
+    if (DataTypes.isBlobDataType(dataType)) {
         return Types.Blob;
     }
-    assertUnreachable(dataType);
+    return Types.Unknown;
 }
 
 const NumericLiteralPattern = /^(\d+)((\.(\d)+)?([eE]([\-+]?\d+))?)?$/;

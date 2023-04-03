@@ -71,7 +71,7 @@ ConstraintDefinition:
 ;
 
 FunctionDefinition:
-    'CREATE' 'FUNCTION' ReferenceNamed '('
+    'CREATE' ('OR' replace?='REPLACE')? 'FUNCTION' ReferenceNamed '('
         (params+=FormalParameterDefinition (',' params+=FormalParameterDefinition)*)?
     ')' 'AS' returnType=Type;
 
@@ -249,7 +249,7 @@ JsonExtractExpression infers Expression:
 ;
 
 IdentifierAsStringLiteral infers Expression:
-    {infer IdentifierAsStringLiteral}value=Identifier
+    {infer IdentifierAsStringLiteral} value=Identifier
 ;
 
 PrimaryExpression infers Expression:
@@ -307,7 +307,7 @@ CastExpression:
     'CAST' '(' expr=Expression 'AS' type=Type ')'
 ;
 
-type ColumnNameSource = ColumnDefinition|ExpressionQuery;
+type ColumnNameSource = ColumnDefinition | ExpressionQuery;
 
 Identifier returns string:
     ID | TICK_STRING
@@ -322,9 +322,11 @@ BooleanLiteral:
 HexStringLiteral:
     value=HEX_STRING;
 
-Type: type=ID ('(' arguments+=TypeArgument (',' arguments+=TypeArgument)? ')')?;
+Type: DataType;
 
-TypeArgument:
+DataType: dataTypeNames+=ID+ ('(' arguments+=DataTypeArgument (',' arguments+=DataTypeArgument)? ')')?;
+
+DataTypeArgument:
     NumberLiteral | StringLiteral;
 
 hidden terminal WS: /\s+/;
