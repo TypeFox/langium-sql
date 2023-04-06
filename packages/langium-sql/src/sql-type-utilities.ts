@@ -355,7 +355,9 @@ export namespace DataTypes {
             'BINARY_FLOAT',
             'BINARY_DOUBLE'
         ],
-        MySQL: [],
+        MySQL: [
+            'DECIMAL(p?, s?)'
+        ],
         PostgreSQL: [],
         Presto: [],
         SQLServer: [

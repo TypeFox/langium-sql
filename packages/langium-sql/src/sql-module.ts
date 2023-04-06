@@ -22,6 +22,7 @@ import { SqlContainerManager } from "./sql-container-manager";
 import { SqlNameProvider } from "./sql-name-provider";
 import { SqlScopeComputation } from "./sql-scope-computation";
 import { SqlScopeProvider } from "./sql-scope-provider";
+import { SqlSemanticTokenProvider } from "./sql-semantic-token-provider";
 import { SqlValidationRegistry, SqlValidator } from "./sql-validator";
 import { SqlValueConverter } from "./sql-value-converter";
 import { SqlWorkspaceManager } from "./sql-workspace-manager";
@@ -77,6 +78,9 @@ export const SqlModule: Module<
         NameProvider: () => new SqlNameProvider(),
         ScopeComputation: (services) => new SqlScopeComputation(services),
         ScopeProvider: (services) => new SqlScopeProvider(services),
+    },
+    lsp: {
+        SemanticTokenProvider: (services) => new SqlSemanticTokenProvider(services),
     },
     validation: {
         ValidationRegistry: (services) => new SqlValidationRegistry(services),
