@@ -129,7 +129,7 @@ SimpleSelectStatement:
  * SQL Server `FETCH FIRST` syntax
  */
 TopClause:
-    'TOP' value=NUMBER percent?='PERCENT';
+    'TOP' value=NUMBER percent?='PERCENT'?;
 
 /**
  * MySQL/PostreSQL `FETCH FIRST` syntax
