@@ -52,7 +52,17 @@
           }
         },
         {
-          "begin": "--//",
+          "begin": "--",
+          "beginCaptures": {
+            "1": {
+              "name": "punctuation.whitespace.comment.leading.sql"
+            }
+          },
+          "end": "(?=$)",
+          "name": "comment.line.sql"
+        },
+        {
+          "begin": "//",
           "beginCaptures": {
             "1": {
               "name": "punctuation.whitespace.comment.leading.sql"

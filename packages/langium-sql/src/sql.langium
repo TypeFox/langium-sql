@@ -337,4 +337,5 @@ terminal ID: /[_a-zA-Z][\w_]*/;
 terminal NUMBER returns number: /\d+((\.\d+)?([eE][\-+]?\d+)?)?/;
 
 hidden terminal ML_COMMENT: /\/\*[\s\S]*?\*\//;
-hidden terminal SL_COMMENT: /(\-\-|\/\/)[^\n\r]*/;
+hidden terminal TICK_COMMENT: /\-\-[^\n\r]*/;
+hidden terminal SL_COMMENT: /\/\/[^\n\r]*/;
