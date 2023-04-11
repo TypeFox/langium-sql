@@ -196,8 +196,6 @@ export class SqlTypeComputer implements TypeComputer {
         return Types.Unknown;
     }
 
-
-
     computeTypeOfNumericLiteral(
         text: string
     ): TypeDescriptor | undefined {

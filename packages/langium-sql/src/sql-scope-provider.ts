@@ -185,7 +185,7 @@ export class SqlScopeProvider extends DefaultScopeProvider {
                     const selectStatement = getContainerOfType(container, isSimpleSelectStatement)!;
                     return this.getTableVariablesForSelectStatementRecursively(context, selectStatement);
                 case "columnName":
-                    const sourceItem = container.variableName.ref;
+                    const sourceItem = container.variableName?.ref;
                     if (sourceItem) {
                         if (isTableSourceItem(sourceItem)) {
                             const tableLike = getFromGlobalReference(sourceItem.table, isTableLike);
@@ -215,7 +215,7 @@ export class SqlScopeProvider extends DefaultScopeProvider {
             const property = context.property as CrossReferencesOf<ColumnNameExpression>;
             switch (property) {
                 case 'columnName':
-                    const selectStatement = getContainerOfType(container, isSimpleSelectStatement)!;
+                    const selectStatement = getContainerOfType(container, isSimpleSelectStatement);
                     const candidates = getColumnCandidatesForSimpleSelectStatement(selectStatement);
                     return this.streamColumnDescriptors(candidates);
                 default:
@@ -237,12 +237,12 @@ export class SqlScopeProvider extends DefaultScopeProvider {
 
     private getTableVariablesForSelectStatementRecursively(
         context: ReferenceInfo,
-        selectStatement: SimpleSelectStatement
+        selectStatement?: SimpleSelectStatement
     ): Scope {
         let outerScope: Scope | undefined = undefined;
 
-        if (hasContainerOfType(selectStatement.$container, isSimpleSelectStatement)) {
-            const outerSelectStatement = getContainerOfType(selectStatement.$container, isSimpleSelectStatement)!;
+        if (selectStatement && hasContainerOfType(selectStatement.$container, isSimpleSelectStatement)) {
+            const outerSelectStatement = getContainerOfType(selectStatement.$container, isSimpleSelectStatement);
             outerScope = this.getTableVariablesForSelectStatementRecursively(context, outerSelectStatement);
         }
 
@@ -252,9 +252,9 @@ export class SqlScopeProvider extends DefaultScopeProvider {
     }
 
     private getTableVariablesForSelectStatement(
-        selectStatement: SimpleSelectStatement
+        selectStatement?: SimpleSelectStatement
     ): AstNodeDescription[] {
-        if (selectStatement.from) {
+        if (selectStatement?.from) {
             const astDescriptions: AstNodeDescription[] = [];
             for (const source of selectStatement.from.sources.list) {
                 const items = [source.item].concat(
