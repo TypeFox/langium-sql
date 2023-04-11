@@ -21,6 +21,7 @@ export type TypeDescriptorDiscriminator =
     | 'null'
     | 'array'
     | 'blob'
+    | 'unknown'
     ;
 
 export function isTypeANull(
@@ -89,6 +90,7 @@ export function isTypeAText(
 
 export interface TypeDescriptorBase {
     discriminator: TypeDescriptorDiscriminator;
+    arguments?: TypeArgument[];
 }
 
 export interface RowTypeDescriptor extends TypeDescriptorBase {
@@ -140,11 +142,21 @@ export interface BlobTypeDescriptor extends TypeDescriptorBase {
     discriminator: "blob";
 }
 
+export interface UnknownTypeDescriptor extends TypeDescriptorBase {
+    discriminator: "unknown";
+}
+
+export type TypeArgument = string | number;
 export type TextualTypeDescriptor = CharTypeDescriptor;
 export type NumberTypeDescriptor = IntegerTypeDescriptor|RealTypeDescriptor;
-export type TypeDescriptor = BlobTypeDescriptor | ArrayTypeDescriptor | NullTypeDescriptor | BooleanTypeDesciptor | NumberTypeDescriptor | TextualTypeDescriptor | RowTypeDescriptor | EnumTypeDescriptor | DateTimeTypeDescriptor;
+export type TypeDescriptor = UnknownTypeDescriptor | BlobTypeDescriptor | ArrayTypeDescriptor | NullTypeDescriptor | BooleanTypeDesciptor | NumberTypeDescriptor | TextualTypeDescriptor | RowTypeDescriptor | EnumTypeDescriptor | DateTimeTypeDescriptor;
+
+export type TypeSet = Record<string, TypeDescriptor | ((args: TypeArgument[]) => TypeDescriptor)>;
 
 export const Types = {
+    Unknown: {
+        discriminator: 'unknown'
+    } as UnknownTypeDescriptor,
     Null: {
         discriminator: 'null',
     } as NullTypeDescriptor,
@@ -175,8 +187,8 @@ export const Types = {
             length
         };
     },
-    Enum(members: string[]): TypeDescriptor {
-        return {discriminator: 'enum', members};
+    Enum(members: TypeArgument[]): TypeDescriptor {
+        return {discriminator: 'enum', members: members.filter(e => typeof e === 'string') as string[]};
     }
 }
 

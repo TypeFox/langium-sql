@@ -6,19 +6,23 @@
 import { LangiumDocument } from "langium";
 import { beforeAll, describe, expect, it } from "vitest";
 import { SqlFile } from "../../src/generated/ast";
-import { createSqlServices } from "../../src/sql-module";
 import { Types } from "../../src/sql-type-descriptors";
-import { computeTypeOfNumericLiteral } from "../../src/sql-type-computation";
 import {
     parseHelper,
     expectNoErrors,
     expectSelectItemsToBeOfType,
-    asSimpleSelectStatement,
     expectSelectItemsToHaveNames,
     asSelectTableExpression,
+    createTestServices,
+    expectValidationIssues,
 } from "../test-utils";
-import { NodeFileSystem } from "langium/node";
 import { join } from "path";
+import { DataTypeDefinition, parseRequiredType } from "../../src/sql-data-types";
+import { TypeComputer } from "../../src/sql-type-computation";
+import { MySqlDialectTypes } from "../../src/dialects/mysql/data-types";
+import { ReportAs } from "../../src/sql-error-codes";
+
+const services = createTestServices(MySqlDialectTypes);
 
 describe("Type utilities", () => {
     it.each([
@@ -28,26 +32,58 @@ describe("Type utilities", () => {
         ["1E3", "integer"],
         ["123456", "integer"],
     ])("typeof(%s) === {%s}", (input: string, discriminator: string) => {
-        expect(computeTypeOfNumericLiteral(input)!).toEqual({
+        expect(services.Sql.dialect.typeComputer.computeTypeOfNumericLiteral(input)!).toEqual({
             discriminator,
         });
     });
+
+    it.each([
+        ["INT", <DataTypeDefinition>{
+            names: ['INT'],
+            arguments: []
+        }],
+        ["CHARACTER VARYING(size)", <DataTypeDefinition>{
+            names: ['CHARACTER', 'VARYING'],
+            arguments: [{type:'size', optional: false}]
+        }],
+        ["DECIMAL(integer?, integer?)", <DataTypeDefinition>{
+            names: ['DECIMAL'],
+            arguments: [
+                {type:'integer', optional: true},
+                {type:'integer', optional: true}
+            ]
+        }],
+    ])("parseRequiredType(%s)", (input: string, expected: DataTypeDefinition) => {
+        expect(parseRequiredType(input)).toEqual(expected);
+    });
 });
 
-const services = createSqlServices(NodeFileSystem);
 
 describe("Type system", () => {
+    let typeComputer: TypeComputer;
     let parse: (input: string) => Promise<LangiumDocument<SqlFile>>;
 
     beforeAll(async () => {
+        typeComputer = services.Sql.dialect.typeComputer;
         parse = await parseHelper(services.Sql, join(__dirname, '..', 'syntax', 'stdlib'));
+    });
+
+    it("CAST to unknown type", async () => {
+        const document = await parse("SELECT CAST(123 AS IMAGINATION(10, 20));");
+        expectNoErrors(document, {exceptFor: "validator"});
+        expectValidationIssues(document, 1, ReportAs.UnknownDataType.Code)
+    });
+
+    it("CAST to known type", async () => {
+        const document = await parse("SELECT CAST(123 AS DECIMAL(65, 0));");
+        expectNoErrors(document);
     });
 
     it("addition of integer and real results in real", async () => {
         const document = await parse("SELECT 1+1.5;");
         const selectStatement = asSelectTableExpression(document);
         expectNoErrors(document);
-        expectSelectItemsToBeOfType(selectStatement, [Types.Real]);
+        expectSelectItemsToBeOfType(typeComputer, selectStatement, [Types.Real]);
         expectSelectItemsToHaveNames(selectStatement, [undefined]);
     });
 
@@ -55,49 +91,49 @@ describe("Type system", () => {
         const document = await parse("SELECT firstname::$middleName AS middleName FROM passenger;");
         const selectStatement = asSelectTableExpression(document);
         expectNoErrors(document);
-        expectSelectItemsToBeOfType(selectStatement, [Types.Char()]);
+        expectSelectItemsToBeOfType(typeComputer, selectStatement, [Types.Char()]);
         expectSelectItemsToHaveNames(selectStatement, ['middleName']);
     });
     it("::$ operator with ticked Identifier", async () => {
         const document = await parse("SELECT firstname::$\`$middleName\` FROM passenger;");
         const selectStatement = asSelectTableExpression(document);
         expectNoErrors(document);
-        expectSelectItemsToBeOfType(selectStatement, [Types.Char()]);
+        expectSelectItemsToBeOfType(typeComputer, selectStatement, [Types.Char()]);
         expectSelectItemsToHaveNames(selectStatement, [undefined]);
     });
     it("::$ operator with NumberLiteral", async () => {
         const document = await parse("SELECT firstname::$123 FROM passenger;");
         const selectStatement = asSelectTableExpression(document);
         expectNoErrors(document);
-        expectSelectItemsToBeOfType(selectStatement, [Types.Char()]);
+        expectSelectItemsToBeOfType(typeComputer, selectStatement, [Types.Char()]);
         expectSelectItemsToHaveNames(selectStatement, [undefined]);
     });
     it("::$ operator with StringLiteral", async () => {
         const document = await parse(`SELECT firstname::\$"string" FROM passenger;`);
         const selectStatement = asSelectTableExpression(document);
         expectNoErrors(document);
-        expectSelectItemsToBeOfType(selectStatement, [Types.Char()]);
+        expectSelectItemsToBeOfType(typeComputer, selectStatement, [Types.Char()]);
         expectSelectItemsToHaveNames(selectStatement, [undefined]);
     });
     it("::% operator with Identifier", async () => {
         const document = await parse("SELECT firstname::%middleName FROM passenger;");
         const selectStatement = asSelectTableExpression(document);
         expectNoErrors(document);
-        expectSelectItemsToBeOfType(selectStatement, [Types.Real]);
+        expectSelectItemsToBeOfType(typeComputer, selectStatement, [Types.Real]);
         expectSelectItemsToHaveNames(selectStatement, [undefined]);
     });
     it(":: operator with Identifier", async () => {
         const document = await parse("SELECT firstname::middleName FROM passenger;");
         const selectStatement = asSelectTableExpression(document);
         expectNoErrors(document);
-        expectSelectItemsToBeOfType(selectStatement, [Types.Char()]);
+        expectSelectItemsToBeOfType(typeComputer, selectStatement, [Types.Char()]);
         expectSelectItemsToHaveNames(selectStatement, [undefined]);
     });
     it("JSON operator chain with Identifier", async () => {
         const document = await parse("SELECT firstname::123::middle::$name AS name FROM passenger;");
         const selectStatement = asSelectTableExpression(document);
         expectNoErrors(document);
-        expectSelectItemsToBeOfType(selectStatement, [Types.Char()]);
+        expectSelectItemsToBeOfType(typeComputer, selectStatement, [Types.Char()]);
         expectSelectItemsToHaveNames(selectStatement, ["name"]);
     });
 });

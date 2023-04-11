@@ -5,7 +5,7 @@ entry SqlFile:
 ;
 
 Statement:
-    (DefinitionRule | RootLevelSelectStatement) ';';
+    (DefinitionRule | RootLevelSelectStatement) ';'?;
 
 DefinitionRule:
     CatalogDefinition | SchemaDefinition | TableDefinition | FunctionDefinition;
@@ -51,7 +51,7 @@ TableContentDefinition:
 ;
 
 ColumnDefinition:
-    name=Identifier dataType=Type (negated?='NOT' null?='NULL')?;
+    name=Identifier dataType=Type (negated?='NOT'? null?='NULL')?;
 
 PrimaryKeyDefinition:
     'PRIMARY' 'KEY' '(' primaryKeys+=[ColumnDefinition] (',' primaryKeys+=[ColumnDefinition])* ')'
@@ -71,7 +71,7 @@ ConstraintDefinition:
 ;
 
 FunctionDefinition:
-    'CREATE' 'FUNCTION' ReferenceNamed '('
+    'CREATE' ('OR' replace?='REPLACE')? 'FUNCTION' ReferenceNamed '('
         (params+=FormalParameterDefinition (',' params+=FormalParameterDefinition)*)?
     ')' 'AS' returnType=Type;
 
@@ -128,17 +128,20 @@ SimpleSelectStatement:
 /**
  * SQL Server `FETCH FIRST` syntax
  */
-TopClause: 'TOP' value=NUMBER percent?='PERCENT';
+TopClause:
+    'TOP' value=NUMBER percent?='PERCENT'?;
 
 /**
  * MySQL/PostreSQL `FETCH FIRST` syntax
  */
-LimitClause: 'LIMIT' (offset=NUMBER ',' limit=NUMBER | limit=NUMBER ('OFFSET' offset=NUMBER)?);
+LimitClause:
+    'LIMIT' (offset=NUMBER ',' limit=NUMBER | limit=NUMBER ('OFFSET' offset=NUMBER)?);
 
 /**
  * Oracle/Standard `FETCH FIRST` syntax
  */
-FetchFirstClause: ('OFFSET' offset=NUMBER offsetRows?='ROWS'?)? 'FETCH' (first?='FIRST' | 'NEXT') limit=NUMBER 'ROWS' (only?='ONLY' | 'WITH' 'TIES');
+FetchFirstClause:
+    ('OFFSET' offset=NUMBER offsetRows?='ROWS'?)? 'FETCH' (first?='FIRST' | 'NEXT') limit=NUMBER 'ROWS' (only?='ONLY' | 'WITH' 'TIES');
 
 WithClause:
     'WITH' 'RECURSIVE'? ctes+=CommonTableExpression (',' ctes+=CommonTableExpression)*;
@@ -243,11 +246,11 @@ MultiplicativeExpression infers Expression:
 //Syntax for SingleStore SQL (https://docs.singlestore.com/managed-service/en/reference/sql-reference/json-functions/json_extract_-type-.html)
 JsonExtractExpression infers Expression:
     PrimaryExpression ({infer BinaryExpression.left=current} operator=('::$'|'::%'|'::') right=(StringLiteral|NumberLiteral|IdentifierAsStringLiteral))*
-    ;
+;
 
 IdentifierAsStringLiteral infers Expression:
-    {infer IdentifierAsStringLiteral}value=Identifier
-    ;
+    {infer IdentifierAsStringLiteral} value=Identifier
+;
 
 PrimaryExpression infers Expression:
     {infer StringLiteral} StringLiteral
@@ -304,7 +307,7 @@ CastExpression:
     'CAST' '(' expr=Expression 'AS' type=Type ')'
 ;
 
-type ColumnNameSource = ColumnDefinition|ExpressionQuery;
+type ColumnNameSource = ColumnDefinition | ExpressionQuery;
 
 Identifier returns string:
     ID | TICK_STRING
@@ -315,20 +318,16 @@ NumberLiteral:
 StringLiteral:
     value=STRING;
 BooleanLiteral:
-    value=('TRUE'|'FALSE');
+    value?='TRUE' | 'FALSE';
 HexStringLiteral:
     value=HEX_STRING;
 
-Type infers Type:
-    {infer BooleanType} 'BOOLEAN'
-    | {infer IntegerType} ('INTEGER'|'INT')
-    | {infer RealType} 'REAL'
-    | {infer CharType} 'CHAR' ('(' length=NumberLiteral ')')?
-    | {infer EnumType} 'ENUM' '(' members+=STRING (',' members+=STRING)* ')'
-    | {infer DateTimeType} 'DATETIME'
-    | {infer BlobType} 'BLOB'
-    ;
+Type: DataType;
 
+DataType: dataTypeNames+=ID+ ('(' arguments+=DataTypeArgument (',' arguments+=DataTypeArgument)? ')')?;
+
+DataTypeArgument:
+    NumberLiteral | StringLiteral;
 
 hidden terminal WS: /\s+/;
 terminal HEX_STRING returns string: /x\'[A-Fa-f0-9]+\'/;
@@ -338,4 +337,5 @@ terminal ID: /[_a-zA-Z][\w_]*/;
 terminal NUMBER returns number: /\d+((\.\d+)?([eE][\-+]?\d+)?)?/;
 
 hidden terminal ML_COMMENT: /\/\*[\s\S]*?\*\//;
-hidden terminal SL_COMMENT: /(\-\-|\/\/)[^\n\r]*/;
+hidden terminal TICK_COMMENT: /\-\-[^\n\r]*/;
+hidden terminal SL_COMMENT: /\/\/[^\n\r]*/;

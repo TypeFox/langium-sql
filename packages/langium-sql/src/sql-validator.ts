@@ -3,7 +3,6 @@
  * This program and the accompanying materials are made available under the
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
-
 import {
     ValidationAcceptor,
     ValidationChecks,
@@ -13,10 +12,11 @@ import * as ast from "./generated/ast";
 import _ from "lodash";
 import type { SqlServices } from "./sql-module";
 import { ReportAs } from "./sql-error-codes";
-import { computeType, computeTypeOfSelectStatement } from "./sql-type-computation";
 import { isTypeABoolean } from "./sql-type-descriptors";
 import { getColumnsForSelectTableExpression, getDefinitionType, getDefinitionTypeName } from "./sql-type-utilities";
 import { canConvert } from "./sql-type-conversion";
+import { TypeComputer } from "./sql-type-computation";
+import { DataTypeDefinition, isCompatibleWithDefinition } from "./sql-data-types";
 
 export class SqlValidationRegistry extends ValidationRegistry {
     constructor(services: SqlServices) {
@@ -39,13 +39,20 @@ export class SqlValidationRegistry extends ValidationRegistry {
             ReferenceDefinition: [validator.checkIfReferencePointsToCorrectParent],
             FunctionCall: [validator.checkFunctionCallTarget],
             TableSourceItem: [validator.checkTableSourceItemTarget],
-            ConstraintDefinition: [validator.checkConstraintTarget]
+            ConstraintDefinition: [validator.checkConstraintTarget],
+            DataType: [validator.checkIfKnownDataType],
         };
         this.register(checks, validator);
     }
 }
 
 export class SqlValidator {
+    private typeComputer: TypeComputer;
+    private dataTypes: DataTypeDefinition[];
+    constructor(services: SqlServices) { 
+        this.typeComputer = services.dialect.typeComputer;
+        this.dataTypes = services.dialect.dataTypes.allTypes();
+    }
 
     checkBinaryTableExpressionMatches(expr: ast.BinaryTableExpression, accept: ValidationAcceptor) {
         const lhs = getColumnsForSelectTableExpression(expr.left);
@@ -55,8 +62,8 @@ export class SqlValidator {
         } else {
             lhs.forEach((left, index) => {
                 const right = rhs[index];
-                const leftType = computeType(left.typedNode);
-                const rightType = computeType(right.typedNode);
+                const leftType = this.typeComputer.computeType(left.typedNode);
+                const rightType = this.typeComputer.computeType(right.typedNode);
                 if(leftType && rightType) {
                     if(!canConvert(leftType, rightType) && !canConvert(rightType, leftType)) {
                         ReportAs.TableOperationUsesTablesWithDifferentColumnTypes(expr, {columnIndex: index}, accept);
@@ -67,30 +74,30 @@ export class SqlValidator {
     }
 
     checkIfExpressionHasType(expr: ast.Expression, accept: ValidationAcceptor): void {
-        const type = computeType(expr);
+        const type = this.typeComputer.computeType(expr);
         if(!type) {
            ReportAs.CannotDeriveTypeOfExpression(expr, {}, accept);
        }
     }
 
     checkWhereIsBoolean(clause: ast.WhereClause, accept: ValidationAcceptor): void {
-        const type = computeType(clause.rowCondition);
+        const type = this.typeComputer.computeType(clause.rowCondition);
          if(type && !isTypeABoolean(type)) {
             ReportAs.ExpressionMustReturnABoolean(clause.rowCondition, type!, accept);
         }
     }
 
     checkHavingIsBoolean(clause: ast.HavingClause, accept: ValidationAcceptor): void {
-        const type = computeType(clause.groupCondition);
+        const type = this.typeComputer.computeType(clause.groupCondition);
         if(type && !isTypeABoolean(type)) {
             ReportAs.ExpressionMustReturnABoolean(clause.groupCondition, type!, accept);
         }
     }
 
     checkBinaryExpressionType(expr: ast.BinaryExpression, accept: ValidationAcceptor): void {
-        const left = computeType(expr.left);
-        const right = computeType(expr.right);
-        const returnType = computeType(expr);
+        const left = this.typeComputer.computeType(expr.left);
+        const right = this.typeComputer.computeType(expr.right);
+        const returnType = this.typeComputer.computeType(expr);
         if(left && right && !returnType) {
             ReportAs.BinaryOperatorNotDefinedForGivenExpressions(expr, {
                 left,
@@ -101,8 +108,8 @@ export class SqlValidator {
     }
 
     checkUnaryExpressionType(expr: ast.UnaryExpression, accept: ValidationAcceptor): void {
-        const operand = computeType(expr.value);
-        const returnType = computeType(expr);
+        const operand = this.typeComputer.computeType(expr.value);
+        const returnType = this.typeComputer.computeType(expr);
         if(operand && !returnType) {
             ReportAs.UnaryOperatorNotDefinedForGivenExpression(expr, {
                 operand,
@@ -181,7 +188,7 @@ export class SqlValidator {
 
     //TODO does not hold for insertions! INSERT INTO employees SELECT id, name FROM xxx
     checkIfSubQuerySelectsExactlyOneValue(subQueryExpression: ast.SubQueryExpression, accept: ValidationAcceptor) {
-        const type = computeTypeOfSelectStatement(subQueryExpression.subQuery);
+        const type = this.typeComputer.computeTypeOfSelectStatement(subQueryExpression.subQuery);
         if(type.discriminator === 'row' && type.columnTypes.length > 1) {
             ReportAs.SubQueriesWithinSelectStatementsMustHaveExactlyOneColumn(subQueryExpression, {}, accept);
         }
@@ -214,6 +221,12 @@ export class SqlValidator {
                 expected: 'TABLE',
                 received: getDefinitionTypeName(reference)
             }, accept);
+        }
+    }
+
+    checkIfKnownDataType(dataType: ast.DataType, accept: ValidationAcceptor) {
+        if(!this.dataTypes.some(dt => isCompatibleWithDefinition(dataType, dt))) {
+            ReportAs.UnknownDataType(dataType, {dataType}, accept);
         }
     }
 }

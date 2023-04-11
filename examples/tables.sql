@@ -1,6 +1,6 @@
 CREATE TABLE employees (
     id INTEGER,
-    name CHAR(200),
+    name TEXT,
     birthday REAL,
     salary REAL
 );

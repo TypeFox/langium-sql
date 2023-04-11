@@ -6,37 +6,48 @@
 import { LangiumDocument } from "langium";
 import { expect } from "vitest";
 import * as ast from "../src/generated/ast";
-import { SqlServices } from "../src/sql-module";
+import { createSqlServices, SqlServices } from "../src/sql-module";
 import { URI } from "vscode-uri";
 import {
     TypeDescriptor,
     TypeDescriptorDiscriminator,
 } from "../src/sql-type-descriptors";
 import {
-    ComputeTypeFunction,
-    computeTypeOfSelectStatement,
+    TypeComputer
 } from "../src/sql-type-computation";
 import assert from "assert";
 import { isAllTable, SimpleSelectTableExpression } from "../src/generated/ast";
 import { getColumnsForSelectTableExpression } from "../src/sql-type-utilities";
 import path from "path";
 import { SqlNameProvider } from "../src/sql-name-provider";
+import { WorkspaceFolder } from 'vscode-languageserver';
+import { NodeFileSystem } from "langium/node";
+import { DialectTypeList, DialectTypes, TypeString } from "../src/sql-data-types";
 
 const nameProvider = new SqlNameProvider();
 
+export function createTestServices(types: DialectTypeList<TypeString>) {
+    return createSqlServices({...NodeFileSystem, module: {
+        dialect: {
+            dataTypes: () => new DialectTypes(types),
+        }
+    }});
+}
+
 export async function parseHelper(
     services: SqlServices,
-    folder: string
+    folder?: string
 ): Promise<(input: string) => Promise<LangiumDocument<ast.SqlFile>>> {
     const metaData = services.LanguageMetaData;
     const documentBuilder = services.shared.workspace.DocumentBuilder;
-    const uri = URI.file(path.resolve(folder)).toString();
-    await services.shared.workspace.WorkspaceManager.initializeWorkspace([
-        {
-            name: "main",
-            uri,
-        },
-    ]);
+    const workspaces: WorkspaceFolder[] = [];
+    if (folder) {
+        workspaces.push({
+            name: 'main',
+            uri: URI.file(path.resolve(folder)).toString()
+        })
+    }
+    await services.shared.workspace.WorkspaceManager.initializeWorkspace(workspaces);
     return async (input) => {
         const randomNumber = Math.floor(Math.random() * 10000000) + 1000000;
         const uri = URI.parse(
@@ -140,10 +151,11 @@ export function expectSelectItemToBeColumnName(
 }
 
 export function expectSelectItemsToBeOfType(
+    computer: TypeComputer,
     selectStatement: ast.SelectTableExpression,
     types: TypeDescriptor[]
 ): void {
-    const row = computeTypeOfSelectStatement(selectStatement);
+    const row = computer.computeTypeOfSelectStatement(selectStatement);
     assert(row.discriminator === "row");
     expect(row.columnTypes.map((m) => m.type)).toStrictEqual(types);
 }
@@ -221,7 +233,7 @@ export function expectValidationIssues(
 }
 
 export function expectSelectItemToBeCastToType(
-    computeType: ComputeTypeFunction,
+    computer: TypeComputer,
     selectStatement: ast.SimpleSelectStatement,
     selectElementIndex: number,
     type: TypeDescriptorDiscriminator
@@ -231,5 +243,5 @@ export function expectSelectItemToBeCastToType(
     );
     const element = selectStatement.select.elements[selectElementIndex];
     expect(element.$type).toBe(ast.CastExpression);
-    expect(computeType(element)!.discriminator).toBe(type);
+    expect(computer.computeType(element)!.discriminator).toBe(type);
 }

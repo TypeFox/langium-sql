@@ -3,17 +3,19 @@
  * This program and the accompanying materials are made available under the
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
+
 import { LangiumDocument } from 'langium';
 import { NodeFileSystem } from 'langium/node';
 import { join } from 'path';
 import {beforeAll, describe, expect, it} from 'vitest'
+import { MySqlDialectTypes } from '../../src/dialects/mysql/data-types';
 import { SqlFile } from '../../src/generated/ast';
 import { createSqlServices } from '../../src/sql-module';
-import { expectNoErrors, parseHelper } from '../test-utils';
+import { createTestServices, expectNoErrors, parseHelper } from '../test-utils';
 
-const services = createSqlServices(NodeFileSystem);
+const services = createTestServices(MySqlDialectTypes);
 
-describe('Syntax coverage', () => {
+describe('SELECT Syntax coverage', () => {
     let parse: (input: string) => Promise<LangiumDocument<SqlFile>>;
 
     beforeAll(async () => {
@@ -30,6 +32,10 @@ describe('Syntax coverage', () => {
     }
 
     it('Simple select', () => expectParseable('SELECT * FROM airline;'));
+    it('Statements without semicolon', () => expectParseable(`
+        SELECT * FROM airline
+        SELECT * FROM booking
+    `));
     it('Select with table variable', () => expectParseable('SELECT a.* FROM airline a;'));
     it('Join with using', () => expectParseable(`
         SELECT firstname, lastname, flightno
