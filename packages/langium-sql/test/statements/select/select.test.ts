@@ -4,11 +4,11 @@
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
 import { LangiumDocument } from "langium";
-import { NodeFileSystem } from "langium/node";
 import { beforeAll, describe, expect, it } from "vitest";
+import { MySqlDialectTypes } from "../../../src/dialects/mysql/data-types";
 import * as ast from "../../../src/generated/ast";
 import { ReportAs } from "../../../src/sql-error-codes";
-import { createSqlServices } from "../../../src/sql-module";
+import { TypeComputer } from "../../../src/sql-type-computation";
 import { Types } from "../../../src/sql-type-descriptors";
 import {
     parseHelper,
@@ -20,15 +20,18 @@ import {
     expectSelectItemsToBeOfType,
     expectSelectItemsToHaveNames,
     asSelectTableExpression,
+    createTestServices,
 } from "../../test-utils";
 
-const services = createSqlServices(NodeFileSystem);
+const services = createTestServices(MySqlDialectTypes);
 
 describe("SELECT use cases", () => {
     let parse: (input: string) => Promise<LangiumDocument<ast.SqlFile>>;
+    let typeComputer: TypeComputer;
 
     beforeAll(async () => {
         parse = await parseHelper(services.Sql, __dirname);
+        typeComputer = services.Sql.dialect.typeComputer;
     });
 
     it("'SELECT (SELECT * FROM tab);' should have validation errors about too many columns within the sub query", async () => {
@@ -46,7 +49,7 @@ describe("SELECT use cases", () => {
         expectTableLinked(simpleSelectStatement, "tab");
         expect(simpleSelectStatement.select.elements).toHaveLength(1);
         expect(simpleSelectStatement.select.elements[0].$type).toBe(ast.AllStar);
-        expectSelectItemsToBeOfType(tableExpression, [Types.Integer, Types.Char()]);
+        expectSelectItemsToBeOfType(typeComputer, tableExpression, [Types.Integer, Types.Char()]);
         expectSelectItemsToHaveNames(tableExpression, ['id', 'name']);
     });
 
@@ -68,7 +71,7 @@ describe("SELECT use cases", () => {
         expectNoErrors(document);
         expectTableLinked(simpleSelectStatement, "tab");
         expectSelectItemsToHaveNames(tableExpression, ['id', 'name']);
-        expectSelectItemsToBeOfType(tableExpression, [Types.Integer, Types.Char()]);
+        expectSelectItemsToBeOfType(typeComputer, tableExpression, [Types.Integer, Types.Char()]);
     });
 
     it("Disallow getting everything from nothing", async () => {
@@ -85,7 +88,7 @@ describe("SELECT use cases", () => {
 
         expectNoErrors(document);
         expectSelectItemsToHaveNames(tableExpression, ['id']);
-        expectSelectItemsToBeOfType(tableExpression, [Types.Integer]);
+        expectSelectItemsToBeOfType(typeComputer, tableExpression, [Types.Integer]);
     });
 
     it("Reselect from sub query", async () => {
@@ -94,7 +97,7 @@ describe("SELECT use cases", () => {
         const tableExpression = asSelectTableExpression(document);
 
         expectSelectItemsToHaveNames(tableExpression, ["id", "name"]);
-        expectSelectItemsToBeOfType(tableExpression, [Types.Integer, Types.Char()]);
+        expectSelectItemsToBeOfType(typeComputer, tableExpression, [Types.Integer, Types.Char()]);
     });
     
 
@@ -107,7 +110,7 @@ describe("SELECT use cases", () => {
 
         expectNoErrors(document);
         expectSelectItemsToHaveNames(tableExpression, ['id', 'name', 'id', 'name']);
-        expectSelectItemsToBeOfType(tableExpression, [Types.Integer, Types.Char(), Types.Integer, Types.Char()]);
+        expectSelectItemsToBeOfType(typeComputer, tableExpression, [Types.Integer, Types.Char(), Types.Integer, Types.Char()]);
     });
 
     it("Column reference to nowhere", async () => {
@@ -143,7 +146,7 @@ describe("SELECT use cases", () => {
         const selectStatement = asSimpleSelectStatement(document);
 
         expectNoErrors(document);
-        expectSelectItemsToBeOfType(tableExpression, [Types.Real]);
+        expectSelectItemsToBeOfType(typeComputer, tableExpression, [Types.Real]);
         expectSelectItemsToHaveNames(tableExpression, [undefined]);
         expect(selectStatement.from).toBeUndefined();
     });
@@ -154,7 +157,7 @@ describe("SELECT use cases", () => {
         const tableExpression = asSelectTableExpression(document);
 
         expectNoErrors(document);
-        expectSelectItemsToBeOfType(tableExpression, [Types.Integer, Types.Real, Types.Boolean, Types.Boolean, Types.Char()]);
+        expectSelectItemsToBeOfType(typeComputer, tableExpression, [Types.Integer, Types.Real, Types.Boolean, Types.Boolean, Types.Char()]);
     });
 
     it('Should complain about missing table p (p.* searches within current select statement only!)', async () => {

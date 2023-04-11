@@ -14,15 +14,19 @@ import {
     LangiumSharedServices,
     Module,
 } from "langium";
+import { SqlDialectTypes } from "./dialects/sql/data-types";
 import {
     SqlGeneratedModule,
     SqlGeneratedSharedModule,
 } from "./generated/module";
 import { SqlContainerManager } from "./sql-container-manager";
+import { DialectTypes } from "./sql-data-types";
+import { DatabaseDialect } from "./sql-databases";
 import { SqlNameProvider } from "./sql-name-provider";
 import { SqlScopeComputation } from "./sql-scope-computation";
 import { SqlScopeProvider } from "./sql-scope-provider";
 import { SqlSemanticTokenProvider } from "./sql-semantic-token-provider";
+import { SqlTypeComputer, TypeComputer } from "./sql-type-computation";
 import { SqlValidationRegistry, SqlValidator } from "./sql-validator";
 import { SqlValueConverter } from "./sql-value-converter";
 import { SqlWorkspaceManager } from "./sql-workspace-manager";
@@ -31,6 +35,10 @@ import { SqlWorkspaceManager } from "./sql-workspace-manager";
  * Declaration of custom services - add your own service classes here.
  */
 export type SqlAddedServices = {
+    dialect: {
+        dataTypes: DialectTypes,
+        typeComputer: TypeComputer
+    }
     validation: {
         SqlValidator: SqlValidator
     }
@@ -71,6 +79,10 @@ export const SqlModule: Module<
     SqlServices,
     DeepPartial<SqlServices>
 > = {
+    dialect: {
+        dataTypes: () => new DialectTypes(SqlDialectTypes),
+        typeComputer: services => new SqlTypeComputer(services)
+    },
     parser: {
         ValueConverter: () => new SqlValueConverter(),
     },
@@ -84,7 +96,7 @@ export const SqlModule: Module<
     },
     validation: {
         ValidationRegistry: (services) => new SqlValidationRegistry(services),
-        SqlValidator: () => new SqlValidator(),
+        SqlValidator: (services) => new SqlValidator(services),
     },
 };
 

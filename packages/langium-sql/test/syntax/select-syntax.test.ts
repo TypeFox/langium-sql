@@ -8,11 +8,12 @@ import { LangiumDocument } from 'langium';
 import { NodeFileSystem } from 'langium/node';
 import { join } from 'path';
 import {beforeAll, describe, expect, it} from 'vitest'
+import { MySqlDialectTypes } from '../../src/dialects/mysql/data-types';
 import { SqlFile } from '../../src/generated/ast';
 import { createSqlServices } from '../../src/sql-module';
-import { expectNoErrors, parseHelper } from '../test-utils';
+import { createTestServices, expectNoErrors, parseHelper } from '../test-utils';
 
-const services = createSqlServices(NodeFileSystem);
+const services = createTestServices(MySqlDialectTypes);
 
 describe('SELECT Syntax coverage', () => {
     let parse: (input: string) => Promise<LangiumDocument<SqlFile>>;
