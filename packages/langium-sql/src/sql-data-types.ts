@@ -27,6 +27,15 @@ export interface DataTypeDefinition {
     arguments: DataTypeArgument[];
 }
 
+export function toString(dataType: DataTypeDefinition): string {
+    const name = `${dataType.names.join(' ')}`;
+    if(dataType.arguments.length > 0) {
+        const args = `(${dataType.arguments.map(arg => `${arg.type}${arg.optional ? '?' : ''}`).join(', ')})`;
+        return `${name}${args}`;
+    }
+    return name;
+}
+
 export function isCompatibleWithDefinition(ast: ast.DataType, required: DataTypeDefinition): boolean {
     if (ast.dataTypeNames.length !== required.names.length) {
         return false;

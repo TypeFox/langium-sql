@@ -19,6 +19,7 @@ import {
     SqlGeneratedModule,
     SqlGeneratedSharedModule,
 } from "./generated/module";
+import { SqlCompletionProvider } from "./sql-completion-provider";
 import { SqlContainerManager } from "./sql-container-manager";
 import { DialectTypes } from "./sql-data-types";
 import { SqlNameProvider } from "./sql-name-provider";
@@ -92,6 +93,7 @@ export const SqlModule: Module<
     },
     lsp: {
         SemanticTokenProvider: (services) => new SqlSemanticTokenProvider(services),
+        CompletionProvider: (services) => new SqlCompletionProvider(services),
     },
     validation: {
         ValidationRegistry: (services) => new SqlValidationRegistry(services),
