@@ -3,12 +3,13 @@
  * This program and the accompanying materials are made available under the
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
-import { AstNode, CompletionAcceptor, CompletionContext, DefaultCompletionProvider, LangiumDocument, MaybePromise, NextFeature } from "langium";
+import { AstNode, CompletionAcceptor, CompletionContext, DefaultCompletionProvider, findNextFeatures, isNamed, LangiumDocument, MaybePromise, NextFeature } from "langium";
 import { AbstractElement } from "langium/lib/grammar/generated/ast";
-import { isDataType } from "./generated/ast";
+import { isDataType, isSimpleSelectStatement } from "./generated/ast";
 import { toString, DataTypeDefinition } from "./sql-data-types";
 import { SqlServices } from "./sql-module";
 import {CompletionItemKind, CompletionList, CompletionParams} from 'vscode-languageserver';
+import { getColumnCandidatesForSelectTableExpression, getColumnsForSelectTableExpression } from "./sql-type-utilities";
 
 export class SqlCompletionProvider extends DefaultCompletionProvider {
     protected dataTypes: DataTypeDefinition[];
@@ -23,14 +24,28 @@ export class SqlCompletionProvider extends DefaultCompletionProvider {
 
     protected override completionFor(context: CompletionContext, next: NextFeature<AbstractElement>, acceptor: CompletionAcceptor): MaybePromise<void> {
         if(isDataType(context.node) && next.property === 'dataTypeNames') {
-            for(const dataType of this.dataTypes) {
+            this.completeWithDataTypes(acceptor);
+        } else if(isSimpleSelectStatement(context.node) && next.type === 'SelectElements') {
+            const columnDescriptors = getColumnCandidatesForSelectTableExpression(context.node.$container);
+            for (const columnDescriptor of columnDescriptors) {
+                const text = columnDescriptor.name ?? (isNamed(columnDescriptor.node) ? columnDescriptor.node.name : undefined);
                 acceptor({
-                    label: toString(dataType),
-                    kind: CompletionItemKind.Class,
-                    insertText: toString(dataType),
+                    kind: CompletionItemKind.Field,
+                    label: text,
+                    insertText: text,
                 });
             }
         }
         return super.completionFor(context, next, acceptor);
+    }
+
+    private completeWithDataTypes(acceptor: CompletionAcceptor) {
+        for (const dataType of this.dataTypes) {
+            acceptor({
+                label: toString(dataType),
+                kind: CompletionItemKind.Class,
+                insertText: toString(dataType),
+            });
+        }
     }
 }

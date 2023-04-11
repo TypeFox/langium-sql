@@ -68,7 +68,7 @@ export function getColumnsForSelectTableExpression(selectTableExpression: AST.Se
 }
 
 function getColumnsSimpleSelectStatement(simpleSelectStatement: AST.SimpleSelectStatement, onlyAliases: boolean): ColumnDescriptor[] {
-    return simpleSelectStatement.select.elements.flatMap(e => {
+    return simpleSelectStatement.select?.elements?.flatMap(e => {
         if (AST.isAllStar(e)) {
             if (onlyAliases) {
                 return [];
@@ -162,7 +162,7 @@ function getColumnsSimpleSelectStatement(simpleSelectStatement: AST.SimpleSelect
             assertUnreachable(e);
         }
         return [];
-    });
+    }) ?? [];
 }
 
 function resolveColumnNameTypedNode(expression: AstNode, columnName: Reference<AST.ColumnNameSource>) {

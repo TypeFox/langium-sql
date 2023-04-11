@@ -1,3 +1,5 @@
+SELECT id FROM employees JOIN managers ON employees.id=managers.employeeId;
+
 --one join
 SELECT m.managerId FROM managers m JOIN employees e ON m.managerId=e.id WHERE m.employeeId = 123;
 --all star on table
