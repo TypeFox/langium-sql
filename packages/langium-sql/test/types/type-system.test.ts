@@ -14,11 +14,13 @@ import {
     expectSelectItemsToHaveNames,
     asSelectTableExpression,
     createTestServices,
+    expectValidationIssues,
 } from "../test-utils";
 import { join } from "path";
 import { DataTypeDefinition, parseRequiredType } from "../../src/sql-data-types";
 import { TypeComputer } from "../../src/sql-type-computation";
 import { MySqlDialectTypes } from "../../src/dialects/mysql/data-types";
+import { ReportAs } from "../../src/sql-error-codes";
 
 const services = createTestServices(MySqlDialectTypes);
 
@@ -64,6 +66,17 @@ describe("Type system", () => {
     beforeAll(async () => {
         typeComputer = services.Sql.dialect.typeComputer;
         parse = await parseHelper(services.Sql, join(__dirname, '..', 'syntax', 'stdlib'));
+    });
+
+    it("CAST to unknown type", async () => {
+        const document = await parse("SELECT CAST(123 AS IMAGINATION(10, 20));");
+        expectNoErrors(document, {exceptFor: "validator"});
+        expectValidationIssues(document, 1, ReportAs.UnknownDataType.Code)
+    });
+
+    it("CAST to known type", async () => {
+        const document = await parse("SELECT CAST(123 AS DECIMAL(65, 0));");
+        expectNoErrors(document);
     });
 
     it("addition of integer and real results in real", async () => {

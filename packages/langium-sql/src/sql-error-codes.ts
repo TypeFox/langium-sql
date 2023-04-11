@@ -156,6 +156,13 @@ export const ReportAs = {
             "error",
             ({ expected, received }) => `Expected definition of type '${expected}' but received '${received}'.`,
             (node) => ({ node, property: 'element' })
+        ),
+    UnknownDataType:
+        SqlErrorFactory.create<ast.DataType, { dataType: ast.DataType }>(
+            "SQL00013",
+            "error",
+            ({ dataType }) => `Unknown data type '${dataType.dataTypeNames.join(' ')}(${dataType.arguments.map(dt => dt.value).join(', ')})'.`,
+            (node) => ({ node })
         )
 };
 

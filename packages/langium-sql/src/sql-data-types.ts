@@ -3,10 +3,8 @@
  * This program and the accompanying materials are made available under the
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
-import { MySqlDialectTypes } from "./dialects/mysql/data-types";
-import { SqlDialectTypes } from "./dialects/sql/data-types";
 import { isNumberLiteral, isStringLiteral } from "./generated/ast";
-import { AST as ast, SqlServices } from "./index";
+import { AST as ast } from "./index";
 export type TypeString = string;
 
 export interface DialectTypeList<T> {
@@ -29,7 +27,7 @@ export interface DataTypeDefinition {
     arguments: DataTypeArgument[];
 }
 
-function areEqual(ast: ast.DataType, required: DataTypeDefinition): boolean {
+export function isCompatibleWithDefinition(ast: ast.DataType, required: DataTypeDefinition): boolean {
     if (ast.dataTypeNames.length !== required.names.length) {
         return false;
     }
@@ -116,25 +114,36 @@ export class DialectTypes {
         }, {} as DialectTypeList<DataTypeDefinition>);
     }
     isStringDataType(dataType: ast.DataType): boolean {
-        return this.types.strings.some(t => areEqual(dataType, t));
+        return this.types.strings.some(t => isCompatibleWithDefinition(dataType, t));
     }
     isIntegerDataType(dataType: ast.DataType): boolean {
-        return this.types.integers.some(t => areEqual(dataType, t));
+        return this.types.integers.some(t => isCompatibleWithDefinition(dataType, t));
     }
     isRealDataType(dataType: ast.DataType): boolean {
-        return this.types.reals.some(t => areEqual(dataType, t));
+        return this.types.reals.some(t => isCompatibleWithDefinition(dataType, t));
     }
     isDateTimeDataType(dataType: ast.DataType): boolean {
-        return this.types.dateTimes.some(t => areEqual(dataType, t));
+        return this.types.dateTimes.some(t => isCompatibleWithDefinition(dataType, t));
     }
     isBooleanDataType(dataType: ast.DataType): boolean {
-        return this.types.booleans.some(t => areEqual(dataType, t));
+        return this.types.booleans.some(t => isCompatibleWithDefinition(dataType, t));
     }
     isBlobDataType(dataType: ast.DataType): boolean {
-        return this.types.blobs.some(t => areEqual(dataType, t));
+        return this.types.blobs.some(t => isCompatibleWithDefinition(dataType, t));
     }
     isEnumDataType(dataType: ast.DataType): boolean {
-        return this.types.enums.some(t => areEqual(dataType, t));
+        return this.types.enums.some(t => isCompatibleWithDefinition(dataType, t));
+    }
+    allTypes(): DataTypeDefinition[] {
+        return [
+            ...this.types.strings,
+            ...this.types.integers,
+            ...this.types.reals,
+            ...this.types.dateTimes,
+            ...this.types.booleans,
+            ...this.types.blobs,
+            ...this.types.enums
+        ];
     }
 }
 

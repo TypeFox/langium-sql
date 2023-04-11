@@ -21,7 +21,6 @@ import {
 } from "./generated/module";
 import { SqlContainerManager } from "./sql-container-manager";
 import { DialectTypes } from "./sql-data-types";
-import { DatabaseDialect } from "./sql-databases";
 import { SqlNameProvider } from "./sql-name-provider";
 import { SqlScopeComputation } from "./sql-scope-computation";
 import { SqlScopeProvider } from "./sql-scope-provider";

@@ -16,6 +16,7 @@ import { isTypeABoolean } from "./sql-type-descriptors";
 import { getColumnsForSelectTableExpression, getDefinitionType, getDefinitionTypeName } from "./sql-type-utilities";
 import { canConvert } from "./sql-type-conversion";
 import { TypeComputer } from "./sql-type-computation";
+import { DataTypeDefinition, isCompatibleWithDefinition } from "./sql-data-types";
 
 export class SqlValidationRegistry extends ValidationRegistry {
     constructor(services: SqlServices) {
@@ -38,7 +39,8 @@ export class SqlValidationRegistry extends ValidationRegistry {
             ReferenceDefinition: [validator.checkIfReferencePointsToCorrectParent],
             FunctionCall: [validator.checkFunctionCallTarget],
             TableSourceItem: [validator.checkTableSourceItemTarget],
-            ConstraintDefinition: [validator.checkConstraintTarget]
+            ConstraintDefinition: [validator.checkConstraintTarget],
+            DataType: [validator.checkIfKnownDataType],
         };
         this.register(checks, validator);
     }
@@ -46,8 +48,10 @@ export class SqlValidationRegistry extends ValidationRegistry {
 
 export class SqlValidator {
     private typeComputer: TypeComputer;
+    private dataTypes: DataTypeDefinition[];
     constructor(services: SqlServices) { 
         this.typeComputer = services.dialect.typeComputer;
+        this.dataTypes = services.dialect.dataTypes.allTypes();
     }
 
     checkBinaryTableExpressionMatches(expr: ast.BinaryTableExpression, accept: ValidationAcceptor) {
@@ -217,6 +221,12 @@ export class SqlValidator {
                 expected: 'TABLE',
                 received: getDefinitionTypeName(reference)
             }, accept);
+        }
+    }
+
+    checkIfKnownDataType(dataType: ast.DataType, accept: ValidationAcceptor) {
+        if(!this.dataTypes.some(dt => isCompatibleWithDefinition(dataType, dt))) {
+            ReportAs.UnknownDataType(dataType, {dataType}, accept);
         }
     }
 }
