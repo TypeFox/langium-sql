@@ -39,9 +39,9 @@ import { canConvert } from "./sql-type-conversion";
 import { areTypesEqual, RowTypeDescriptor, TypeDescriptor, Types } from "./sql-type-descriptors";
 import { BinaryOperator, BinaryOperators, UnaryOperator, UnaryOperators } from "./sql-type-operators";
 import {
-    DataTypes,
     getColumnsForSelectTableExpression, getFromGlobalReference,
 } from "./sql-type-utilities";
+import * as DataTypes from "./sql-data-types";
 
 export type ComputeTypeFunction = (node: AstNode) => TypeDescriptor | undefined;
 

@@ -19,6 +19,7 @@ import {
 } from "../test-utils";
 import { NodeFileSystem } from "langium/node";
 import { join } from "path";
+import { DataType, parseRequiredType } from "../../src/sql-databases";
 
 describe("Type utilities", () => {
     it.each([
@@ -31,6 +32,26 @@ describe("Type utilities", () => {
         expect(computeTypeOfNumericLiteral(input)!).toEqual({
             discriminator,
         });
+    });
+
+    it.each([
+        ["INT", <DataType>{
+            names: ['INT'],
+            arguments: []
+        }],
+        ["CHARACTER VARYING(size)", <DataType>{
+            names: ['CHARACTER', 'VARYING'],
+            arguments: [{type:'size', optional: false}]
+        }],
+        ["DECIMAL(integer?, integer?)", <DataType>{
+            names: ['DECIMAL'],
+            arguments: [
+                {type:'integer', optional: true},
+                {type:'integer', optional: true}
+            ]
+        }],
+    ])("parseRequiredType(%s)", (input: string, expected: DataType) => {
+        expect(parseRequiredType(input)).toEqual(expected);
     });
 });
 
