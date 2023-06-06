@@ -13,7 +13,6 @@ This project provides a language server for SQL dialects.
 * **Super-set approach**: Any piece of any dialect that is missing can be added to the main grammar and be protected from other dialects using validations.
 * **Highly customizable**: Any behavior or aspect that is missing for your specific use case can be easily overwritten.
 
-
 ![](docs/langium_sql.svg)
 
 ## Demo
@@ -36,15 +35,27 @@ or
 yarn add langium-sql
 ```
 
+## Example usage
+
+Here is a minimal example of how to use the Langium/SQL language server in your project.
+
+```ts
+import { parseHelper, createTestServices } from "../test-utils";
+import { join } from "path";
+import { MySqlDialectTypes } from "../../src/dialects/mysql/data-types";
+
+const services = createTestServices(MySqlDialectTypes);
+const parse = await parseHelper(services.Sql, join(__dirname, 'path', 'to', 'schemas.sql'));
+const document = await parse("SELECT CAST(123 AS IMAGINATION(10, 20));");
+
+console.log(document.parseResult.value);
+```
+
+See more examples in the [Langium test folder](test/).
+
 ### Learn more
 
-Checkout the [announcing blog post](https://www.typefox.io/blog/langium-sql) or the [Langium documentation](https://github.com/langium/langium#documentation) to get familiar with the project structure.
-
-### Usage and Examples
-
-```
-TODO
-```
+Look at the [announcing blog post](https://www.typefox.io/blog/langium-sql) or the [Langium documentation](https://github.com/langium/langium#documentation) to get familiar with the project structure.
 
 ## License
 
