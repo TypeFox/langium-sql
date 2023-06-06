@@ -3,7 +3,7 @@
  * This program and the accompanying materials are made available under the
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
-import { AstNode, CompletionAcceptor, CompletionContext, DefaultCompletionProvider, findNextFeatures, isNamed, LangiumDocument, MaybePromise, NextFeature } from "langium";
+import { AstNode, CompletionAcceptor, CompletionContext, CompletionProvider, CompletionProviderOptions, DefaultCompletionProvider, findNextFeatures, isNamed, LangiumDocument, MaybePromise, NextFeature } from "langium";
 import { AbstractElement } from "langium/lib/grammar/generated/ast";
 import { isDataType, isSimpleSelectStatement } from "./generated/ast";
 import { toString, DataTypeDefinition } from "./sql-data-types";
@@ -12,6 +12,9 @@ import {CompletionItemKind, CompletionList, CompletionParams} from 'vscode-langu
 import { getColumnCandidatesForSelectTableExpression, getColumnsForSelectTableExpression } from "./sql-type-utilities";
 
 export class SqlCompletionProvider extends DefaultCompletionProvider {
+    readonly completionOptions: CompletionProviderOptions = {
+        triggerCharacters: ['.']
+    }
     protected dataTypes: DataTypeDefinition[];
     constructor(services: SqlServices) {
         super(services);

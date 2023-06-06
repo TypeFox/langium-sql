@@ -45,7 +45,7 @@ import { join } from "path";
 import { MySqlDialectTypes } from "../../src/dialects/mysql/data-types";
 
 const services = createTestServices(MySqlDialectTypes);
-const parse = await parseHelper(services.Sql, join(__dirname, 'path', 'to', 'schemas.sql'));
+const parse = await parseHelper(services.Sql, join('path', 'to', 'schemas.sql'));
 const document = await parse("SELECT * FROM my_table;");
 
 console.log(document.parseResult.value);
