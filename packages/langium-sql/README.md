@@ -46,7 +46,7 @@ import { MySqlDialectTypes } from "../../src/dialects/mysql/data-types";
 
 const services = createTestServices(MySqlDialectTypes);
 const parse = await parseHelper(services.Sql, join(__dirname, 'path', 'to', 'schemas.sql'));
-const document = await parse("SELECT CAST(123 AS IMAGINATION(10, 20));");
+const document = await parse("SELECT * FROM my_table;");
 
 console.log(document.parseResult.value);
 ```
