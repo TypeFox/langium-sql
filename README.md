@@ -1,3 +1,5 @@
 # Langium/SQL
 
-This project is going to provide a language server for SQL dialects.
+This project provides a language server for SQL dialects.
+
+Go to the [core package](./packages/langium-sql/README.md) for better documentation.
