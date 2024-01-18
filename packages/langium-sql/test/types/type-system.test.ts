@@ -108,8 +108,8 @@ describe("Type system", () => {
         expectSelectItemsToBeOfType(typeComputer, selectStatement, [Types.Char()]);
         expectSelectItemsToHaveNames(selectStatement, [undefined]);
     });
-    it("::$ operator with StringLiteral", async () => {
-        const document = await parse(`SELECT firstname::\$"string" FROM passenger;`);
+    it("::$ operator with a Quoted Identifier", async () => {
+        const document = await parse(`SELECT firstname::\$[string] FROM passenger;`);
         const selectStatement = asSelectTableExpression(document);
         expectNoErrors(document);
         expectSelectItemsToBeOfType(typeComputer, selectStatement, [Types.Char()]);

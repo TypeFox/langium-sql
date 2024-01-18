@@ -310,7 +310,7 @@ CastExpression:
 type ColumnNameSource = ColumnDefinition | ExpressionQuery;
 
 Identifier returns string:
-    ID | TICK_STRING
+    ID | QUOTED_ID | TICK_STRING | BRACKET_STRING
 ;
 
 NumberLiteral:
@@ -331,8 +331,10 @@ DataTypeArgument:
 
 hidden terminal WS: /\s+/;
 terminal HEX_STRING returns string: /x\'[A-Fa-f0-9]+\'/;
-terminal STRING returns string: /"(\\.|[^"\\])*"|'(\\.|[^'\\])*'/;
+terminal STRING returns string: /'(\\.|[^'\\])*'/;
 terminal TICK_STRING returns string: /\`(\\.|\\\\|[^`\\])*\`/;
+terminal BRACKET_STRING returns string:    /\[(\\.|\\\\|[^[\\])*\]/;
+terminal QUOTED_ID returns string: /\"(\\.|\\\\|[^"\\])*\"/;
 terminal ID: /[_a-zA-Z][\w_]*/;
 terminal NUMBER returns number: /\d+((\.\d+)?([eE][\-+]?\d+)?)?/;
 

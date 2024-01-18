@@ -30,6 +30,8 @@ describe('CREATE TABLE syntax coverage', () => {
     }
 
     it('Simple CREATE TABLE', () => expectParseable('CREATE TABLE X(Y int);'));
+    it('Simple CREATE TABLE with bracket escaped identifier', () => expectParseable('CREATE TABLE X([Rule] int);'));
+    it('Simple CREATE TABLE with tick escaped identifier', () => expectParseable('CREATE TABLE X(`Rule` int);'));
     it('Simple CREATE TABLE with multiple columns', () => expectParseable('CREATE TABLE X(Y int, Z real);'));
     it('Simple CREATE TABLE with nullable column', () => expectParseable('CREATE TABLE X(Y int NULL);'));
     it('Simple CREATE TABLE with non-nullable column', () => expectParseable('CREATE TABLE X(Y int NOT NULL);'));
