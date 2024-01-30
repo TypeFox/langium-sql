@@ -260,7 +260,7 @@ PrimaryExpression infers Expression:
     | {infer CastExpression} CastExpression
     | {infer UnaryExpression} operator=('NOT'|'-'|'+') value=PrimaryExpression
     | {infer ParenthesisOrListExpression} '(' items+=Expression (',' items+=Expression)* ')'
-    | {infer CaseExpression} conditions+=WhenClause ('ELSE' defaultResult=Expression)? 'END' 'AS' name=Identifier
+    | {infer CaseExpression} 'CASE' conditions+=WhenClause ('ELSE' defaultResult=Expression)? 'END' 'AS' name=Identifier
     | {infer SubQueryExpression} '(' subQuery=SelectStatementRootExpression ')'
     | {infer FunctionCall} function=GlobalReference '(' params=SelectElements? ')' 
       overClause=OverClause?
@@ -274,7 +274,7 @@ OverClause:
 ;
 
 WhenClause:
-    'CASE' 'WHEN' condition=Expression 'THEN' result=Expression
+    'WHEN' condition=Expression 'THEN' result=Expression
 ;
 
 WindowSpec:
