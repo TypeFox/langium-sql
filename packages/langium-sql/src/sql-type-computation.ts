@@ -34,6 +34,7 @@ import {
     NegatableExpression,
     SelectTableExpression,
     isIdentifierAsStringLiteral,
+    isCaseExpression,
 } from "./generated/ast";
 import { canConvert } from "./sql-type-conversion";
 import { areTypesEqual, RowTypeDescriptor, TypeDescriptor, Types } from "./sql-type-descriptors";
@@ -157,6 +158,9 @@ export class SqlTypeComputer implements TypeComputer {
         }
         if(isIdentifierAsStringLiteral(node)) {
             return Types.Char();
+        }
+        if(isCaseExpression(node)) {
+            return undefined;
         }
         assertUnreachable(node);
     }
