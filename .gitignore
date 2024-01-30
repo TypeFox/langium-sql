@@ -5,3 +5,4 @@ node_modules/
 /packages/**/generated
 *.tsbuildinfo
 /test/customers/
+/.idea*

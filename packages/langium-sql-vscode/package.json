@@ -2,7 +2,7 @@
   "name": "langium-sql-vscode",
   "displayName": "SQL Extension",
   "description": "Language server extension for SQL",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "publisher": "langium",
   "license": "MIT",
   "engines": {
@@ -46,7 +46,7 @@
     "lint": "eslint src --ext ts"
   },
   "dependencies": {
-    "langium-sql": "0.2.3",
+    "langium-sql": "0.2.4",
     "vscode-languageclient": "^8.0.2"
   },
   "devDependencies": {
