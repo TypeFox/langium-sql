@@ -4,8 +4,9 @@
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
 
-import { startLanguageServer, EmptyFileSystem } from 'langium';
-import { createConnection, BrowserMessageReader, BrowserMessageWriter } from 'vscode-languageserver/browser';
+import { EmptyFileSystem } from 'langium';
+import { startLanguageServer } from 'langium/lsp';
+import { createConnection, BrowserMessageReader, BrowserMessageWriter } from 'vscode-languageserver/browser.js';
 import { createSqlServices } from 'langium-sql';
 
 /* browser specific setup code */

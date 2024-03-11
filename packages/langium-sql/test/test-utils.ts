@@ -5,24 +5,24 @@
  ******************************************************************************/
 import { LangiumDocument } from "langium";
 import { expect } from "vitest";
-import * as ast from "../src/generated/ast";
-import { createSqlServices, SqlServices } from "../src/sql-module";
+import * as ast from "../src/generated/ast.js";
+import { createSqlServices, SqlServices } from "../src/sql-module.js";
 import { URI } from "vscode-uri";
 import {
     TypeDescriptor,
     TypeDescriptorDiscriminator,
-} from "../src/sql-type-descriptors";
+} from "../src/sql-type-descriptors.js";
 import {
     TypeComputer
-} from "../src/sql-type-computation";
+} from "../src/sql-type-computation.js";
 import assert from "assert";
-import { isAllTable, SimpleSelectTableExpression } from "../src/generated/ast";
-import { getColumnsForSelectTableExpression } from "../src/sql-type-utilities";
+import { isAllTable, SimpleSelectTableExpression } from "../src/generated/ast.js";
+import { getColumnsForSelectTableExpression } from "../src/sql-type-utilities.js";
 import path from "path";
-import { SqlNameProvider } from "../src/sql-name-provider";
+import { SqlNameProvider } from "../src/sql-name-provider.js";
 import { WorkspaceFolder } from 'vscode-languageserver';
 import { NodeFileSystem } from "langium/node";
-import { DialectTypeList, DialectTypes, TypeString } from "../src/sql-data-types";
+import { DialectTypeList, DialectTypes, TypeString } from "../src/sql-data-types.js";
 
 const nameProvider = new SqlNameProvider();
 
@@ -59,7 +59,7 @@ export async function parseHelper(
                 uri
             );
         services.shared.workspace.LangiumDocuments.addDocument(document);
-        await documentBuilder.build([document], { validationChecks: "all" });
+        await documentBuilder.build([document], { validation: true });
         return document;
     };
 }

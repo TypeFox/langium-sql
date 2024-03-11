@@ -8,10 +8,9 @@ import { LangiumDocument } from 'langium';
 import { NodeFileSystem } from 'langium/node';
 import { join } from 'path';
 import {beforeAll, describe, expect, it} from 'vitest'
-import { MySqlDialectTypes } from '../../src/dialects/mysql/data-types';
-import { SqlFile } from '../../src/generated/ast';
-import { createSqlServices } from '../../src/sql-module';
-import { createTestServices, expectNoErrors, parseHelper } from '../test-utils';
+import { MySqlDialectTypes } from '../../src/dialects/mysql/data-types.js';
+import { SqlFile } from '../../src/generated/ast.js';
+import { createTestServices, expectNoErrors, parseHelper } from '../test-utils.js';
 
 const services = createTestServices(MySqlDialectTypes);
 

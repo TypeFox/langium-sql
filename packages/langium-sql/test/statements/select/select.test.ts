@@ -5,11 +5,11 @@
  ******************************************************************************/
 import { LangiumDocument } from "langium";
 import { beforeAll, describe, expect, it } from "vitest";
-import { MySqlDialectTypes } from "../../../src/dialects/mysql/data-types";
-import * as ast from "../../../src/generated/ast";
-import { ReportAs } from "../../../src/sql-error-codes";
-import { TypeComputer } from "../../../src/sql-type-computation";
-import { Types } from "../../../src/sql-type-descriptors";
+import { MySqlDialectTypes } from "../../../src/dialects/mysql/data-types.js";
+import * as ast from "../../../src/generated/ast.js";
+import { ReportAs } from "../../../src/sql-error-codes.js";
+import { TypeComputer } from "../../../src/sql-type-computation.js";
+import { Types } from "../../../src/sql-type-descriptors.js";
 import {
     parseHelper,
     expectNoErrors,
@@ -21,7 +21,7 @@ import {
     expectSelectItemsToHaveNames,
     asSelectTableExpression,
     createTestServices,
-} from "../../test-utils";
+} from "../../test-utils.js";
 
 const services = createTestServices(MySqlDialectTypes);
 

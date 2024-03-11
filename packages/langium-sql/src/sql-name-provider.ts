@@ -5,7 +5,7 @@
  ******************************************************************************/
 
 import { AstNode, CstNode, DefaultNameProvider } from "langium";
-import { GlobalReference, isFunctionDefinition, isSchemaDefinition, isTableDefinition } from "./generated/ast";
+import { GlobalReference, isFunctionDefinition, isSchemaDefinition, isTableDefinition } from "./generated/ast.js";
 
 export class SqlNameProvider extends DefaultNameProvider {
 

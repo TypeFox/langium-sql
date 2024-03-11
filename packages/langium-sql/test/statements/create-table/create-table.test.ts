@@ -7,14 +7,14 @@
 import { LangiumDocument } from "langium";
 import { NodeFileSystem } from "langium/node";
 import { beforeAll, describe, it } from "vitest";
-import * as ast from "../../../src/generated/ast";
-import { ReportAs } from "../../../src/sql-error-codes";
-import { createSqlServices } from "../../../src/sql-module";
+import * as ast from "../../../src/generated/ast.js";
+import { ReportAs } from "../../../src/sql-error-codes.js";
+import { createSqlServices } from "../../../src/sql-module.js";
 import {
     parseHelper,
     expectNoErrors,
     expectValidationIssues,
-} from "../../test-utils";
+} from "../../test-utils.js";
 
 const services = createSqlServices(NodeFileSystem);
 

@@ -37,12 +37,15 @@
     "dist",
     "src"
   ],
+  "type": "module",
+  "exports": "./dist/node/extension.js",
+  "types": "./dist/node/extension.d.ts",
   "main": "./dist/node/extension.js",
   "browser": "./dist/browser/extension.js",
   "scripts": {
     "vscode:prepublish": "npm run build && npm run lint",
-    "build": "node esbuild.js",
-    "watch": "node esbuild.js --watch",
+    "build": "node esbuild.mjs",
+    "watch": "node esbuild.mjs --watch",
     "lint": "eslint src --ext ts"
   },
   "dependencies": {
@@ -51,7 +54,7 @@
   },
   "devDependencies": {
     "@types/vscode": "^1.67.0",
-    "esbuild": "^0.16.14"
+    "esbuild": "~0.19.9"
   },
   "repository": {
     "type": "git",

@@ -4,11 +4,10 @@
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
 
-import { CstNode, DefaultValueConverter, ValueType } from "langium";
-import { AbstractRule } from "langium/lib/grammar/generated/ast";
+import { GrammarAST, CstNode, DefaultValueConverter, ValueType } from "langium";
 
 export class SqlValueConverter extends DefaultValueConverter {
-    protected override runConverter(rule: AbstractRule, input: string, cstNode: CstNode): ValueType {
+    protected override runConverter(rule: GrammarAST.AbstractRule, input: string, cstNode: CstNode): ValueType {
         if(rule.name.toUpperCase() === 'TICK_STRING' || rule.name.toUpperCase() === 'STRING') {
             return input.substring(1, input.length-1).replace(/\\(.)/g, '$1');
         }

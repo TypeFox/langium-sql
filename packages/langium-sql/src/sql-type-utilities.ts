@@ -5,7 +5,7 @@
  ******************************************************************************/
 
 import { AstNode, Reference, assertUnreachable } from "langium";
-import * as AST from "./generated/ast";
+import * as AST from "./generated/ast.js";
 
 export interface ColumnDescriptor {
     name?: string;

@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
         "target": "ES2017",
-        "module": "CommonJS",
+        "module": "NodeNext",
         "moduleResolution": "node16",
         "jsx": "react",
         "composite": true,

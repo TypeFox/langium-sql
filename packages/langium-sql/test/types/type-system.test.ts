@@ -5,8 +5,8 @@
  ******************************************************************************/
 import { LangiumDocument } from "langium";
 import { beforeAll, describe, expect, it } from "vitest";
-import { SqlFile } from "../../src/generated/ast";
-import { Types } from "../../src/sql-type-descriptors";
+import { SqlFile } from "../../src/generated/ast.js";
+import { Types } from "../../src/sql-type-descriptors.js";
 import {
     parseHelper,
     expectNoErrors,
@@ -15,12 +15,12 @@ import {
     asSelectTableExpression,
     createTestServices,
     expectValidationIssues,
-} from "../test-utils";
+} from "../test-utils.js";
 import { join } from "path";
-import { DataTypeDefinition, parseRequiredType } from "../../src/sql-data-types";
-import { TypeComputer } from "../../src/sql-type-computation";
-import { MySqlDialectTypes } from "../../src/dialects/mysql/data-types";
-import { ReportAs } from "../../src/sql-error-codes";
+import { DataTypeDefinition, parseRequiredType } from "../../src/sql-data-types.js";
+import { TypeComputer } from "../../src/sql-type-computation.js";
+import { MySqlDialectTypes } from "../../src/dialects/mysql/data-types.js";
+import { ReportAs } from "../../src/sql-error-codes.js";
 
 const services = createTestServices(MySqlDialectTypes);
 

@@ -4,7 +4,7 @@
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
 
-import { DialectTypeList } from "../../sql-data-types";
+import { DialectTypeList } from "../../sql-data-types.js";
 
 export const SqlDialectTypes: DialectTypeList<string> = {
     strings: ['TEXT'],

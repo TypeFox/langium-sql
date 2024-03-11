@@ -3,8 +3,8 @@
  * This program and the accompanying materials are made available under the
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
-import { isNumberLiteral, isStringLiteral } from "./generated/ast";
-import { AST as ast } from "./index";
+import { isNumberLiteral, isStringLiteral } from "./generated/ast.js";
+import { AST as ast } from "./index.js";
 export type TypeString = string;
 
 export interface DialectTypeList<T> {

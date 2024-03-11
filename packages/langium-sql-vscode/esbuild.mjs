@@ -4,6 +4,8 @@
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
 
+import * as esbuild from 'esbuild';
+
 //@ts-check
 const watch = process.argv.includes('--watch');
 const minify = process.argv.includes('--minify');
@@ -21,7 +23,7 @@ function padZeroes(i) {
     return i.toString().padStart(2, '0');
 }
 
-require('esbuild').build({
+esbuild.build({
     // Two entry points, one for the extension, one for the language server
     entryPoints: ['src/node/extension.ts', 'src/node/language-server.ts'],
     outdir: 'dist/node',
@@ -41,7 +43,7 @@ require('esbuild').build({
     .then(() => console.log(`${getTime()}Node ${success}`))
     .catch(() => process.exit(1));
 
-require('esbuild').build({
+esbuild.build({
     // Two entry points, one for the extension, one for the language server
     entryPoints: ['src/browser/extension.ts', 'src/browser/language-server.ts'],
     outdir: 'dist/browser',

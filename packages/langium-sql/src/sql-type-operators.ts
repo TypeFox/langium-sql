@@ -5,8 +5,8 @@
  ******************************************************************************/
 
 import _ from "lodash";
-import { BinaryExpression, NegatableExpression, UnaryExpression } from "./generated/ast";
-import { TypeDescriptor, Types } from "./sql-type-descriptors";
+import { BinaryExpression, NegatableExpression, UnaryExpression } from "./generated/ast.js";
+import { TypeDescriptor, Types } from "./sql-type-descriptors.js";
 
 export type UnaryOperator = UnaryExpression["operator"];
 export type BinaryOperator = BinaryExpression["operator"] | NegatableExpression['operator'];

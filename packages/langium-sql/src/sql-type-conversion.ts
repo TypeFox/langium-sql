@@ -4,8 +4,8 @@
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
 
-import { TypeDescriptor, TypeDescriptorDiscriminator, Types } from "./sql-type-descriptors";
-import { Value } from "./sql-type-values";
+import { TypeDescriptor, TypeDescriptorDiscriminator, Types } from "./sql-type-descriptors.js";
+import { Value } from "./sql-type-values.js";
 
 export type TypeConversionKind = 'implicit'|'explicit';
 type TypeConvertFunction = (value: Value) => Value;

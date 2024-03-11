@@ -10,8 +10,6 @@ import {
     AstNodeDescriptionProvider,
     AstNodeLocator,
     DefaultScopeProvider,
-    getContainerOfType,
-    hasContainerOfType,
     LangiumDocuments,
     NamedAstNode,
     Reference,
@@ -21,9 +19,9 @@ import {
     stream,
     StreamScope,
     Stream,
-    streamAllContents,
     EMPTY_SCOPE,
 } from "langium";
+import { AstUtils } from 'langium';
 import {
     AllTable,
     ColumnDefinition,
@@ -53,12 +51,12 @@ import {
     SimpleSelectStatement,
     SqlAstType,
     TableRelatedColumnExpression,
-} from "./generated/ast";
-import { SqlContainerManager } from "./sql-container-manager";
-import { SqlServices } from "./sql-module";
+} from "./generated/ast.js";
+import { SqlContainerManager } from "./sql-container-manager.js";
+import { SqlServices } from "./sql-module.js";
 import {
     ColumnDescriptor, getColumnCandidatesForSelectTableExpression, getColumnCandidatesForSimpleSelectStatement, getFromGlobalReference,
-} from "./sql-type-utilities";
+} from "./sql-type-utilities.js";
 
 
 /**
@@ -127,7 +125,7 @@ export class SqlScopeProvider extends DefaultScopeProvider {
             const property = context.property as CrossReferencesOf<PrimaryKeyDefinition>;
             switch (property) {
                 case 'primaryKeys':
-                    const tableDef = getContainerOfType(container, isTableDefinition)!;
+                    const tableDef = AstUtils.getContainerOfType(container, isTableDefinition)!;
                     return this.streamColumnDefinitions(tableDef.columns.filter(isColumnDefinition));
                 default:
                     assertUnreachable(property);
@@ -136,7 +134,7 @@ export class SqlScopeProvider extends DefaultScopeProvider {
             const property = context.property as CrossReferencesOf<IndexDefinition>;
             switch (property) {
                 case 'indexes':
-                    const tableDef = getContainerOfType(container, isTableDefinition)!;
+                    const tableDef = AstUtils.getContainerOfType(container, isTableDefinition)!;
                     return this.streamColumnDefinitions(tableDef.columns.filter(isColumnDefinition));
                 default:
                     assertUnreachable(property);
@@ -145,7 +143,7 @@ export class SqlScopeProvider extends DefaultScopeProvider {
             const property = context.property as CrossReferencesOf<KeyDefinition>;
             switch (property) {
                 case 'keys':
-                    const tableDef = getContainerOfType(container, isTableDefinition)!;
+                    const tableDef = AstUtils.getContainerOfType(container, isTableDefinition)!;
                     return this.streamColumnDefinitions(tableDef.columns.filter(isColumnDefinition));
                 default:
                     assertUnreachable(property);
@@ -154,7 +152,7 @@ export class SqlScopeProvider extends DefaultScopeProvider {
             const property = context.property as CrossReferencesOf<ConstraintDefinition>;
             switch (property) {
                 case "from": {
-                    const columns = getContainerOfType(
+                    const columns = AstUtils.getContainerOfType(
                         container,
                         isTableDefinition
                     )!.columns.filter(isColumnDefinition);
@@ -171,7 +169,7 @@ export class SqlScopeProvider extends DefaultScopeProvider {
             const property = context.property as CrossReferencesOf<AllTable>;
             switch (property) {
                 case "variableName": {
-                    const selectStatement = getContainerOfType(container, isSimpleSelectStatement)!;
+                    const selectStatement = AstUtils.getContainerOfType(container, isSimpleSelectStatement)!;
                     //ATTENTION! Do not recursively traverse upwards, t.* only looks up t in the current select statement
                     return this.newCaseInsensitiveScope(stream(this.getTableVariablesForSelectStatement(selectStatement)));
                 }
@@ -182,7 +180,7 @@ export class SqlScopeProvider extends DefaultScopeProvider {
             const property = context.property as CrossReferencesOf<TableRelatedColumnExpression>;
             switch (property) {
                 case "variableName":
-                    const selectStatement = getContainerOfType(container, isSimpleSelectStatement)!;
+                    const selectStatement = AstUtils.getContainerOfType(container, isSimpleSelectStatement)!;
                     return this.getTableVariablesForSelectStatementRecursively(context, selectStatement);
                 case "columnName":
                     const sourceItem = container.variableName?.ref;
@@ -215,7 +213,7 @@ export class SqlScopeProvider extends DefaultScopeProvider {
             const property = context.property as CrossReferencesOf<ColumnNameExpression>;
             switch (property) {
                 case 'columnName':
-                    const selectStatement = getContainerOfType(container, isSimpleSelectStatement);
+                    const selectStatement = AstUtils.getContainerOfType(container, isSimpleSelectStatement);
                     const candidates = getColumnCandidatesForSimpleSelectStatement(selectStatement);
                     return this.streamColumnDescriptors(candidates);
                 default:
@@ -225,8 +223,8 @@ export class SqlScopeProvider extends DefaultScopeProvider {
             const property = context.property as CrossReferencesOf<OverClause>;
             switch (property) {
                 case 'windowName':
-                    const selectStatement = getContainerOfType(container, isSimpleSelectStatement)!;
-                    const nodes = streamAllContents(selectStatement).filter(isWindowSpec).toArray() as NamedAstNode[];
+                    const selectStatement = AstUtils.getContainerOfType(container, isSimpleSelectStatement)!;
+                    const nodes = AstUtils.streamAllContents(selectStatement).filter(isWindowSpec).toArray() as NamedAstNode[];
                     return this.packToDescriptions(nodes);
             }
         } else {
@@ -241,8 +239,8 @@ export class SqlScopeProvider extends DefaultScopeProvider {
     ): Scope {
         let outerScope: Scope | undefined = undefined;
 
-        if (selectStatement && hasContainerOfType(selectStatement.$container, isSimpleSelectStatement)) {
-            const outerSelectStatement = getContainerOfType(selectStatement.$container, isSimpleSelectStatement);
+        if (selectStatement && AstUtils.hasContainerOfType(selectStatement.$container, isSimpleSelectStatement)) {
+            const outerSelectStatement = AstUtils.getContainerOfType(selectStatement.$container, isSimpleSelectStatement);
             outerScope = this.getTableVariablesForSelectStatementRecursively(context, outerSelectStatement);
         }
 
@@ -295,14 +293,6 @@ export class SqlScopeProvider extends DefaultScopeProvider {
 
     override getGlobalScope(nodeType: string, _context: ReferenceInfo): Scope {
         return this.newCaseInsensitiveScope(this.indexManager.allElements(nodeType));
-    }
-
-    protected unpackFromDescriptions<N extends NamedAstNode>(scope: Scope) {
-        return scope.getAllElements().toArray()
-            .map(d => {
-                const document = this.langiumDocuments.getOrCreateDocument(d.documentUri)!;
-                return this.astNodeLocator.getAstNode(document.parseResult.value, d.path) as N;
-            });
     }
 
     protected packToDescriptions<N extends NamedAstNode>(nodes: N[]): Scope {

@@ -8,15 +8,15 @@ import {
     ValidationChecks,
     ValidationRegistry,
 } from "langium";
-import * as ast from "./generated/ast";
+import * as ast from "./generated/ast.js";
 import _ from "lodash";
-import type { SqlServices } from "./sql-module";
-import { ReportAs } from "./sql-error-codes";
-import { isTypeABoolean } from "./sql-type-descriptors";
-import { getColumnsForSelectTableExpression, getDefinitionType, getDefinitionTypeName } from "./sql-type-utilities";
-import { canConvert } from "./sql-type-conversion";
-import { TypeComputer } from "./sql-type-computation";
-import { DataTypeDefinition, isCompatibleWithDefinition } from "./sql-data-types";
+import type { SqlServices } from "./sql-module.js";
+import { ReportAs } from "./sql-error-codes.js";
+import { isTypeABoolean } from "./sql-type-descriptors.js";
+import { getColumnsForSelectTableExpression, getDefinitionType, getDefinitionTypeName } from "./sql-type-utilities.js";
+import { canConvert } from "./sql-type-conversion.js";
+import { TypeComputer } from "./sql-type-computation.js";
+import { DataTypeDefinition, isCompatibleWithDefinition } from "./sql-data-types.js";
 
 export class SqlValidationRegistry extends ValidationRegistry {
     constructor(services: SqlServices) {

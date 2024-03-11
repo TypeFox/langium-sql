@@ -5,7 +5,7 @@
  ******************************************************************************/
 
 import { AstNode, AstNodeDescription, DefaultScopeComputation, LangiumDocument, PrecomputedScopes } from "langium";
-import { isCatalogDefinition, isDefinition, isFunctionDefinition, isSchemaDefinition, isTableDefinition, isWithClause } from "./generated/ast";
+import { isCatalogDefinition, isDefinition, isFunctionDefinition, isSchemaDefinition, isTableDefinition, isWithClause } from "./generated/ast.js";
 
 export class SqlScopeComputation extends DefaultScopeComputation {
 

@@ -4,18 +4,18 @@
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
 
-import * as AST from './generated/ast';
+import * as AST from './generated/ast.js';
 
 export { AST };
-export * from './sql-error-codes';
-export * from './sql-module';
-export * from './sql-scope-provider';
-export * from './sql-type-computation';
-export * from './sql-type-conversion';
-export * from './sql-type-descriptors';
-export * from './sql-type-operators';
-export * from './sql-type-utilities';
-export * from './sql-type-values';
-export * from './sql-validator';
-export * from './sql-value-converter';
-export * from './sql-workspace-manager';
+export * from './sql-error-codes.js';
+export * from './sql-module.js';
+export * from './sql-scope-provider.js';
+export * from './sql-type-computation.js';
+export * from './sql-type-conversion.js';
+export * from './sql-type-descriptors.js';
+export * from './sql-type-operators.js';
+export * from './sql-type-utilities.js';
+export * from './sql-type-values.js';
+export * from './sql-validator.js';
+export * from './sql-value-converter.js';
+export * from './sql-workspace-manager.js';

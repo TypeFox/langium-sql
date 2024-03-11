@@ -4,13 +4,10 @@
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
 
-import {
-    AbstractSemanticTokenProvider,
-    AstNode,
-    SemanticTokenAcceptor
-} from "langium";
-import * as ast from "./generated/ast";
+import * as ast from "./generated/ast.js";
 import { SemanticTokenTypes } from 'vscode-languageserver';
+import { AbstractSemanticTokenProvider, SemanticTokenAcceptor } from "langium/lsp";
+import { AstNode } from "langium";
 
 export class SqlSemanticTokenProvider extends AbstractSemanticTokenProvider {
 
