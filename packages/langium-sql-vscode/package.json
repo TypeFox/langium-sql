@@ -38,10 +38,10 @@
     "src"
   ],
   "type": "commonjs",
-  "exports": "./dist/node/extension.js",
+  "exports": "./dist/node/extension.cjs",
   "types": "./dist/node/extension.d.ts",
-  "main": "./dist/node/extension.js",
-  "browser": "./dist/browser/extension.js",
+  "main": "./dist/node/extension.cjs",
+  "browser": "./dist/browser/extension.cjs",
   "scripts": {
     "vscode:prepublish": "npm run build && npm run lint",
     "build": "node esbuild.mjs",

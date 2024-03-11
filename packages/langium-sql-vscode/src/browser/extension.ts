@@ -8,7 +8,7 @@ import * as vscode from "vscode";
 import {
     LanguageClient,
     LanguageClientOptions
-} from "vscode-languageclient/browser";
+} from "vscode-languageclient/browser.js";
 
 let client: LanguageClient;
 
