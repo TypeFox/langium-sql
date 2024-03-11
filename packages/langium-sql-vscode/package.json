@@ -37,7 +37,7 @@
     "dist",
     "src"
   ],
-  "type": "module",
+  "type": "commonjs",
   "exports": "./dist/node/extension.js",
   "types": "./dist/node/extension.d.ts",
   "main": "./dist/node/extension.js",

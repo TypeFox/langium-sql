@@ -23,10 +23,23 @@ function padZeroes(i) {
     return i.toString().padStart(2, '0');
 }
 
+const plugins = [{
+    name: 'watch-plugin',
+    setup(build) {
+        build.onEnd(result => {
+            if (result.errors.length === 0) {
+                console.log(getTime() + success);
+            }
+        });
+    },
+}];
+
+
 const ctxNode = await esbuild.context({
     // Two entry points, one for the extension, one for the language server
     entryPoints: ['src/node/extension.ts', 'src/node/language-server.ts'],
     outdir: 'dist/node',
+    target: 'ES2017',
     outExtension: {
         '.js': '.cjs'
     },
@@ -36,7 +49,8 @@ const ctxNode = await esbuild.context({
     external: ['vscode'], // the vscode-module is created on-the-fly and must be excluded.
     platform: 'node', // VSCode extensions run in a node process
     sourcemap: !minify,
-    minify
+    minify,
+    plugins
 });
 const ctxBrowser = await esbuild.context({
     // Two entry points, one for the extension, one for the language server
@@ -45,13 +59,15 @@ const ctxBrowser = await esbuild.context({
     outExtension: {
         '.js': '.cjs'
     },
+    target: 'ES2017',
     bundle: true,
     loader: { '.ts': 'ts' },
     external: ['vscode'], // the vscode-module is created on-the-fly and must be excluded.
     platform: 'browser', // VSCode extensions run in a node process,
     format: 'iife',
     sourcemap: !minify,
-    minify
+    minify,
+    plugins
 });
 
 if (watch) {
