@@ -27,7 +27,7 @@ export function deactivate(): Thenable<void> | undefined {
 
 function startLanguageClient(context: vscode.ExtensionContext): LanguageClient {
 
-    const serverMain = vscode.Uri.joinPath(context.extensionUri, 'dist/browser/language-server.js');
+    const serverMain = vscode.Uri.joinPath(context.extensionUri, 'dist/browser/language-server.cjs');
 
     const worker = new Worker(serverMain.toString());
 
