@@ -34,15 +34,15 @@ import {
     NegatableExpression,
     SelectTableExpression,
     isIdentifierAsStringLiteral,
-} from "./generated/ast";
-import { canConvert } from "./sql-type-conversion";
-import { areTypesEqual, RowTypeDescriptor, TypeDescriptor, Types } from "./sql-type-descriptors";
-import { BinaryOperator, BinaryOperators, UnaryOperator, UnaryOperators } from "./sql-type-operators";
+} from "./generated/ast.js";
+import { canConvert } from "./sql-type-conversion.js";
+import { areTypesEqual, RowTypeDescriptor, TypeDescriptor, Types } from "./sql-type-descriptors.js";
+import { BinaryOperator, BinaryOperators, UnaryOperator, UnaryOperators } from "./sql-type-operators.js";
 import {
     getColumnsForSelectTableExpression, getFromGlobalReference,
-} from "./sql-type-utilities";
-import * as DataTypes from "./sql-data-types";
-import { SqlServices } from "./sql-module";
+} from "./sql-type-utilities.js";
+import * as DataTypes from "./sql-data-types.js";
+import { SqlServices } from "./sql-module.js";
 
 export interface TypeComputer {
     computeType(node: AstNode): TypeDescriptor | undefined;

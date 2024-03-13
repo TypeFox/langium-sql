@@ -4,18 +4,19 @@
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
 
-import { startLanguageServer, EmptyFileSystem } from 'langium';
-import { createConnection, BrowserMessageReader, BrowserMessageWriter } from 'vscode-languageserver/browser';
-import { createSqlServices } from 'langium-sql';
+import { createConnection, BrowserMessageReader, BrowserMessageWriter } from 'vscode-languageserver/browser.js';
 
-/* browser specific setup code */
-const messageReader = new BrowserMessageReader(self);
-const messageWriter = new BrowserMessageWriter(self);
+Promise.all([import('langium'), import('langium/lsp'), import('langium-sql')] as const)
+    .then(([{EmptyFileSystem}, {startLanguageServer}, {createSqlServices}]) => {
+        /* browser specific setup code */
+        const messageReader = new BrowserMessageReader(self);
+        const messageWriter = new BrowserMessageWriter(self);
 
-const connection = createConnection(messageReader, messageWriter);
+        const connection = createConnection(messageReader, messageWriter);
 
-// Inject the shared services and language-specific services
-const { shared } = createSqlServices({ connection, ...EmptyFileSystem });
+        // Inject the shared services and language-specific services
+        const { shared } = createSqlServices({ connection, ...EmptyFileSystem });
 
-// Start the language server with the shared services
-startLanguageServer(shared);
+        // Start the language server with the shared services
+        startLanguageServer(shared);
+    });

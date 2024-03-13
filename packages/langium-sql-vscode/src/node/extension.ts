@@ -11,7 +11,7 @@ import {
     LanguageClientOptions,
     ServerOptions,
     TransportKind,
-} from "vscode-languageclient/node";
+} from "vscode-languageclient/node.js";
 
 let client: LanguageClient;
 
@@ -30,7 +30,7 @@ export function deactivate(): Thenable<void> | undefined {
 
 function startLanguageClient(context: vscode.ExtensionContext): LanguageClient {
     const serverModule = context.asAbsolutePath(
-        path.join("dist", "node", "language-server")
+        path.join("dist", "node", "language-server.cjs")
     );
     // The debug options for the server
     // --inspect=6009: runs the server in Node's Inspector mode so VS Code can attach to the server for debugging.

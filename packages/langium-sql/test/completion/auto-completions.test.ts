@@ -7,9 +7,9 @@ import { beforeAll, describe, expect, it } from "vitest";
 import {
     parseHelper,
     createTestServices,
-} from "../test-utils";
+} from "../test-utils.js";
 import { join } from "path";
-import { MySqlDialectTypes } from "../../src/dialects/mysql/data-types";
+import { MySqlDialectTypes } from "../../src/dialects/mysql/data-types.js";
 
 const services = createTestServices(MySqlDialectTypes);
 

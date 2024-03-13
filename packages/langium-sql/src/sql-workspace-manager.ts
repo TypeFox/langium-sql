@@ -8,8 +8,10 @@ import {
     DefaultWorkspaceManager,
     LangiumDocument,
     LangiumDocumentFactory,
-    LangiumSharedServices,
 } from "langium";
+import {
+    LangiumSharedServices,
+} from "langium/lsp";
 import { URI } from "vscode-uri";
 import { WorkspaceFolder } from "vscode-languageserver";
 

@@ -2,30 +2,39 @@
   "name": "langium-sql",
   "displayName": "SQL Language Server",
   "description": "Extensible language server for SQL",
-  "version": "0.2.4",
+  "version": "0.3.0",
   "license": "MIT",
   "files": [
     "lib",
     "src"
   ],
+  "type": "module",
+  "exports": {
+    ".": {
+        "types": "./lib/index.d.ts",
+        "default": "./lib/index.js"
+    }
+  },
   "main": "./lib/index.js",
   "scripts": {
-    "compile:src": "tsc --build tsconfig.src.json",
+    "compile:src": "node esbuild.mjs",
     "compile:test": "tsc --build tsconfig.test.json",
     "clean": "npx shx rm -fr lib *.tsbuildinfo",
-    "build": "npm run clean && npm run langium:generate && npm run compile:src && npm run compile:test",
+    "build": "npm run clean && npm run langium:generate && npm run compile:src",
     "watch": "tsc -b tsconfig.src.json --watch",
     "lint": "eslint src --ext ts",
     "langium:generate": "langium generate",
     "langium:watch": "langium generate --watch"
   },
   "dependencies": {
-    "langium": "~1.1.0",
+    "langium": "^3.0.0",
     "lodash": "^4.17.21"
   },
   "devDependencies": {
     "@types/lodash": "^4.14.191",
-    "langium-cli": "~1.1.0"
+    "esbuild": "~0.19.9",
+    "esbuild-plugin-d.ts": "^1.2.3",
+    "langium-cli": "^3.0.0"
   },
   "repository": {
     "type": "git",

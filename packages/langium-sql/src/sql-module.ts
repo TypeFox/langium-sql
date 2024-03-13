@@ -4,32 +4,24 @@
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
 
-import {
-    createDefaultModule,
-    createDefaultSharedModule,
-    DeepPartial,
-    DefaultSharedModuleContext,
-    inject,
-    LangiumServices,
-    LangiumSharedServices,
-    Module,
-} from "langium";
-import { SqlDialectTypes } from "./dialects/sql/data-types";
+import { Module, DeepPartial, inject } from "langium";
+import { LangiumServices, LangiumSharedServices, DefaultSharedModuleContext, createDefaultSharedModule, createDefaultModule } from "langium/lsp";
+import { SqlDialectTypes } from "./dialects/sql/data-types.js";
 import {
     SqlGeneratedModule,
     SqlGeneratedSharedModule,
-} from "./generated/module";
-import { SqlCompletionProvider } from "./sql-completion-provider";
-import { SqlContainerManager } from "./sql-container-manager";
-import { DialectTypes } from "./sql-data-types";
-import { SqlNameProvider } from "./sql-name-provider";
-import { SqlScopeComputation } from "./sql-scope-computation";
-import { SqlScopeProvider } from "./sql-scope-provider";
-import { SqlSemanticTokenProvider } from "./sql-semantic-token-provider";
-import { SqlTypeComputer, TypeComputer } from "./sql-type-computation";
-import { SqlValidationRegistry, SqlValidator } from "./sql-validator";
-import { SqlValueConverter } from "./sql-value-converter";
-import { SqlWorkspaceManager } from "./sql-workspace-manager";
+} from "./generated/module.js";
+import { SqlCompletionProvider } from "./sql-completion-provider.js";
+import { SqlContainerManager } from "./sql-container-manager.js";
+import { DialectTypes } from "./sql-data-types.js";
+import { SqlNameProvider } from "./sql-name-provider.js";
+import { SqlScopeComputation } from "./sql-scope-computation.js";
+import { SqlScopeProvider } from "./sql-scope-provider.js";
+import { SqlSemanticTokenProvider } from "./sql-semantic-token-provider.js";
+import { SqlTypeComputer, TypeComputer } from "./sql-type-computation.js";
+import { SqlValidationRegistry, SqlValidator } from "./sql-validator.js";
+import { SqlValueConverter } from "./sql-value-converter.js";
+import { SqlWorkspaceManager } from "./sql-workspace-manager.js";
 
 /**
  * Declaration of custom services - add your own service classes here.

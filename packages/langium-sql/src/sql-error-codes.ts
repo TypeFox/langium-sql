@@ -5,9 +5,9 @@
  ******************************************************************************/
 
 import { AstNode, DiagnosticInfo, ValidationAcceptor } from "langium";
-import * as ast from "./generated/ast";
-import { TypeDescriptor } from "./sql-type-descriptors";
-import { BinaryOperator, UnaryOperator } from "./sql-type-operators";
+import * as ast from "./generated/ast.js";
+import { TypeDescriptor } from "./sql-type-descriptors.js";
+import { BinaryOperator, UnaryOperator } from "./sql-type-operators.js";
 
 type SqlErrorSeverity = "error" | "warning" | "info" | "hint";
 

@@ -4,8 +4,8 @@
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
 
-import { DialectTypeList, typesExtend } from "../../sql-data-types";
-import { SqlDialectTypes } from "../sql/data-types";
+import { DialectTypeList, typesExtend } from "../../sql-data-types.js";
+import { SqlDialectTypes } from "../sql/data-types.js";
 
 export const MySqlDialectTypes: DialectTypeList<string> = typesExtend(SqlDialectTypes, {
     strings: [

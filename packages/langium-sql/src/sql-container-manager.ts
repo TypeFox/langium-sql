@@ -6,8 +6,8 @@
 
 import { DocumentState, interruptAndCheck, LangiumDocuments, MultiMap } from "langium";
 import { CancellationToken } from "vscode-languageserver";
-import { Definition, FunctionDefinition, isFunctionDefinition, isSchemaDefinition, isSqlFile, isTableDefinition, ReferenceDefinition, SchemaDefinition, SqlFile, TableDefinition } from "./generated/ast";
-import { SqlSharedServices } from "./sql-module";
+import { Definition, FunctionDefinition, isFunctionDefinition, isSchemaDefinition, isSqlFile, isTableDefinition, ReferenceDefinition, SchemaDefinition, SqlFile, TableDefinition } from "./generated/ast.js";
+import { SqlSharedServices } from "./sql-module.js";
 
 export class SqlContainerManager {
 

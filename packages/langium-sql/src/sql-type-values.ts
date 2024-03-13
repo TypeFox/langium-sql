@@ -4,7 +4,7 @@
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
 
-import { TypeDescriptorDiscriminator } from "./sql-type-descriptors";
+import { TypeDescriptorDiscriminator } from "./sql-type-descriptors.js";
 
 export interface ValueBase {
     type: TypeDescriptorDiscriminator;

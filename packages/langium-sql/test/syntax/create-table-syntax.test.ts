@@ -7,9 +7,9 @@
 import { LangiumDocument } from 'langium';
 import { NodeFileSystem } from 'langium/node';
 import {beforeAll, describe, expect, it} from 'vitest'
-import { SqlFile } from '../../src/generated/ast';
-import { createSqlServices } from '../../src/sql-module';
-import { expectNoErrors, parseHelper } from '../test-utils';
+import { SqlFile } from '../../src/generated/ast.js';
+import { createSqlServices } from '../../src/sql-module.js';
+import { expectNoErrors, parseHelper } from '../test-utils.js';
 
 const services = createSqlServices(NodeFileSystem);
 
