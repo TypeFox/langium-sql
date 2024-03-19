@@ -6,7 +6,7 @@
 
 import { Module, DeepPartial, inject } from "langium";
 import { LangiumServices, LangiumSharedServices, DefaultSharedModuleContext, createDefaultSharedModule, createDefaultModule } from "langium/lsp";
-import { SqlDialectTypes } from "./dialects/sql/data-types.js";
+import { SqlServerDialectTypes } from "./dialects/sql-server/data-types.js";
 import {
     SqlGeneratedModule,
     SqlGeneratedSharedModule,
@@ -72,7 +72,7 @@ export const SqlModule: Module<
     DeepPartial<SqlServices>
 > = {
     dialect: {
-        dataTypes: () => new DialectTypes(SqlDialectTypes),
+        dataTypes: () => new DialectTypes(SqlServerDialectTypes),
         typeComputer: services => new SqlTypeComputer(services)
     },
     parser: {

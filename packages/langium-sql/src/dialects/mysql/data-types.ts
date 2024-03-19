@@ -5,9 +5,9 @@
  ******************************************************************************/
 
 import { DialectTypeList, typesExtend } from "../../sql-data-types.js";
-import { SqlDialectTypes } from "../sql/data-types.js";
+import { SqlServerDialectTypes } from "../sql-server/data-types.js";
 
-export const MySqlDialectTypes: DialectTypeList<string> = typesExtend(SqlDialectTypes, {
+export const MySqlDialectTypes: DialectTypeList<string> = typesExtend(SqlServerDialectTypes, {
     strings: [
         'CHAR(size?)',
         'VARCHAR(size)',
