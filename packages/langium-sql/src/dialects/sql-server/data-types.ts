@@ -6,7 +6,7 @@
 
 import { DialectTypeList } from "../../sql-data-types.js";
 
-export const SqlDialectTypes: DialectTypeList<string> = {
+export const SqlServerDialectTypes: DialectTypeList<string> = {
     strings: ['TEXT'],
     integers: ['INTEGER', 'INT'],
     reals: ['REAL'],
